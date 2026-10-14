@@ -1,5 +1,6 @@
 services:
   timer:
+    image: severnbli/dmb-timers:latest
     build: .
     env_file: .env
     ports:
