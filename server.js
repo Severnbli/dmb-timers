@@ -15,7 +15,7 @@
  */
 
 // Demobilization timers: zero-dependency Node.js server (multiple persons on one page)
-// Month arithmetic uses the server time zone (set TZ in docker.env, default Europe/Minsk).
+// Month arithmetic uses the server time zone (set TZ in .env, default Europe/Minsk).
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
@@ -25,7 +25,7 @@ const CFG_FILE = path.join(DATA_DIR, 'config.json');
 const SESSION_HOURS = +process.env.SESSION_HOURS || 12;
 const MAX_TIMERS = 100;
 const MONTHS = { year: 12, half: 6 }; // duration modes; anything else is 'custom'
-if (!PASS) { console.error('ADMIN_PASSWORD is not set (see docker.env)'); process.exit(1); }
+if (!PASS) { console.error('ADMIN_PASSWORD is not set (see .env)'); process.exit(1); }
 const SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
 const now = () => new Date();
