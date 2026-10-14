@@ -1,0 +1,11 @@
+services:
+  timer:
+    build: .
+    env_file: docker.env
+    ports:
+      - "777:3000"
+    volumes:
+      - timer-data:/data
+    restart: unless-stopped
+volumes:
+  timer-data:

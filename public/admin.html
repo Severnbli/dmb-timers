@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Timers admin</title>
+<style>
+:root{--bg:#d8d3bd;--ink:#2a3021;--mute:#6b6f57;--accent:#b23a1e;--card:#e6e2d0}
+@media(prefers-color-scheme:dark){:root{--bg:#20251a;--ink:#e3dfc9;--mute:#8f9377;--card:#2a3022}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,serif;padding:24px}
+main{max-width:640px;margin:0 auto}
+h1{font-size:1.5rem;margin:0 0 1rem} h2{font-size:1.1rem;margin:1.6rem 0 .6rem}
+form,section{background:var(--card);border:2px solid var(--ink);padding:16px;margin-bottom:14px}
+label{display:block;margin:.7rem 0 .2rem;font-weight:700}
+input[type=text],input[type=password],input[type=datetime-local],select{width:100%;padding:8px;font:inherit;border:2px solid var(--ink);background:var(--bg);color:var(--ink)}
+input:disabled{opacity:.6}
+input[type=color]{width:64px;height:36px;border:2px solid var(--ink);background:none;padding:0}
+.chk{display:flex;gap:8px;align-items:center;font-weight:400}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.two{grid-template-columns:1fr}}
+button{font:inherit;font-weight:700;padding:8px 14px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+button.alt{background:none;color:var(--ink)} button.danger{background:var(--accent);border-color:var(--accent);color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#msg{min-height:1.5rem;font-weight:700} .err{color:var(--accent)}
+ul{padding-left:1.2rem;color:var(--mute);margin:.5rem 0 0} small,.empty{color:var(--mute)}
+.add{display:flex;gap:10px} .add input{flex:1}
+[hidden]{display:none}
+</style></head><body><main>
+<h1>Timers admin</h1>
+
+<form id="login" hidden>
+  <label for="pw">Password</label>
+  <input id="pw" type="password" autocomplete="current-password" autofocus>
+  <div class="row"><button>Log in</button></div>
+</form>
+
+<div id="panel" hidden>
+  <h2>Add a person</h2>
+  <form id="addForm" class="add">
+    <input id="addName" type="text" placeholder="Name" aria-label="Name" required>
+    <button>Add person</button>
+  </form>
+
+  <h2>Timers</h2>
+  <div id="list"></div>
+
+  <h2>Page settings</h2>
+  <form id="settings">
+    <label for="pageTitle">Page title</label><input id="pageTitle" type="text">
+    <label class="chk"><input id="showSeconds" type="checkbox"> Show seconds</label>
+    <label class="chk"><input id="showProgress" type="checkbox"> Show progress bars</label>
+    <label class="chk"><input id="showStatuses" type="checkbox"> Show funny statuses</label>
+    <div class="row"><button>Save page settings</button><a href="/" target="_blank"><button type="button" class="alt">Open timers page</button></a></div>
+  </form>
+
+  <section><b>Recent changes</b><ul id="hist"></ul></section>
+  <div class="row"><button id="logout" class="alt">Log out</button></div>
+</div>
+<div id="msg" role="status"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const say=(t,err)=>{$('msg').textContent=t;$('msg').className=err?'err':''};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toLocal=v=>{const d=new Date(v);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+const MONTHS={year:12,half:6};
+function addMonths(d,n){const r=new Date(d),day=r.getDate();r.setDate(1);r.setMonth(r.getMonth()+n);
+  r.setDate(Math.min(day,new Date(r.getFullYear(),r.getMonth()+1,0).getDate()));return r}
+let S=null;
+async function api(m,u,b){
+  const r=await fetch(u,{method:m,headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});
+  const d=await r.json().catch(()=>({}));
+  if(r.status===401&&u.startsWith('/api/admin'))show(false);
+  if(!r.ok)throw new Error(d.error||'Request failed');return d;
+}
+function show(on){$('login').hidden=on;$('panel').hidden=!on}
+function render(){
+  $('pageTitle').value=S.page.pageTitle;$('showSeconds').checked=S.page.showSeconds;
+  $('showProgress').checked=S.page.showProgress;$('showStatuses').checked=S.page.showStatuses;
+  const opt=(t,v,l)=>`<option value="${v}"${t.mode===v?' selected':''}>${l}</option>`;
+  $('list').innerHTML=S.timers.map(t=>`<form data-id="${t.id}">
+    <label>Name</label><input type="text" name="name" value="${esc(t.name)}" required>
+    <label>Label</label><input type="text" name="label" value="${esc(t.label)}">
+    <div class="two"><div><label>Service start</label><input type="datetime-local" name="start" value="${toLocal(t.start)}" required></div>
+    <div><label>Duration</label><select name="mode">${opt(t,'year','1 year (12 months)')}${opt(t,'half','Half year (6 months)')}${opt(t,'custom','Custom end date')}</select></div></div>
+    <label>Demobilization date ${t.mode==='custom'?'':'<small>(start + duration)</small>'}</label>
+    <input type="datetime-local" name="end" value="${toLocal(t.end)}" required${t.mode==='custom'?'':' disabled'}>
+    <label>Message when finished</label><input type="text" name="doneMessage" value="${esc(t.doneMessage)}">
+    <label>Accent color</label><input type="color" name="accent" value="${t.accent}">
+    <div class="row"><button>Save</button>
+    <button type="button" class="alt" data-act="reset">Start from now</button>
+    ${t.mode==='custom'?'<button type="button" class="alt" data-act="keep">Restart, keep duration</button>':''}
+    <button type="button" class="danger" data-act="del">Delete</button></div></form>`).join('')||'<p class="empty">No timers yet. Add the first person above.</p>';
+  $('hist').innerHTML=S.history.map(h=>`<li>${new Date(h.at).toLocaleString()}: ${esc(h.msg)}</li>`).join('')||'<li>No changes yet</li>';
+}
+const run=async(m,u,b,ok)=>{try{S=await api(m,u,b);render();say(ok)}catch(x){say(x.message,1)}};
+async function init(){try{S=await api('GET','/api/admin/config');render();show(true)}catch{show(false)}}
+
+$('login').onsubmit=async e=>{e.preventDefault();try{await api('POST','/api/login',{password:$('pw').value});$('pw').value='';say('');init()}catch(x){say(x.message,1)}};
+$('addForm').onsubmit=async e=>{e.preventDefault();await run('POST','/api/admin/timers',{name:$('addName').value},'Person added');$('addName').value=''};
+$('settings').onsubmit=e=>{e.preventDefault();run('PUT','/api/admin/settings',{pageTitle:$('pageTitle').value,showSeconds:$('showSeconds').checked,showProgress:$('showProgress').checked,showStatuses:$('showStatuses').checked},'Page settings saved')};
+$('list').onchange=e=>{ // live preview of the computed end date; the server recalculates on save
+  const n=e.target.name;if(n!=='mode'&&n!=='start')return;
+  const f=e.target.form,m=f.elements.mode.value,end=f.elements.end,st=f.elements.start.value;
+  end.disabled=m!=='custom';
+  if(m!=='custom'&&st)end.value=toLocal(addMonths(new Date(st),MONTHS[m]));
+};
+$('list').onsubmit=e=>{e.preventDefault();const f=e.target,b=Object.fromEntries(new FormData(f));
+  b.start=new Date(f.elements.start.value).toISOString();b.end=new Date(f.elements.end.value).toISOString();
+  run('PUT','/api/admin/timers/'+f.dataset.id,b,'Saved')};
+$('list').onclick=e=>{const a=e.target.dataset.act;if(!a)return;const f=e.target.closest('form'),id=f.dataset.id,n=f.querySelector('[name=name]').value;
+  if(a==='del'&&confirm(`Delete "${n}"?`))run('DELETE','/api/admin/timers/'+id,null,'Deleted');
+  if(a==='reset'&&confirm(`Set start for "${n}" to now?`))run('POST',`/api/admin/timers/${id}/reset`,{},'Start reset');
+  if(a==='keep'&&confirm(`Restart "${n}" from now with the same duration?`))run('POST',`/api/admin/timers/${id}/reset`,{keepDuration:true},'Restarted')};
+$('logout').onclick=async()=>{await api('POST','/api/logout');show(false);say('Logged out')};
+init();
+</script></main></body></html>

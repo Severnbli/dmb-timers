@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demobilization timers</title>
+<style>
+:root{--bg:#d8d3bd;--ink:#2a3021;--mute:#6b6f57}
+@media(prefers-color-scheme:dark){:root{--bg:#20251a;--ink:#e3dfc9;--mute:#8f9377}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;padding:24px;min-height:100vh}
+h1{font-weight:400;font-size:1.1rem;color:var(--mute);margin:0 auto 1.5rem;max-width:1100px}
+#app{display:grid;gap:22px;max-width:1100px;margin:0 auto;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+#app.one{max-width:720px;grid-template-columns:1fr;margin-top:4vh}
+.card{border:2px solid var(--ink);padding:20px}
+.one .card{border:0;padding:0}
+h2{font-weight:400;font-size:1.15rem;margin:0 0 1rem;color:var(--mute)}
+h2 b{color:var(--ink);font-weight:700;font-size:1.3rem;display:block}
+.tag{display:inline-block;margin-bottom:.6rem;padding:2px 8px;border:2px solid var(--accent);color:var(--accent);font:700 .75rem/1.4 ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;letter-spacing:.06em}
+.days{font:900 clamp(4.5rem,14vw,7rem)/.85 Impact,"Arial Narrow Bold",sans-serif;color:var(--accent);font-variant-numeric:tabular-nums}
+.one .days{font-size:clamp(7rem,32vw,17rem)}
+.unit{font-size:1.1rem;margin:.5rem 0 1rem}
+.hms{font:500 1.5rem ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+.one .hms{font-size:clamp(1.6rem,7vw,2.4rem)}
+.bar{margin-top:1.4rem;height:12px;border:2px solid var(--ink);position:relative;
+ background:repeating-linear-gradient(90deg,transparent 0 9px,color-mix(in srgb,var(--ink) 25%,transparent) 9px 10px)}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--ink);width:0}
+.meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:.5rem;color:var(--mute);font-size:.9rem}
+.status{margin-top:1.1rem;padding-left:12px;border-left:4px solid var(--accent);font-style:italic}
+.done{font:900 2.4rem/1.05 Impact,"Arial Narrow Bold",sans-serif;color:var(--accent)}
+.one .done{font-size:clamp(2.5rem,10vw,5rem)}
+.empty{color:var(--mute)}
+</style></head><body>
+<h1 id="ptitle"></h1>
+<main id="app"></main>
+<script>
+const SOON={ // service has not started yet; bucket = days until call-up
+ far:["Getting ready for the army, buying berets","Collecting documents and praying the medical board misses something","Explaining to everyone that it will definitely be fine","Googling what 'portyanki' (footwraps) are","Studying the draft notice like an ancient scroll","Last cheat days: eating everything, because perlovka is ahead"],
+ mid:["Saying goodbye to the hair, one week at a time","Packing a bag the army will rearrange anyway","Listening to every uncle tell how it was in '95","Training to fall asleep in 40 seconds","Mom is cooking for the next year, all in one week","Practicing 'Yes, comrade sergeant!' in the mirror"],
+ week:["Farewell party is on. The liver is already on leave","Buying socks, because nobody trusts footwraps","Visiting the military enlistment office (voenkomat) for the tenth time","Last walk with friends, last normal haircut","Saying goodbye to the favorite mattress","Sewing a secret pocket for snacks"],
+ eve:["Sitting on the packed bag at the assembly point","Last homemade dinner for a long while","Hugging mom, patting the dog, checking the ticket","The bus to the unit is almost here. So is the haircut"]};
+const SERVING=[ // [upper progress limit in %, statuses]
+ [4,["Got a new haircut. Everybody got the same one","Meeting the starshina (sergeant major). Forgot own name","Learning to make a bed that looks like a cube","Got the uniform. It fits nobody and everybody"]],
+ [15,["Training unit (uchebka): marching, marching, marching","Cleans a gun","Practicing the march step for the oath","Assembling and disassembling the rifle, blindfolded. Again","Learning to tie footwraps. Nobody asked if it was wanted","Running cross-country at 6:00, sincerely wondering why"]],
+ [40,["Peeling potatoes on kitchen duty (naryad)","Standing guard in the snow, dreaming about a hot shawarma","Polishing the floor with a toothbrush, purely for education","Political classes: fighting sleep and losing","Drawing a calendar on the back of a notebook","Eating perlovka. It tastes better than it looks. A bit","Waiting for Sunday, the day of the phone call to mom","Washing the uniform by hand, drying it on the radiator"]],
+ [60,["Halfway there. The 'pereval' (mountain pass) is behind","Knows which boot squeaks and which door never closes","Saying 'when I was a rookie...' to a rookie","Sent to help with the potato harvest, for the motherland","Mastered the art of sleeping while standing","Weighing how many kilos mom's parcels added"]],
+ [85,["Mentoring the young ones: 'this is how you hold a mop'","Knows the regulations by heart and the loopholes even better","No longer afraid of the sergeant, but still salutes","On guard duty: sees everything, says nothing","Already dreaming about jeans and freedom","Adjusting the beret with mathematical precision"]],
+ [97,["Drawing the demobilization album (dembelsky albom)","Sewing the aiguillettes (aksel'bant) for the ride home","Counting not days anymore, but breakfasts","Already a legend of the barracks","Ironing the dress uniform for the last time"]],
+ [101,["Last week: suitcase packed, eyes already at home","Looking at the gate like at a finish line","Reading the train timetable for the fifth time","Saying farewell to the canteen tea","Trying to look serious, smiling anyway"]]];
+const DONE=["Dembel! Walking home with aiguillettes, a beret and a thousand stories","Sleeping in own bed with no wake-up call for the first time in ages","Eating mom's draniki: the portion for the whole year","Reserve soldier now. Civilians, be careful","Wearing jeans for the first time in a year","Teaching everyone how to make a bed properly","Sleeping until noon purely because it is possible"];
+
+let cfg=null, offset=0;
+const $=document.getElementById('app'), pad=n=>String(n).padStart(2,'0');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=t=>new Date(t).toLocaleDateString('ru-RU');
+const DAY=864e5;
+async function load(){
+  try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();
+  document.title=cfg.page.pageTitle||'Timers';document.getElementById('ptitle').textContent=cfg.page.pageTitle;}catch{}
+}
+function pick(list,t,now){ // stable for a few hours, same for every visitor
+  let h=0;for(const c of t.id+':'+Math.floor(now/108e5))h=(h*31+c.charCodeAt(0))>>>0;
+  return list[h%list.length];
+}
+function statusFor(state,t,now,pct,daysToStart){
+  if(state==='done')return pick(DONE,t,now);
+  if(state==='soon')return pick(SOON[daysToStart>60?'far':daysToStart>21?'mid':daysToStart>3?'week':'eve'],t,now);
+  return pick(SERVING.find(s=>pct<s[0])[1],t,now);
+}
+function card(t,p,now){
+  const s=+new Date(t.start), e=+new Date(t.end), total=Math.round((e-s)/DAY);
+  const state=now<s?'soon':now<e?'serving':'done';
+  const head=`<h2><b>${esc(t.name)}</b>${esc(t.label)}</h2>`;
+  const dates=`<div class="meta"><span>Service: ${total} days</span><span>${fmt(s)} → ${fmt(e)}</span></div>`;
+  let pct=0,toStart=0,main;
+  if(state==='soon'){ // counting to the call-up; the service length itself is shown separately
+    const left=s-now; toStart=left/DAY;
+    const d=Math.floor(left/DAY),h=Math.floor(left/36e5)%24,m=Math.floor(left/6e4)%60,sec=Math.floor(left/1e3)%60;
+    main=`<span class="tag">Service starts soon</span><div class="days">${d}</div><div class="unit">${d===1?'day':'days'} until call-up, then ${total} days of service</div>
+    <div class="hms">${pad(h)}:${pad(m)}${p.showSeconds?':'+pad(sec):''}</div>`+
+    (p.showProgress?`<div class="bar"><i style="width:0"></i></div><div class="meta"><span>0% served</span><span>not started</span></div>`:'');
+  }else if(state==='serving'){
+    const left=e-now, d=Math.floor(left/DAY),h=Math.floor(left/36e5)%24,m=Math.floor(left/6e4)%60,sec=Math.floor(left/1e3)%60;
+    pct=Math.max(0,Math.min(100,(now-s)/(e-s)*100));
+    const dayNo=Math.min(total,Math.floor((now-s)/DAY)+1);
+    main=`<div class="days">${d}</div><div class="unit">${d===1?'day':'days'} left</div>
+    <div class="hms">${pad(h)}:${pad(m)}${p.showSeconds?':'+pad(sec):''}</div>`+
+    (p.showProgress?`<div class="bar" role="progressbar" aria-valuenow="${pct.toFixed(1)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+    <div class="meta"><span>${pct.toFixed(2)}% served</span><span>day ${dayNo} of ${total}</span></div>`:'');
+  }else main=`<div class="done">${esc(t.doneMessage)}</div>`;
+  const st=p.showStatuses===false?'':`<div class="status">${esc(statusFor(state,t,now,pct,toStart))}</div>`;
+  return `<article class="card" style="--accent:${t.accent}">${head}${main}${dates}${st}</article>`;
+}
+function render(){
+  if(!cfg)return;
+  const now=Date.now()+offset, ts=[...cfg.timers].sort((a,b)=>new Date(a.end)-new Date(b.end));
+  $.className=ts.length===1?'one':'';
+  $.innerHTML=ts.length?ts.map(t=>card(t,cfg.page,now)).join(''):'<p class="empty">No timers yet. Add one in the admin panel.</p>';
+}
+load().then(render);setInterval(render,1000);setInterval(load,60000);
+</script></body></html>
