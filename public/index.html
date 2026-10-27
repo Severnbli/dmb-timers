@@ -67,6 +67,7 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 @media(prefers-reduced-motion:reduce){.chip.is-soon::before{animation:none}}
 .count{display:flex;align-items:flex-end;gap:.25em 8px;margin:8px 0 0}
 .count.stack{flex-direction:column;align-items:flex-start}
+.count.stack .unit{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 .5em} /* digits take the full width, label and clock share one line below */
 .days{font:800 2.6rem/.85 var(--sans);letter-spacing:-.045em;color:var(--accent);font-variant-numeric:tabular-nums}
 .unit{display:flex;flex-direction:column;min-width:0;color:var(--mute);font-size:.78rem;font-weight:500;line-height:1.25}
 .clock{font:600 .82rem/1.2 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
@@ -214,20 +215,15 @@ function fitCards(){ // fit each square: the status shrinks until it fits, then 
     let f=fitted.get(key);
     if(!f){
       let k=1,g=1;
-      while(!fits()&&k>.45){k-=.04;setS(k)} // status first
-      while(!fits()&&g>.5){g-=.05;setG(g,false)} // then the big text, only if the status alone could not make room
+      while(!fits()&&g>.5){g-=.05;setG(g,false)} // the big text gives way first, so the status keeps one size on every card
+      while(!fits()&&k>.45){k-=.04;setS(k)} // the status shrinks only if that was not enough
       f={k,g,stack:false};
       if(g===1&&grow.length)for(const stack of cnt?[false,true]:[false]){ // largest countdown / message in either layout
         let lo=1,hi=6;setG(1,stack);if(!fits())continue;
         for(let i=0;i<9;i++){const m=(lo+hi)/2;setG(m,stack);fits()?lo=m:hi=m}
         if(lo*.98>f.g)f={k,g:lo*.98,stack}; // small margin against sub-pixel rounding
       }
-      if(st&&f.k===1){ // a countdown capped by the card width leaves room below: the status grows into it
-        setG(f.g,f.stack);let lo=1,hi=2.2;
-        for(let i=0;i<8;i++){const m=(lo+hi)/2;setS(m);fits()?lo=m:hi=m}
-        f.k=lo*.98;
-      }
-      setS(f.k);setG(f.g,f.stack);f.spread=fill.getBoundingClientRect().height>16;
+      setG(f.g,f.stack);f.spread=fill.getBoundingClientRect().height>16;
       fitted.set(key,f);
     }
     setS(f.k);setG(f.g,f.stack);c.classList.toggle('spread',f.spread);
