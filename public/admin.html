@@ -172,7 +172,7 @@ function render(){
     <summary><span class="who"><b>${esc(tm.name)}</b><small>${summary(tm)}</small></span></summary>
     <form data-id="${tm.id}">
     <div class="grid"><div><label>${t('f.name')}</label><input type="text" name="name" value="${esc(tm.name)}" required maxlength="200"></div>
-    <div><label>${t('f.label')}</label><input type="text" name="label" value="${esc(tm.label)}" placeholder="${esc(t('timer.defaultLabel'))}" maxlength="200"></div></div>
+    <div><label>${t('f.label')}</label><input type="text" name="label" value="${esc(tm.label)}" maxlength="200"></div></div>
     <div class="grid"><div><label>${t('f.start')}</label><input type="datetime-local" name="start" value="${toLocal(tm.start)}" required></div>
     <div><label>${t('f.mode')}</label><select name="mode">${opt(tm,'year')}${opt(tm,'half')}${opt(tm,'custom')}</select></div></div>
     <label>${t('f.end')} ${tm.mode==='custom'?'':`<small>(${t('f.endAuto')})</small>`}</label>

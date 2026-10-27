@@ -130,7 +130,7 @@ footer a:hover{color:var(--ink)}
 </style></head><body>
 <header class="top"><h1><span id="ptitle"></span></h1><div class="tools"><div data-lang-switch></div><div data-theme-switch></div></div></header>
 <main id="app" aria-live="off"></main>
-<footer><a href="/privacy" data-i18n="footer.privacy">Privacy</a><a href="https://github.com/Severnbli/dmb-timers" rel="noopener" data-i18n="footer.source">Source code</a></footer>
+<footer><a href="/privacy" data-i18n="footer.privacy">Privacy</a><a href="/admin" data-i18n="footer.admin">Admin</a><a href="https://github.com/Severnbli/dmb-timers" rel="noopener" data-i18n="footer.source">Source code</a></footer>
 <script src="/i18n.js"></script>
 <script src="/statuses.js"></script>
 <script>
@@ -166,11 +166,13 @@ function statusFor(phase,t,now,ctx){ // weighted pick among the statuses whose w
 const hmsText=(ms,sec)=>{const h=Math.floor(ms/36e5)%24,m=Math.floor(ms/6e4)%60,s=Math.floor(ms/1e3)%60;
   return `<span class="clock" title="${t('hms.h')} : ${t('hms.m')}${sec?' : '+t('hms.s'):''}">${pad(h)}:${pad(m)}${sec?':'+pad(s):''}</span>`};
 const count=(d,unit,ms,sec)=>`<div class="count"><span class="days">${d}</span><span class="unit">${unit}${hmsText(ms,sec)}</span></div>`;
+const SOON_DAYS=60;
 function card(tm,p,now){
   const s=+new Date(tm.start), e=+new Date(tm.end), total=Math.round((e-s)/DAY);
   const phase=now<s?'soon':now<e?'serve':'done';
   const ctx={u:(s-now)/DAY,d:(now-s)/DAY,l:(e-now)/DAY,a:(now-e)/DAY,p:Math.max(0,Math.min(100,(now-s)/(e-s)*100))};
-  const head=`<div class="head"><div><h2>${esc(tm.name)}</h2><p class="label">${esc(tm.label||t('timer.defaultLabel'))}</p></div><span class="chip is-${phase}">${t('state.'+phase)}</span></div>`;
+  const chip=phase==='soon'&&ctx.u>SOON_DAYS?'wait':phase; // the call-up is "soon" only within the last couple of months
+  const head=`<div class="head"><div><h2>${esc(tm.name)}</h2>${tm.label?`<p class="label">${esc(tm.label)}</p>`:''}</div><span class="chip is-${chip}">${t('state.'+chip)}</span></div>`;
   const bar=(pct,l,r)=>p.showProgress?`<div class="bar" role="progressbar" aria-valuenow="${pct.toFixed(1)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i><em title="${t('half')}"></em></div><div class="meta"><span>${l}</span><span>${r}</span></div>`:'';
   let main;
   if(phase==='soon'){ // counting to the call-up; the service length itself is shown separately
