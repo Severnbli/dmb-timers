@@ -16,105 +16,180 @@
 
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2322271c'/%3E%3Cpath d='M16 7l2.6 5.6 6.1.6-4.6 4.1 1.3 6L16 20.2 10.6 23.3l1.3-6-4.6-4.1 6.1-.6z' fill='%23fff'/%3E%3C/svg%3E">
 <title>Timers admin</title>
 <style>
-:root{--bg:#d8d3bd;--ink:#2a3021;--mute:#6b6f57;--accent:#b23a1e;--card:#e6e2d0}
-@media(prefers-color-scheme:dark){:root{--bg:#20251a;--ink:#e3dfc9;--mute:#8f9377;--card:#2a3022}}
+:root{--bg:#ebe8dc;--surface:#f8f6ef;--field:#fff;--ink:#22271c;--mute:#6a6e5b;--line:#d7d3c3;--accent:#b23a1e;--ok:#3d6b2f;--shadow:0 1px 2px rgb(40 45 30/.06),0 8px 24px -14px rgb(40 45 30/.25);
+ --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#14170f;--surface:#1d2117;--field:#15180f;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d;--accent:#e0663f;--ok:#8fc27a;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -16px rgb(0 0 0/.6)}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,serif;padding:24px}
-main{max-width:640px;margin:0 auto}
-h1{font-size:1.5rem;margin:0 0 1rem} h2{font-size:1.1rem;margin:1.6rem 0 .6rem}
-form,section{background:var(--card);border:2px solid var(--ink);padding:16px;margin-bottom:14px}
-label{display:block;margin:.7rem 0 .2rem;font-weight:700}
-input[type=text],input[type=password],input[type=datetime-local],select{width:100%;padding:8px;font:inherit;border:2px solid var(--ink);background:var(--bg);color:var(--ink)}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);min-height:100vh}
+.wrap{max-width:720px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) max(32px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.top{position:sticky;top:0;z-index:3;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin-bottom:20px}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:max(12px,env(safe-area-inset-top));padding-bottom:12px}
+h1{margin:0;font-size:clamp(.98rem,3.6vw,1.15rem);line-height:1.2;display:flex;align-items:center;gap:10px}
+h1::before{content:"";flex:none;width:11px;height:11px;border-radius:3px;background:var(--ink);transform:rotate(45deg)}
+.tools{display:flex;align-items:center;gap:8px}
+h2{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin:28px 4px 10px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:12px}
+label{display:block;margin:14px 0 6px;font-size:.88rem;font-weight:600}
+label small{font-weight:400;color:var(--mute)}
+input[type=text],input[type=password],input[type=datetime-local],select{width:100%;min-height:44px;padding:9px 12px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);appearance:none;-webkit-appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
 input:disabled{opacity:.6}
-input[type=color]{width:64px;height:36px;border:2px solid var(--ink);background:none;padding:0}
-.chk{display:flex;gap:8px;align-items:center;font-weight:400}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:480px){.two{grid-template-columns:1fr}}
-button{font:inherit;font-weight:700;padding:8px 14px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
-button.alt{background:none;color:var(--ink)} button.danger{background:var(--accent);border-color:var(--accent);color:#fff}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-#msg{min-height:1.5rem;font-weight:700} .err{color:var(--accent)}
-ul{padding-left:1.2rem;color:var(--mute);margin:.5rem 0 0} small,.empty{color:var(--mute)}
-.add{display:flex;gap:10px} .add input{flex:1}
-[hidden]{display:none}
-</style></head><body><main>
-<h1>Timers admin</h1>
+input[type=color]{width:56px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--field);padding:4px;cursor:pointer}
+.hint{margin:6px 0 0;font-size:.8rem;color:var(--mute)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.grid>div{min-width:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;font:600 .92rem var(--sans);padding:9px 16px;border:1px solid var(--ink);border-radius:10px;background:var(--ink);color:var(--surface);cursor:pointer;text-decoration:none}
+button.alt,.btn.alt{background:transparent;color:var(--ink);border-color:var(--line)}
+button.alt:hover,.btn.alt:hover{border-color:var(--ink)}
+button.danger{background:transparent;border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent);margin-left:auto}
+button.danger:hover{background:var(--accent);color:#fff}
+button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.lang{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.lang button{min-height:0;font:600 .78rem/1 var(--sans);letter-spacing:.04em;color:var(--mute);background:none;border:0;border-radius:999px;padding:7px 10px;min-width:38px}
+.lang button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
+.add{display:flex;gap:8px}.add input{flex:1;min-width:0}
+details.timer{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden}
+details.timer>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;border-left:4px solid var(--c)}
+details.timer>summary::-webkit-details-marker{display:none}
+summary .who{flex:1;min-width:0}
+summary b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+summary small{color:var(--mute);font-size:.84rem}
+summary::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:rotate(45deg);transition:transform .15s;margin:0 4px 4px}
+details[open]>summary::after{transform:rotate(225deg);margin-bottom:-4px}
+details.timer form{padding:2px 16px 16px;border-top:1px solid var(--line)}
+.chk{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:12px 0;font-weight:500;border-bottom:1px solid var(--line);cursor:pointer}
+.chk:last-of-type{border-bottom:0}
+.chk input{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .15s;margin:0}
+.chk input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.3);transition:transform .15s}
+.chk input:checked{background:var(--ok)}.chk input:checked::after{transform:translateX(18px)}
+#hist{list-style:none;padding:0;margin:0;font-size:.88rem}
+#hist li{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+#hist li:last-child{border-bottom:0}
+#hist time{flex:none;color:var(--mute);font-variant-numeric:tabular-nums;min-width:8.5em}
+.empty{color:var(--mute);margin:0}
+.login{max-width:400px;margin:10vh auto 0}
+.login p{color:var(--mute);margin:4px 0 0;font-size:.9rem}
+#msg{position:fixed;z-index:6;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:.2s;
+ padding:11px 18px;border-radius:12px;background:var(--ink);color:var(--surface);font-weight:600;font-size:.92rem;box-shadow:0 12px 40px -10px rgb(0 0 0/.5);max-width:calc(100% - 32px);text-align:center}
+#msg.show{opacity:1;transform:translate(-50%,0)}
+#msg.err{background:var(--accent);color:#fff}
+[hidden]{display:none!important}
+@media(max-width:520px){
+ .grid{grid-template-columns:1fr}
+ .row button,.row .btn{flex:1 1 calc(50% - 4px)}
+ button.danger{margin-left:0;flex-basis:100%}
+ .add{flex-direction:column}
+ #hist li{flex-direction:column;gap:0}
+ .box{padding:16px}
+}
+</style></head><body data-no-notice>
+<header class="top"><div class="wrap"><h1 data-i18n="admin.title">Timers admin</h1>
+  <div class="tools"><div data-lang-switch></div><button id="logout" class="alt" hidden data-i18n="admin.logout">Log out</button></div></div></header>
+<main class="wrap">
 
-<form id="login" hidden>
-  <label for="pw">Password</label>
+<form id="login" class="box login" hidden>
+  <label for="pw" style="margin-top:0" data-i18n="admin.password">Password</label>
   <input id="pw" type="password" autocomplete="current-password" autofocus>
-  <div class="row"><button>Log in</button></div>
+  <p data-i18n="admin.loginHint"></p>
+  <div class="row"><button style="flex:1" data-i18n="admin.login">Log in</button></div>
 </form>
 
 <div id="panel" hidden>
-  <h2>Add a person</h2>
-  <form id="addForm" class="add">
-    <input id="addName" type="text" placeholder="Name" aria-label="Name" required>
-    <button>Add person</button>
+  <h2 data-i18n="admin.addTitle">Add a person</h2>
+  <form id="addForm" class="box add">
+    <input id="addName" type="text" data-i18n-ph="admin.namePh" data-i18n-label="admin.namePh" required maxlength="200">
+    <button data-i18n="admin.add">Add</button>
   </form>
 
-  <h2>Timers</h2>
+  <h2 data-i18n="admin.timers">Timers</h2>
   <div id="list"></div>
 
-  <h2>Page settings</h2>
-  <form id="settings">
-    <label for="pageTitle">Page title</label><input id="pageTitle" type="text">
-    <label class="chk"><input id="showSeconds" type="checkbox"> Show seconds</label>
-    <label class="chk"><input id="showProgress" type="checkbox"> Show progress bars</label>
-    <label class="chk"><input id="showStatuses" type="checkbox"> Show funny statuses</label>
-    <div class="row"><button>Save page settings</button><a href="/" target="_blank"><button type="button" class="alt">Open timers page</button></a></div>
+  <h2 data-i18n="s.title">Page settings</h2>
+  <form id="settings" class="box">
+    <label for="pageTitle" style="margin-top:0" data-i18n="s.pageTitle">Page title</label>
+    <input id="pageTitle" type="text" maxlength="200">
+    <p class="hint" data-i18n="f.defaultHint"></p>
+    <div style="margin-top:8px">
+      <label class="chk"><span data-i18n="s.seconds">Show seconds</span><input id="showSeconds" type="checkbox"></label>
+      <label class="chk"><span data-i18n="s.progress">Show progress bars</span><input id="showProgress" type="checkbox"></label>
+      <label class="chk"><span data-i18n="s.statuses">Show funny statuses</span><input id="showStatuses" type="checkbox"></label>
+    </div>
+    <div class="row"><button data-i18n="s.save">Save settings</button><a class="btn alt" href="/" target="_blank" data-i18n="s.open">Open timers page</a></div>
   </form>
 
-  <section><b>Recent changes</b><ul id="hist"></ul></section>
-  <div class="row"><button id="logout" class="alt">Log out</button></div>
+  <h2 data-i18n="hist.title">Recent changes</h2>
+  <section class="box"><ul id="hist"></ul></section>
 </div>
-<div id="msg" role="status"></div>
+<p style="text-align:center;margin-top:28px;font-size:.85rem"><a href="/privacy" style="color:var(--mute)" data-i18n="footer.privacy">Privacy</a></p>
+</main>
+<div id="msg" role="status" aria-live="polite"></div>
 
+<script src="/i18n.js"></script>
 <script>
+const {t,tp}=I18N;
 const $=id=>document.getElementById(id);
-const say=(t,err)=>{$('msg').textContent=t;$('msg').className=err?'err':''};
+let toast;
+const say=(m,err)=>{const e=$('msg');e.textContent=m;e.className=m?'show'+(err?' err':''):'';clearTimeout(toast);if(m)toast=setTimeout(()=>e.className='',3000)};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const toLocal=v=>{const d=new Date(v);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
-const MONTHS={year:12,half:6};
+const MONTHS={year:12,half:6}, DAY=864e5;
 function addMonths(d,n){const r=new Date(d),day=r.getDate();r.setDate(1);r.setMonth(r.getMonth()+n);
   r.setDate(Math.min(day,new Date(r.getFullYear(),r.getMonth()+1,0).getDate()));return r}
 let S=null;
+const open=new Set(); // timer cards the admin has expanded survive re-renders
 async function api(m,u,b){
   const r=await fetch(u,{method:m,headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});
   const d=await r.json().catch(()=>({}));
   if(r.status===401&&u.startsWith('/api/admin'))show(false);
-  if(!r.ok)throw new Error(d.error||'Request failed');return d;
+  if(!r.ok)throw new Error(d.code?t('err.'+d.code):d.error||t('err.request'));return d;
 }
-function show(on){$('login').hidden=on;$('panel').hidden=!on}
+function show(on){$('login').hidden=on;$('panel').hidden=!on;$('logout').hidden=!on}
+function summary(tm){ // short state line for the collapsed card
+  const now=Date.now(),s=+new Date(tm.start),e=+new Date(tm.end);
+  if(now<s){const d=Math.floor((s-now)/DAY);return `${t('state.soon')} · ${d} ${tp('unit.toStart',d)}`}
+  if(now<e){const d=Math.floor((e-now)/DAY);return `${t('state.serve')} · ${d} ${tp('unit.left',d)}`}
+  return t('state.done');
+}
 function render(){
-  $('pageTitle').value=S.page.pageTitle;$('showSeconds').checked=S.page.showSeconds;
-  $('showProgress').checked=S.page.showProgress;$('showStatuses').checked=S.page.showStatuses;
-  const opt=(t,v,l)=>`<option value="${v}"${t.mode===v?' selected':''}>${l}</option>`;
-  $('list').innerHTML=S.timers.map(t=>`<form data-id="${t.id}">
-    <label>Name</label><input type="text" name="name" value="${esc(t.name)}" required>
-    <label>Label</label><input type="text" name="label" value="${esc(t.label)}">
-    <div class="two"><div><label>Service start</label><input type="datetime-local" name="start" value="${toLocal(t.start)}" required></div>
-    <div><label>Duration</label><select name="mode">${opt(t,'year','1 year (12 months)')}${opt(t,'half','Half year (6 months)')}${opt(t,'custom','Custom end date')}</select></div></div>
-    <label>Demobilization date ${t.mode==='custom'?'':'<small>(start + duration)</small>'}</label>
-    <input type="datetime-local" name="end" value="${toLocal(t.end)}" required${t.mode==='custom'?'':' disabled'}>
-    <label>Message when finished</label><input type="text" name="doneMessage" value="${esc(t.doneMessage)}">
-    <label>Accent color</label><input type="color" name="accent" value="${t.accent}">
-    <div class="row"><button>Save</button>
-    <button type="button" class="alt" data-act="reset">Start from now</button>
-    ${t.mode==='custom'?'<button type="button" class="alt" data-act="keep">Restart, keep duration</button>':''}
-    <button type="button" class="danger" data-act="del">Delete</button></div></form>`).join('')||'<p class="empty">No timers yet. Add the first person above.</p>';
-  $('hist').innerHTML=S.history.map(h=>`<li>${new Date(h.at).toLocaleString()}: ${esc(h.msg)}</li>`).join('')||'<li>No changes yet</li>';
+  if(!S)return;
+  $('pageTitle').value=S.page.pageTitle;$('pageTitle').placeholder=t('page.defaultTitle');
+  $('showSeconds').checked=S.page.showSeconds;$('showProgress').checked=S.page.showProgress;$('showStatuses').checked=S.page.showStatuses;
+  const opt=(tm,v)=>`<option value="${v}"${tm.mode===v?' selected':''}>${t('mode.'+v)}</option>`;
+  $('list').innerHTML=S.timers.map(tm=>`<details class="timer" data-id="${tm.id}" style="--c:${tm.accent}"${open.has(tm.id)?' open':''}>
+    <summary><span class="who"><b>${esc(tm.name)}</b><small>${summary(tm)}</small></span></summary>
+    <form data-id="${tm.id}">
+    <div class="grid"><div><label>${t('f.name')}</label><input type="text" name="name" value="${esc(tm.name)}" required maxlength="200"></div>
+    <div><label>${t('f.label')}</label><input type="text" name="label" value="${esc(tm.label)}" placeholder="${esc(t('timer.defaultLabel'))}" maxlength="200"></div></div>
+    <div class="grid"><div><label>${t('f.start')}</label><input type="datetime-local" name="start" value="${toLocal(tm.start)}" required></div>
+    <div><label>${t('f.mode')}</label><select name="mode">${opt(tm,'year')}${opt(tm,'half')}${opt(tm,'custom')}</select></div></div>
+    <label>${t('f.end')} ${tm.mode==='custom'?'':`<small>(${t('f.endAuto')})</small>`}</label>
+    <input type="datetime-local" name="end" value="${toLocal(tm.end)}" required${tm.mode==='custom'?'':' disabled'}>
+    <label>${t('f.done')}</label><input type="text" name="doneMessage" value="${esc(tm.doneMessage)}" placeholder="${esc(t('timer.defaultDone'))}" maxlength="200">
+    <p class="hint">${t('f.defaultHint')}</p>
+    <label>${t('f.accent')}</label><input type="color" name="accent" value="${tm.accent}">
+    <div class="row"><button>${t('btn.save')}</button>
+    <button type="button" class="alt" data-act="reset">${t('btn.reset')}</button>
+    ${tm.mode==='custom'?`<button type="button" class="alt" data-act="keep">${t('btn.keep')}</button>`:''}
+    <button type="button" class="danger" data-act="del">${t('btn.del')}</button></div></form></details>`).join('')||`<div class="box"><p class="empty">${t('admin.emptyTimers')}</p></div>`;
+  $('hist').innerHTML=S.history.map(h=>`<li><time>${new Date(h.at).toLocaleString(I18N.lang,{dateStyle:'short',timeStyle:'short'})}</time><span>${esc(h.act?t('hist.'+h.act,{name:h.name}):h.msg)}</span></li>`).join('')||`<li class="empty">${t('hist.empty')}</li>`;
 }
-const run=async(m,u,b,ok)=>{try{S=await api(m,u,b);render();say(ok)}catch(x){say(x.message,1)}};
+const run=async(m,u,b,ok)=>{try{S=await api(m,u,b);render();say(t(ok))}catch(x){say(x.message,1)}};
 async function init(){try{S=await api('GET','/api/admin/config');render();show(true)}catch{show(false)}}
 
 $('login').onsubmit=async e=>{e.preventDefault();try{await api('POST','/api/login',{password:$('pw').value});$('pw').value='';say('');init()}catch(x){say(x.message,1)}};
-$('addForm').onsubmit=async e=>{e.preventDefault();await run('POST','/api/admin/timers',{name:$('addName').value},'Person added');$('addName').value=''};
-$('settings').onsubmit=e=>{e.preventDefault();run('PUT','/api/admin/settings',{pageTitle:$('pageTitle').value,showSeconds:$('showSeconds').checked,showProgress:$('showProgress').checked,showStatuses:$('showStatuses').checked},'Page settings saved')};
+$('addForm').onsubmit=async e=>{e.preventDefault();const before=new Set(S.timers.map(x=>x.id));
+  await run('POST','/api/admin/timers',{name:$('addName').value},'msg.added');$('addName').value='';
+  const added=S.timers.find(x=>!before.has(x.id));if(added){open.add(added.id);render()}};
+$('settings').onsubmit=e=>{e.preventDefault();run('PUT','/api/admin/settings',{pageTitle:$('pageTitle').value,showSeconds:$('showSeconds').checked,showProgress:$('showProgress').checked,showStatuses:$('showStatuses').checked},'msg.settings')};
+$('list').addEventListener('toggle',e=>{const id=e.target.dataset.id;if(id)e.target.open?open.add(id):open.delete(id)},true);
 $('list').onchange=e=>{ // live preview of the computed end date; the server recalculates on save
   const n=e.target.name;if(n!=='mode'&&n!=='start')return;
   const f=e.target.form,m=f.elements.mode.value,end=f.elements.end,st=f.elements.start.value;
@@ -123,11 +198,14 @@ $('list').onchange=e=>{ // live preview of the computed end date; the server rec
 };
 $('list').onsubmit=e=>{e.preventDefault();const f=e.target,b=Object.fromEntries(new FormData(f));
   b.start=new Date(f.elements.start.value).toISOString();b.end=new Date(f.elements.end.value).toISOString();
-  run('PUT','/api/admin/timers/'+f.dataset.id,b,'Saved')};
-$('list').onclick=e=>{const a=e.target.dataset.act;if(!a)return;const f=e.target.closest('form'),id=f.dataset.id,n=f.querySelector('[name=name]').value;
-  if(a==='del'&&confirm(`Delete "${n}"?`))run('DELETE','/api/admin/timers/'+id,null,'Deleted');
-  if(a==='reset'&&confirm(`Set start for "${n}" to now?`))run('POST',`/api/admin/timers/${id}/reset`,{},'Start reset');
-  if(a==='keep'&&confirm(`Restart "${n}" from now with the same duration?`))run('POST',`/api/admin/timers/${id}/reset`,{keepDuration:true},'Restarted')};
-$('logout').onclick=async()=>{await api('POST','/api/logout');show(false);say('Logged out')};
+  run('PUT','/api/admin/timers/'+f.dataset.id,b,'msg.saved')};
+$('list').onclick=e=>{const a=e.target.dataset.act;if(!a)return;const f=e.target.closest('form'),id=f.dataset.id,name=f.querySelector('[name=name]').value;
+  if(a==='del'&&confirm(t('confirm.del',{name})))run('DELETE','/api/admin/timers/'+id,null,'msg.deleted');
+  if(a==='reset'&&confirm(t('confirm.reset',{name})))run('POST',`/api/admin/timers/${id}/reset`,{},'msg.reset');
+  if(a==='keep'&&confirm(t('confirm.keep',{name})))run('POST',`/api/admin/timers/${id}/reset`,{keepDuration:true},'msg.restarted')};
+$('logout').onclick=async()=>{await api('POST','/api/logout');S=null;show(false);say(t('msg.loggedOut'))};
+const title=()=>document.title=t('admin.title');
+document.addEventListener('langchange',()=>{title();render()});
+I18N.init();title();
 init();
-</script></main></body></html>
+</script></body></html>
