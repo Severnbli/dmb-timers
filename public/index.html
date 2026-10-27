@@ -65,8 +65,6 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 @keyframes pulse{50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.chip.is-soon::before{animation:none}}
 .count{display:flex;align-items:flex-end;gap:.25em 8px;margin:8px 0 0}
-.count.stack{flex-direction:column;align-items:flex-start}
-.count.stack .unit{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 .5em} /* digits take the full width, label and clock share one line below */
 .days{font:800 2.6rem/.85 var(--sans);letter-spacing:-.045em;color:var(--accent);font-variant-numeric:tabular-nums}
 .unit{display:flex;flex-direction:column;min-width:0;color:var(--mute);font-size:.78rem;font-weight:500;line-height:1.25}
 .clock{font:600 .82rem/1.2 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
@@ -75,7 +73,7 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .bar i{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 70%,var(--surface)),var(--accent))}
 .bar em{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--mute);opacity:.45;border-radius:2px}
 .meta{display:flex;justify-content:space-between;gap:8px;white-space:nowrap;margin-top:5px;color:var(--mute);font-size:.7rem;font-variant-numeric:tabular-nums}
-.status{position:relative;display:flex;align-items:center;margin:0;padding:5px 8px 5px 24px;border-radius:8px;background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:.78rem;line-height:1.35}
+.status{position:relative;margin:0;padding:5px 8px 5px 24px;border-radius:8px;background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:clamp(.6rem,7cqi,1.4rem);line-height:1.3} /* one size on every card, it takes as many lines as its text needs */
 .status::before{content:"\201C";position:absolute;left:7px;top:3px;font:700 1.2rem/1 Georgia,serif;color:var(--accent)}
 .done{margin:8px 0 0;font:800 1.25rem/1.1 var(--sans);letter-spacing:-.02em;color:var(--accent);overflow-wrap:anywhere}
 .meta span{overflow:hidden;text-overflow:ellipsis}
@@ -86,7 +84,6 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .one .days{font-size:clamp(3.6rem,16vw,6rem)}
 .one .unit{font-size:clamp(.85rem,2.4vw,1rem)}
 .one .clock{font-size:clamp(1rem,3.5vw,1.3rem)}
-.one .status{font-size:.9rem}
 .one .done{font-size:clamp(1.8rem,7vw,2.8rem)}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 .empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:12vh 0}
@@ -118,14 +115,13 @@ footer a:hover{color:var(--ink)}
  .bar{height:4px;margin-top:7px}
  .meta{font-size:.52rem;margin-top:4px;gap:4px}
  .dates{font-size:.56rem;margin-top:5px;padding-top:4px}
- .status{padding:4px 5px 4px 15px;font-size:.62rem;line-height:1.3}
+ .status{padding:4px 5px 4px 15px}
  .status::before{left:4px;top:2px;font-size:.85rem}
  .done{margin-top:6px;font-size:.9rem}
 }
 @container card (max-width:135px){ /* very narrow phones, about 150px cards */
  .meta,.sub,.dates{display:none}
  .days{font-size:1.6rem}
- .status{font-size:.58rem}
  .dates{font-size:.52rem}
 }
 </style></head><body>
@@ -198,59 +194,31 @@ function render(){
   fitCards();
 }
 const fitted=new Map(); // fitted sizes per set of cards + width + texts, so the 1 s re-render does not measure again
-const KS=[.75,2.6]; // status font range, relative to its CSS size
-function fitCards(){ // every status box gets one tall height and sits right above the dates, so all statuses line up; the digits share one size that fits what is left, and each status text fills its box
+function fitCards(){ // one digit size for every card, the largest with which every card still fits; names get one height so the digits line up
   if(fitted.size>50)fitted.clear();
   const cards=[...$.querySelectorAll('.card')].map(c=>{
-    const st=c.querySelector('.status'), cnt=c.querySelector('.count'), done=c.querySelector('.done');
+    const cnt=c.querySelector('.count'), done=c.querySelector('.done'), fill=c.querySelector('.fill');
     const grow=cnt?[cnt.querySelector('.days'),cnt.querySelector('.unit'),cnt.querySelector('.clock')]:done?[done]:[];
-    const px=e=>parseFloat(getComputedStyle(e).fontSize);
-    const sBase=st&&px(st), gBase=grow.map(px);
-    const CAP=[9,1.2,1.6]; // days grow freely, the unit label and clock only a little, so the space goes to the digits
-    const fill=c.querySelector('.fill'); // the flexible gap: content fits while it keeps 1px more than its 6px minimum
-    const gap=()=>fill.getBoundingClientRect().height;
-    return {c,st,cnt,gap,
-      key:[c.dataset.id,c.getBoundingClientRect().width.toFixed(1),I18N.lang,st?.textContent,...grow.map(e=>e.textContent.length)].join('|'),
-      setS:k=>{if(st)st.style.fontSize=sBase*k+'px'},
-      setH:h=>{if(st)st.style.height=h?h+'px':''},
-      setG:(g,stack)=>{grow.forEach((e,i)=>e.style.fontSize=gBase[i]*Math.min(g,cnt?CAP[i]:9)+'px');cnt?.classList.toggle('stack',stack)},
-      fits:()=>gap()>=7&&(!cnt||cnt.scrollWidth<=cnt.clientWidth),
-      inBox:()=>st.scrollHeight<=st.clientHeight+.5};
+    const gBase=grow.map(e=>parseFloat(getComputedStyle(e).fontSize));
+    const CAP=[9,1.2,1.6]; // the days grow freely, the unit label and clock only a little
+    return {head:c.querySelector('.head'),
+      key:[c.dataset.id,c.getBoundingClientRect().width.toFixed(1),I18N.lang,c.querySelector('.status')?.textContent,...grow.map(e=>e.textContent.length)].join('|'),
+      setG:g=>grow.forEach((e,i)=>e.style.fontSize=gBase[i]*Math.min(g,cnt?CAP[i]:9)+'px'),
+      ok:()=>fill.getBoundingClientRect().height>=6&&c.scrollHeight<=c.clientHeight+.5&&(!cnt||cnt.scrollWidth<=cnt.clientWidth)};
   });
   const key=cards.map(x=>x.key).join('#');
-  let plan=fitted.get(key);
-  if(!plan){
-    const max=(set,ok,lo,hi)=>{ // largest value in [lo, hi] that still passes ok(), or lo when nothing does
-      set(lo);if(!ok())return lo;
-      for(let i=0;i<9;i++){const m=(lo+hi)/2;set(m);ok()?lo=m:hi=m}
-      return lo*.98; // small margin against sub-pixel rounding
-    };
-    const cnts=cards.filter(x=>x.cnt);
-    const room=x=>x.gap()-7+x.st.getBoundingClientRect().height; // status height plus the spare gap
-    cards.forEach(x=>{x.setS(KS[0]);x.setH(0)});
-    let G=6,H=Infinity; // the tightest card, with its status at the smallest size, sets the digit size for all
-    for(const x of cnts)G=Math.min(G,Math.max(...[false,true].map(stack=>max(g=>x.setG(g,stack),x.fits,.3,6))));
-    for(const x of cards)if(x.st){ // the status box is 2.5 times what that leaves, as far as smaller digits can make room
-      x.setG(x.cnt?G:1,false);if(x.cnt&&!x.fits())x.setG(G,true);const r=x.fits()?room(x)*2.5:Infinity;
-      x.setG(Math.max(.35,(x.cnt?G:1)*.55),false);H=Math.min(H,r,room(x)); // but the digits keep at least about half their size
-    }
-    H=isFinite(H)?Math.floor(H):0;
-    cards.forEach(x=>x.setH(H));
-    G=6; // the digits shrink to whatever the taller box leaves, again one size for all
-    for(const x of cnts)G=Math.min(G,Math.max(...[false,true].map(stack=>max(g=>x.setG(g,stack),x.fits,.3,6))));
-    plan=cards.map(x=>{
-      let stack=false;
-      if(x.cnt){x.setG(G,false);if(!x.fits())stack=true}
-      const f={g:x.cnt?G:1,stack,h:x.st?H:0,k:1};
-      x.setG(f.g,stack);
-      if(x.st&&f.h)f.k=max(x.setS,x.inBox,KS[0],KS[1]);
-      x.setS(f.k);
-      if(!x.cnt)f.g=max(g=>x.setG(g,false),x.fits,.3,6); // "welcome home": the message grows into what is left
-      return f;
-    });
-    fitted.set(key,plan);
+  let f=fitted.get(key);
+  if(!f){
+    cards.forEach(x=>x.head.style.minHeight='');
+    const hh=Math.max(0,...cards.map(x=>x.head.getBoundingClientRect().height));
+    cards.forEach(x=>x.head.style.minHeight=hh+'px');
+    const all=g=>cards.forEach(x=>x.setG(g)), ok=()=>cards.every(x=>x.ok());
+    let lo=.5,hi=6;all(lo);
+    if(ok())for(let i=0;i<9;i++){const m=(lo+hi)/2;all(m);ok()?lo=m:hi=m}
+    f={hh,g:lo*.98}; // small margin against sub-pixel rounding
+    fitted.set(key,f);
   }
-  cards.forEach((x,i)=>{const f=plan[i];x.setS(f.k);x.setH(f.h);x.setG(f.g,f.stack)});
+  cards.forEach(x=>{x.head.style.minHeight=f.hh+'px';x.setG(f.g)});
 }
 addEventListener('resize',render);
 (()=>{ // while a card is hovered, accent-colored particles drift outward from its edges
