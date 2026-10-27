@@ -53,7 +53,6 @@ main.one{max-width:420px;grid-template-columns:1fr;padding-top:3vh}
  aspect-ratio:1;display:flex;flex-direction:column;container:card/inline-size} /* square at every width; top block and status/dates are pushed apart */
 .card>*{flex:none}
 .fill{flex:1 0 6px}
-.card.spread{justify-content:space-between}.card.spread .fill{flex-grow:0} /* leftover space goes between the blocks, not into one gap */
 .card::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--accent)}
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .head>div{min-width:0}
@@ -199,8 +198,8 @@ function render(){
   fitCards();
 }
 const fitted=new Map(); // fitted sizes per set of cards + width + texts, so the 1 s re-render does not measure again
-const KS=[.75,1.8]; // status font range, relative to its CSS size
-function fitCards(){ // every countdown gets one digit size and every status box one height, the largest the tightest card allows; the status text then grows or shrinks inside its box
+const KS=[.75,2.6]; // status font range, relative to its CSS size
+function fitCards(){ // every status box gets one tall height and sits right above the dates, so all statuses line up; the digits share one size that fits what is left, and each status text fills its box
   if(fitted.size>50)fitted.clear();
   const cards=[...$.querySelectorAll('.card')].map(c=>{
     const st=c.querySelector('.status'), cnt=c.querySelector('.count'), done=c.querySelector('.done');
@@ -227,32 +226,31 @@ function fitCards(){ // every countdown gets one digit size and every status box
       return lo*.98; // small margin against sub-pixel rounding
     };
     const cnts=cards.filter(x=>x.cnt);
+    const room=x=>x.gap()-7+x.st.getBoundingClientRect().height; // status height plus the spare gap
     cards.forEach(x=>{x.setS(KS[0]);x.setH(0)});
     let G=6,H=Infinity; // the tightest card, with its status at the smallest size, sets the digit size for all
     for(const x of cnts)G=Math.min(G,Math.max(...[false,true].map(stack=>max(g=>x.setG(g,stack),x.fits,.3,6))));
-    const lay=new Map(); // per countdown card the layout that leaves the most room for the status
-    for(const x of cards){
-      let room=-1;
-      for(const stack of x.cnt?[false,true]:[false]){
-        x.setG(x.cnt?G:1,stack);
-        const r=x.gap()-7+(x.st?x.st.getBoundingClientRect().height:0);
-        if(x.fits()&&r>room){room=r;lay.set(x,stack)}
-      }
-      if(x.st&&room>0)H=Math.min(H,room);
+    for(const x of cards)if(x.st){ // the status box is 2.5 times what that leaves, as far as smaller digits can make room
+      x.setG(x.cnt?G:1,false);if(x.cnt&&!x.fits())x.setG(G,true);const r=x.fits()?room(x)*2.5:Infinity;
+      x.setG(Math.max(.35,(x.cnt?G:1)*.55),false);H=Math.min(H,r,room(x)); // but the digits keep at least about half their size
     }
-    H=Math.floor(H);
+    H=isFinite(H)?Math.floor(H):0;
+    cards.forEach(x=>x.setH(H));
+    G=6; // the digits shrink to whatever the taller box leaves, again one size for all
+    for(const x of cnts)G=Math.min(G,Math.max(...[false,true].map(stack=>max(g=>x.setG(g,stack),x.fits,.3,6))));
     plan=cards.map(x=>{
-      const stack=lay.get(x)||false, f={g:x.cnt?G:1,stack,h:x.st&&isFinite(H)?H:0,k:1};
-      x.setG(f.g,stack);x.setH(f.h);
+      let stack=false;
+      if(x.cnt){x.setG(G,false);if(!x.fits())stack=true}
+      const f={g:x.cnt?G:1,stack,h:x.st?H:0,k:1};
+      x.setG(f.g,stack);
       if(x.st&&f.h)f.k=max(x.setS,x.inBox,KS[0],KS[1]);
       x.setS(f.k);
-      if(!x.cnt)f.g=max(g=>x.setG(g,false),x.fits,.5,6); // "welcome home": the message grows into what is left
-      x.setG(f.g,stack);f.spread=x.gap()>16;
+      if(!x.cnt)f.g=max(g=>x.setG(g,false),x.fits,.3,6); // "welcome home": the message grows into what is left
       return f;
     });
     fitted.set(key,plan);
   }
-  cards.forEach((x,i)=>{const f=plan[i];x.setS(f.k);x.setH(f.h);x.setG(f.g,f.stack);x.c.classList.toggle('spread',f.spread)});
+  cards.forEach((x,i)=>{const f=plan[i];x.setS(f.k);x.setH(f.h);x.setG(f.g,f.stack)});
 }
 addEventListener('resize',render);
 (()=>{ // while a card is hovered, accent-colored particles drift outward from its edges
