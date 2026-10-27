@@ -2,16 +2,14 @@
 
 A small self-hosted website for posting demob (demobilization) timers: countdowns to the end of military service for one or many people on a single page.
 
-![Timers page in the light theme](docs/screenshots/timers-light.png)
-
 <table>
   <tr>
-    <td width="60%"><img src="docs/screenshots/timers-dark.png" alt="Timers page in Russian, dark theme"></td>
-    <td width="40%"><img src="docs/screenshots/admin.png" alt="Admin panel"></td>
-  </tr>
-  <tr>
-    <td align="center">Dark theme, Russian</td>
-    <td align="center">Admin panel</td>
+    <td width="50%">
+      <img src="docs/screenshots/timers-light.png" alt="Timers page in Russian, light theme" width="100%">
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/timers-dark.png" alt="Timers page in Russian, dark theme" width="100%">
+    </td>
   </tr>
 </table>
 
