@@ -26,10 +26,15 @@
 // Statuses are picked only inside their window, so nobody sits at the train station two days early.
 window.STATUSES = [
 // ---- before the call-up ----
+['soon', {u: [180]}, 'Studying on a deferment. The enlistment office waits patiently', 'Учится на отсрочке. Военкомат терпеливо ждёт', 'Вучыцца на адтэрміноўцы. Ваенкамат цярпліва чакае'],
+['soon', {u: [180]}, 'The call-up is far away: time for the sea and the dacha', 'До призыва далеко: успеет и на море, и на дачу', 'Да прызыву далёка: паспее і на мора, і на дачу'],
+['soon', {u: [90]}, 'Says "I\'ll serve someday" and changes the subject', 'Говорит «когда-нибудь отслужу» и меняет тему', 'Кажа «калі-небудзь адслужу» і мяняе тэму'],
+['soon', {u: [30, 365]}, 'Found the registration certificate (pripisnoe) from school days. Turned out useful', 'Нашёл приписное, выданное ещё в школе. Пригодилось', 'Знайшоў прыпіснае, выдадзенае яшчэ ў школе. Спатрэбілася'],
+['soon', {u: [1, 60]}, 'Asking everyone who served: "What is it like in Pechi?"', 'Расспрашивает всех отслуживших: «А как там в Печах?»', 'Распытвае ўсіх, хто адслужыў: «А як там у Печах?»'],
 ['soon', {u: [60]}, 'Still a civilian. Enjoying every lie-in', 'Пока гражданский. Наслаждается каждым поздним подъёмом', 'Пакуль цывільны. Атрымлівае асалоду ад кожнага позняга пад\'ёму'],
-['soon', {u: [21]}, 'Passing the medical board, hoping the eye chart is merciful', 'Проходит медкомиссию, надеется на снисхождение окулиста', 'Праходзіць медкамісію, спадзяецца на літасць акуліста'],
+['soon', {u: [14, 180]}, 'Passing the medical board, hoping the eye chart is merciful', 'Проходит медкомиссию, надеется на снисхождение окулиста', 'Праходзіць медкамісію, спадзяецца на літасць акуліста'],
 ['soon', {u: [14]}, 'Googling what portyanki (footwraps) are', 'Гуглит, что такое портянки', 'Гугліць, што такое анучы'],
-['soon', {u: [7]}, 'Last cheat days: eating everything, perlovka is ahead', 'Последние читмилы: ест всё подряд, впереди перловка', 'Апошнія чытмілы: есць усё запар, наперадзе пярлоўка'],
+['soon', {u: [1, 10]}, 'Last cheat days: eating everything, perlovka is ahead', 'Последние читмилы: ест всё подряд, впереди перловка', 'Апошнія чытмілы: есць усё запар, наперадзе пярлоўка'],
 ['soon', {u: [10]}, 'Doing push-ups every evening. Well, most evenings', 'Каждый вечер отжимается. Ну, почти каждый', 'Кожны вечар адціскаецца. Ну, амаль кожны'],
 ['soon', {u: [1]}, 'Explaining to everyone that it will definitely be fine', 'Объясняет всем, что всё точно будет нормально', 'Тлумачыць усім, што ўсё дакладна будзе нармальна'],
 ['soon', {u: [1, 30]}, 'Studying the draft notice (povestka) like an ancient scroll', 'Изучает повестку, как древний свиток', 'Вывучае позву, як старажытны скрутак'],
@@ -71,7 +76,23 @@ window.STATUSES = [
 ['serve', {d: [3, 120]}, 'Running cross-country at dawn, sincerely wondering why', 'Бежит кросс на рассвете и искренне не понимает зачем', 'Бяжыць крос на світанку і шчыра не разумее навошта'],
 ['serve', {d: [14, 90]}, 'First time at the shooting range. Ears still ringing', 'Первый раз на стрельбище. В ушах до сих пор звенит', 'Першы раз на стрэльбішчы. У вушах дагэтуль звініць'],
 
+['serve', {d: [0, 90]}, 'Hearing legends about the Pechi training centre, hoping they are exaggerated', 'Слушает легенды про учебку в Печах и надеется, что они преувеличены', 'Слухае легенды пра вучэбку ў Печах і спадзяецца, што яны перабольшаныя'],
+['serve', {d: [5, 30]}, 'Learning the anthem "My, Belarusy" by heart, every verse', 'Учит наизусть гимн «Мы, беларусы», все куплеты', 'Вучыць на памяць гімн «Мы, беларусы», усе куплеты'],
+['serve', {d: [25, 40], w: 2}, 'Took the oath at a war memorial. Mom filmed every second', 'Принял присягу у мемориала. Мама сняла каждую секунду', 'Прыняў прысягу ля мемарыяла. Мама зняла кожную секунду'],
+
 // ---- everyday service ----
+['serve', {d: [7]}, 'Draniki in the canteen today! A holiday for the whole company', 'В столовой драники! Праздник для всей роты', 'У сталовай дранікі! Свята для ўсёй роты'],
+['serve', {d: [7]}, 'Potatoes for lunch, potatoes for dinner. Belarus, after all', 'Бульба на обед, бульба на ужин. Беларусь всё-таки', 'Бульба на абед, бульба на вячэру. Беларусь усё ж такі'],
+['serve', {d: [21]}, 'Writing to mom: "All good, they feed us potatoes"', 'Пишет маме: «Всё хорошо, кормят бульбой»', 'Піша маме: «Усё добра, кормяць бульбай»'],
+['serve', {d: [30]}, 'Got the monthly allowance: enough for condensed milk and cookies', 'Пришло денежное довольствие: хватило на сгущёнку и печенье', 'Прыйшло грашовае забеспячэнне: хапіла на згушчонку і пячэнне'],
+['serve', {d: [14]}, 'Excursion to the Brest Fortress: stood in silence for a long time', 'Экскурсия в Брестскую крепость: долго стоял молча', 'Экскурсія ў Брэсцкую крэпасць: доўга стаяў моўчкі'],
+['serve', {d: [7], h: [21, 22], w: 2}, 'Evening roll call: shouting "Here!" louder than anyone', 'Вечерняя поверка: кричит «Я!» громче всех', 'Вячэрняя праверка: крычыць «Я!» гучней за ўсіх'],
+['serve', {d: [3], l: [3], m: [12, 1, 2]}, 'Belarusian winter: no frost, no snow, just slush on the parade ground', 'Белорусская зима: ни мороза, ни снега, только слякоть на плацу', 'Беларуская зіма: ні марозу, ні снегу, толькі слата на плацы'],
+['serve', {d: [30], l: [7], m: [6, 7, 8]}, 'Field exercise in Polesie: feeding the local mosquitoes', 'Полевой выход на Полесье: кормит местных комаров', 'Палявы выхад на Палессе: корміць мясцовых камароў'],
+['serve', {d: [14], m: [4, 5, 6, 7, 8]}, 'Watching a stork over the barracks and thinking of home', 'Смотрит на аиста над казармой и думает о доме', 'Глядзіць на бусла над казармай і думае пра дом'],
+['serve', {d: [30], md: [610, 703]}, 'Parade rehearsal for July 3rd: marching down Pieramozhcau Avenue at night', 'Репетиция парада к 3 июля: ночью марширует по проспекту Победителей', 'Рэпетыцыя парада да 3 ліпеня: ноччу маршыруе па праспекце Пераможцаў'],
+['serve done', {md: [703, 704], w: 6}, 'July 3rd, Independence Day: parade, fireworks and squared shoulders', '3 июля, День Независимости: парад, салют и гордо расправленные плечи', '3 ліпеня, Дзень Незалежнасці: парад, салют і ганарліва распраўленыя плечы'],
+['serve done', {md: [509, 510], w: 6}, 'May 9th: laying flowers at the eternal flame', '9 Мая: возлагает цветы к Вечному огню', '9 Мая: ускладае кветкі да Вечнага агню'],
 ['serve', {d: [5], l: [1]}, 'Cleaning the rifle. It was already clean', 'Чистит автомат. Он и так был чистый', 'Чысціць аўтамат. Ён і так быў чысты'],
 ['serve', {d: [14], l: [7]}, 'Peeling potatoes on kitchen duty (naryad)', 'Чистит картошку в наряде по столовой', 'Чысціць бульбу ў нарадзе па сталовай'],
 ['serve', {d: [14], l: [7]}, 'Polishing the floor with a toothbrush, purely for education', 'Натирает пол зубной щёткой, исключительно в воспитательных целях', 'Націрае падлогу зубной шчоткай, выключна ў выхаваўчых мэтах'],
@@ -110,6 +131,9 @@ window.STATUSES = [
 ['serve', {p: [48, 53], d: [30], w: 8}, 'Halfway there. The "pereval" (mountain pass) is behind', 'Половина позади. Перевал пройден', 'Палова ззаду. Перавал пройдзены'],
 ['serve', {p: [50, 62], d: [30]}, 'Downhill from here: every day is shorter than the last', 'Дальше под горку: каждый день короче предыдущего', 'Далей з горкі: кожны дзень карацейшы за папярэдні'],
 
+['serve', {d: [120], l: [30]}, 'Exercises at the Borisov range: sand everywhere, even in the tea', 'Учения на Борисовском полигоне: песок везде, даже в чае', 'Вучэнні на Барысаўскім палігоне: пясок усюды, нават у гарбаце'],
+['serve', {d: [150], l: [30]}, 'Home on leave: it flew by like a single day', 'В отпуске дома: пролетел как один день', 'У адпачынку дома: праляцеў як адзін дзень'],
+
 // ---- getting ready to go home ----
 ['serve', {l: [97, 103], d: [100], w: 8}, '100 days to the order: shaved head again, by tradition', 'Сто дней до приказа: снова побрился наголо, по традиции', 'Сто дзён да загаду: зноў пагаліўся налыса, па традыцыі'],
 ['serve', {l: [1, 90], d: [60]}, 'Already dreaming about jeans and freedom', 'Уже мечтает о джинсах и свободе', 'Ужо марыць пра джынсы і свабоду'],
@@ -129,6 +153,8 @@ window.STATUSES = [
 ['serve', {l: [0, 0.5], w: 4}, 'Looking at the checkpoint gate like at a finish line', 'Смотрит на КПП, как на финишную черту', 'Глядзіць на КПП, як на фінішную рысу'],
 
 // ---- after demobilization ----
+['done', {a: [0.5, 14]}, 'Registering at the enlistment office again, this time as a reservist', 'Встаёт на учёт в военкомате, теперь как запасник', 'Становіцца на ўлік у ваенкамаце, цяпер як запаснік'],
+['done', {a: [1, 60]}, 'Grandma: "So thin!" Serving draniki with machanka', 'Бабушка: «Как исхудал!» Кормит драниками с мачанкой', 'Бабуля: «Як схуднеў!» Корміць дранікамі з мачанкай'],
 ['done', {a: [0, 0.5], w: 4}, 'At the train station in full dress, aiguillettes shining', 'На вокзале при параде, аксельбанты сияют', 'На вакзале ў парадным, аксельбанты зіхацяць'],
 ['done', {a: [0, 1], w: 3}, 'On the train home, staring out of the window and grinning', 'Едет домой в поезде, смотрит в окно и улыбается', 'Едзе дадому ў цягніку, глядзіць у акно і ўсміхаецца'],
 ['done', {a: [0.2, 2], w: 3}, 'Dembel! Hugging mom at the door', 'Дембель! Обнимает маму на пороге', 'Дэмбель! Абдымае маму на парозе'],

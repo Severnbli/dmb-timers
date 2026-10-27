@@ -62,6 +62,7 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
  color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);white-space:nowrap}
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .chip.is-soon::before{animation:pulse 1.6s ease-in-out infinite}
+.chip.is-wait{color:var(--mute);background:color-mix(in srgb,var(--mute) 14%,transparent)}
 @keyframes pulse{50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.chip.is-soon::before{animation:none}}
 .count{display:flex;align-items:flex-end;gap:.25em 8px;margin:8px 0 0}
