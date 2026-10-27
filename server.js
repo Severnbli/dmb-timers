@@ -96,7 +96,14 @@ const body = req => new Promise(r => { let d = ''; req.on('data', c => { d += c;
 const err = (res, status, code) => json(res, status, { code, error: ERRORS[code] });
 const FILES = { '/': 'index.html', '/admin': 'admin.html', '/privacy': 'privacy.html', '/i18n.js': 'i18n.js', '/statuses.js': 'statuses.js' };
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
-const page = (res, f) => { res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)], 'Cache-Control': 'no-cache' }); res.end(fs.readFileSync(path.join(__dirname, 'public', f))); };
+const read = f => fs.readFileSync(path.join(__dirname, 'public', f), 'utf8');
+// Scripts are linked as /i18n.js?v=<hash of their contents>, so a browser holding an old copy fetches the new one after an update
+const VERSION = crypto.createHash('sha1').update(read('i18n.js') + read('statuses.js')).digest('hex').slice(0, 10);
+const page = (res, f) => {
+  let out = read(f);
+  if (f.endsWith('.html')) out = out.replace(/src="\/(i18n|statuses)\.js"/g, `src="/$1.js?v=${VERSION}"`);
+  res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)], 'Cache-Control': 'no-cache' }); res.end(out);
+};
 
 function parseTimer(b, base) {
   const o = { id: base.id };
