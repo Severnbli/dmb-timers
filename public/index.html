@@ -24,10 +24,10 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b23a1e'/%3E%3Cpath d='M16 7l2.6 5.6 6.1.6-4.6 4.1 1.3 6L16 20.2 10.6 23.3l1.3-6-4.6-4.1 6.1-.6z' fill='%23fff'/%3E%3C/svg%3E">
 <title>Demobilization timers</title>
 <style>
-:root{--bg:#ebe8dc;--surface:#f8f6ef;--ink:#22271c;--mute:#6a6e5b;--soon:#a8700c;--line:#d7d3c3;--track:#e3dfd0;--shadow:0 1px 2px rgb(40 45 30/.06),0 8px 24px -12px rgb(40 45 30/.25);
+:root{--bg:#ebe8dc;--surface:#f8f6ef;--ink:#22271c;--mute:#6a6e5b;--soon:#3d7a2a;--line:#d7d3c3;--track:#e3dfd0;--shadow:0 1px 2px rgb(40 45 30/.06),0 8px 24px -12px rgb(40 45 30/.25);
  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--soon:#e2a947;--line:#30352a;--track:#2a2f23;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}}
-:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--soon:#e2a947;--line:#30352a;--track:#2a2f23;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--soon:#7fc463;--line:#30352a;--track:#2a2f23;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}}
+:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--soon:#7fc463;--line:#30352a;--track:#2a2f23;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}
 *{box-sizing:border-box}
 .theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer}
 .theme:hover{border-color:var(--mute)}
@@ -62,7 +62,6 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
  color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);white-space:nowrap}
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .chip.is-soon::before{animation:pulse 1.6s ease-in-out infinite}
-.chip.is-soon{color:var(--soon);background:color-mix(in srgb,var(--soon) 14%,transparent)}
 @keyframes pulse{50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.chip.is-soon::before{animation:none}}
 .count{display:flex;align-items:flex-end;gap:.25em 8px;margin:8px 0 0}
@@ -187,7 +186,7 @@ function card(tm,p,now){
     main=`<p class="done">${esc(tm.doneMessage||t('timer.defaultDone'))}</p><p class="sub">${d} ${tp('unit.home',d)}</p>`;
   }
   const st=p.showStatuses===false?'':statusFor(phase,tm,now,ctx);
-  return `<article class="card" data-id="${tm.id}" style="--accent:${chip==='wait'?'var(--mute)':tm.accent}">${head}${main}<div class="fill"></div>${st?`<p class="status">${esc(st)}</p>`:''}
+  return `<article class="card" data-id="${tm.id}" style="--accent:${chip==='wait'?'var(--mute)':chip==='soon'?'var(--soon)':tm.accent}">${head}${main}<div class="fill"></div>${st?`<p class="status">${esc(st)}</p>`:''}
     <div class="dates">${fmt(s)} → ${fmt(e)}</div></article>`;
 }
 function render(){
