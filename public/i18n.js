@@ -22,7 +22,7 @@ const NAMES = { 'en-US': 'English', 'ru-RU': 'Русский', 'be-BY': 'Бел�
 const DICT = {
 'en-US': {
   'lang.label': 'Language', 'theme.dark': 'Switch to dark theme', 'theme.light': 'Switch to light theme',
-  'footer.privacy': 'Privacy', 'footer.admin': 'Admin', 'footer.source': 'Source code',
+  'footer.privacy': 'Privacy', 'nav.admin': 'Admin', 'nav.timers': 'Back to timers', 'footer.source': 'Source code',
   'notice.text': 'No tracking, ads or analytics here. Only your language and theme choices are saved, in your own browser.',
   'notice.more': 'Details', 'notice.ok': 'Got it',
   'page.defaultTitle': 'Demobilization timers',
@@ -63,7 +63,7 @@ const DICT = {
 },
 'ru-RU': {
   'lang.label': 'Язык', 'theme.dark': 'Включить тёмную тему', 'theme.light': 'Включить светлую тему',
-  'footer.privacy': 'Конфиденциальность', 'footer.admin': 'Админка', 'footer.source': 'Исходный код',
+  'footer.privacy': 'Конфиденциальность', 'nav.admin': 'Админка', 'nav.timers': 'К таймерам', 'footer.source': 'Исходный код',
   'notice.text': 'Здесь нет слежки, рекламы и аналитики. Сохраняются только выбранные язык и тема – в вашем браузере.',
   'notice.more': 'Подробнее', 'notice.ok': 'Понятно',
   'page.defaultTitle': 'Дембельские таймеры',
@@ -105,7 +105,7 @@ const DICT = {
 },
 'be-BY': {
   'lang.label': 'Мова', 'theme.dark': 'Уключыць цёмную тэму', 'theme.light': 'Уключыць светлую тэму',
-  'footer.privacy': 'Канфідэнцыйнасць', 'footer.admin': 'Адмінка', 'footer.source': 'Зыходны код',
+  'footer.privacy': 'Канфідэнцыйнасць', 'nav.admin': 'Адмінка', 'nav.timers': 'Да таймераў', 'footer.source': 'Зыходны код',
   'notice.text': 'Тут няма сачэння, рэкламы і аналітыкі. Захоўваюцца толькі абраныя мова і тэма – у вашым браўзеры.',
   'notice.more': 'Падрабязней', 'notice.ok': 'Зразумела',
   'page.defaultTitle': 'Дэмбельскія таймеры',
@@ -172,7 +172,7 @@ function apply(root = document) {
   document.documentElement.lang = lang.slice(0, 2);
   root.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   root.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
-  root.querySelectorAll('[data-i18n-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nLabel)); });
+  root.querySelectorAll('[data-i18n-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nLabel)); if (el.matches('a')) el.title = t(el.dataset.i18nLabel); });
   document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
 }
 function setLang(l) {
