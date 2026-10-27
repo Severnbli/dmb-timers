@@ -2,6 +2,19 @@
 
 A small self-hosted website for posting demob (demobilization) timers: countdowns to the end of military service for one or many people on a single page.
 
+![Timers page in the light theme](docs/screenshots/timers-light.png)
+
+<table>
+  <tr>
+    <td width="60%"><img src="docs/screenshots/timers-dark.png" alt="Timers page in Russian, dark theme"></td>
+    <td width="40%"><img src="docs/screenshots/admin.png" alt="Admin panel"></td>
+  </tr>
+  <tr>
+    <td align="center">Dark theme, Russian</td>
+    <td align="center">Admin panel</td>
+  </tr>
+</table>
+
 - Days, hours, minutes and seconds until the end of service, a progress bar, and the current day of service
 - A "starts soon" countdown before the call-up
 - Funny statuses that follow the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Each status has its own time window (days served or days left, season, time of day), so nobody is waiting at the train station two days early
