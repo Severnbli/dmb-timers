@@ -194,14 +194,14 @@ function render(){
   fitCards();
 }
 const fitted=new Map(); // fitted sizes per set of cards + width + texts, so the 1 s re-render does not measure again
-function fitCards(){ // one digit size for every card, the largest with which every card still fits; names get one height so the digits line up
+function fitCards(){ // one digit size for every countdown, the largest with which every card still fits; names get one height so the digits line up
   if(fitted.size>50)fitted.clear();
   const cards=[...$.querySelectorAll('.card')].map(c=>{
     const cnt=c.querySelector('.count'), done=c.querySelector('.done'), fill=c.querySelector('.fill');
     const grow=cnt?[cnt.querySelector('.days'),cnt.querySelector('.unit'),cnt.querySelector('.clock')]:done?[done]:[];
     const gBase=grow.map(e=>parseFloat(getComputedStyle(e).fontSize));
     const CAP=[9,1.2,1.6]; // the days grow freely, the unit label and clock only a little
-    return {head:c.querySelector('.head'),
+    return {head:c.querySelector('.head'),cnt,
       key:[c.dataset.id,c.getBoundingClientRect().width.toFixed(1),I18N.lang,c.querySelector('.status')?.textContent,...grow.map(e=>e.textContent.length)].join('|'),
       setG:g=>grow.forEach((e,i)=>e.style.fontSize=gBase[i]*Math.min(g,cnt?CAP[i]:9)+'px'),
       ok:()=>fill.getBoundingClientRect().height>=6&&c.scrollHeight<=c.clientHeight+.5&&(!cnt||cnt.scrollWidth<=cnt.clientWidth)};
@@ -212,15 +212,20 @@ function fitCards(){ // one digit size for every card, the largest with which ev
     cards.forEach(x=>x.head.style.minHeight='');
     const hh=Math.max(0,...cards.map(x=>x.head.getBoundingClientRect().height));
     cards.forEach(x=>x.head.style.minHeight=hh+'px');
-    const all=g=>cards.forEach(x=>x.setG(g)), ok=()=>cards.every(x=>x.ok());
-    let lo=.5,hi=6;all(lo);
-    if(ok())for(let i=0;i<9;i++){const m=(lo+hi)/2;all(m);ok()?lo=m:hi=m}
-    f={hh,g:lo*.98}; // small margin against sub-pixel rounding
+    const fit=xs=>{ // largest size with which all these cards fit
+      const all=g=>xs.forEach(x=>x.setG(g)), ok=()=>xs.every(x=>x.ok());
+      let lo=.5,hi=6;all(lo);
+      if(ok())for(let i=0;i<9;i++){const m=(lo+hi)/2;all(m);ok()?lo=m:hi=m}
+      return lo*.98; // small margin against sub-pixel rounding
+    };
+    // the "welcome home" text has its own size, so a long message does not shrink everyone's digits
+    f={hh,g:fit(cards.filter(x=>x.cnt)),gd:fit(cards.filter(x=>!x.cnt))};
     fitted.set(key,f);
   }
-  cards.forEach(x=>{x.head.style.minHeight=f.hh+'px';x.setG(f.g)});
+  cards.forEach(x=>{x.head.style.minHeight=f.hh+'px';x.setG(x.cnt?f.g:f.gd)});
 }
-addEventListener('resize',render);
+let resizing=0; // phones fire resize mid-rotation, so fit again once the layout has settled
+addEventListener('resize',()=>{render();clearTimeout(resizing);resizing=setTimeout(()=>{fitted.clear();render()},250)});
 (()=>{ // while a card is hovered, accent-colored particles drift outward from its edges
   if(!matchMedia('(hover:hover) and (pointer:fine)').matches||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   const cv=document.createElement('canvas'),ctx=cv.getContext('2d');cv.className='fx';document.body.append(cv);
