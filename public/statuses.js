@@ -26,6 +26,25 @@
 // Statuses are picked only inside their window, so nobody sits at the train station two days early.
 window.STATUSES = [
 // ---- before the call-up ----
+// civilians: the call-up is still months or years away
+['soon', {u: [365], w: 2}, 'More than a year to go. Living like it is forever', 'Больше года до призыва. Живёт так, будто это навсегда', 'Больш за год да прызыву. Жыве так, быццам гэта назаўсёды'],
+['soon', {u: [365]}, 'The army is so far away it feels like a rumour', 'Армия так далеко, что кажется слухом', 'Войска так далёка, што здаецца чуткай'],
+['soon', {u: [180]}, 'Passing exams to push the call-up a bit further', 'Сдаёт сессию, чтобы отодвинуть призыв подальше', 'Здае сесію, каб адсунуць прызыў далей'],
+['soon', {u: [180]}, 'Mom is already saving recipes for future parcels', 'Мама уже сохраняет рецепты для будущих посылок', 'Мама ўжо захоўвае рэцэпты для будучых пасылак'],
+['soon', {u: [60]}, 'Sleeping until noon while it is still legal', 'Спит до обеда, пока это ещё законно', 'Спіць да абеду, пакуль гэта яшчэ законна'],
+['soon', {u: [60]}, 'Growing the hair out while nobody minds', 'Отращивает волосы, пока никто не против', 'Адрошчвае валасы, пакуль ніхто не супраць'],
+['soon', {u: [60]}, 'Leaving the bed unmade on purpose', 'Специально не заправляет кровать', 'Спецыяльна не засцілае ложак'],
+['soon', {u: [60]}, 'Crossing the street to avoid walking past the enlistment office', 'Обходит военкомат по другой стороне улицы', 'Абыходзіць ваенкамат па іншым баку вуліцы'],
+['soon', {u: [60]}, 'Says "when I join the army..." purely for the drama', 'Говорит «вот уйду в армию...» исключительно для драмы', 'Кажа «вось пайду ў войска...» выключна дзеля драмы'],
+['soon', {u: [60]}, 'Eating draniki at grandma\'s, stocking up for later', 'Ест драники у бабушки – запасается впрок', 'Есць дранікі ў бабулі – запасаецца на потым'],
+['soon', {u: [90]}, 'Gaming until 3 a.m. Calls it training for night duty', 'Играет в приставку до трёх ночи. Называет это подготовкой к нарядам', 'Гуляе ў прыстаўку да трох ночы. Называе гэта падрыхтоўкай да нарадаў'],
+['soon', {u: [60], h: [7, 11], w: 2}, 'Hitting snooze for the fifth time. No sergeant in sight', 'Пятый раз откладывает будильник. Сержанта поблизости нет', 'Пяты раз адкладвае будзільнік. Сяржанта паблізу няма'],
+['soon', {u: [60], h: [21, 3]}, 'Ordering shawarma at midnight, just because', 'Заказывает шаурму в полночь. Просто потому что можно', 'Заказвае шаўрму апоўначы. Проста таму, што можна'],
+['soon', {u: [60], m: [6, 7, 8]}, 'Summer at the Braslav lakes, no wake-up call', 'Лето на Браславских озёрах, никакого подъёма', 'Лета на Браслаўскіх азёрах, ніякага пад\'ёму'],
+['soon', {u: [60], m: [8, 9, 10]}, 'Picking mushrooms in the forest. Definitely not reconnaissance', 'Собирает грибы в лесу. Это точно не разведка', 'Збірае грыбы ў лесе. Гэта дакладна не разведка'],
+['soon', {u: [60], m: [9, 10]}, 'Digging potatoes at the dacha: civilian drill', 'Копает бульбу на даче – гражданская строевая', 'Капае бульбу на лецішчы – цывільная страявая'],
+['soon', {u: [60], m: [12, 1, 2]}, 'Winter holidays on the sofa: tangerines and series', 'Зимние каникулы на диване: мандарины и сериалы', 'Зімовыя канікулы на канапе: мандарыны і серыялы'],
+
 ['soon', {u: [180]}, 'Studying on a deferment. The enlistment office waits patiently', 'Учится на отсрочке. Военкомат терпеливо ждёт', 'Вучыцца на адтэрміноўцы. Ваенкамат цярпліва чакае'],
 ['soon', {u: [180]}, 'The call-up is far away: time for the sea and the dacha', 'До призыва далеко: успеет и на море, и на дачу', 'Да прызыву далёка: паспее і на мора, і на дачу'],
 ['soon', {u: [90]}, 'Says "I\'ll serve someday" and changes the subject', 'Говорит «когда-нибудь отслужу» и меняет тему', 'Кажа «калі-небудзь адслужу» і мяняе тэму'],
