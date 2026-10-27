@@ -14,16 +14,16 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Site localization shared by all pages: dictionaries, language switcher and the privacy notice.
+// Shared by all pages: localization dictionaries, the language and theme switchers, and the privacy notice.
 // Plural forms are objects keyed by Intl.PluralRules categories (one / few / many / other).
 (() => {
 const LANGS = { 'en-US': 'EN', 'ru-RU': 'RU', 'be-BY': 'BY' };
 const NAMES = { 'en-US': 'English', 'ru-RU': 'Русский', 'be-BY': 'Беларуская' };
 const DICT = {
 'en-US': {
-  'lang.label': 'Language',
+  'lang.label': 'Language', 'theme.dark': 'Switch to dark theme', 'theme.light': 'Switch to light theme',
   'footer.privacy': 'Privacy', 'footer.source': 'Source code',
-  'notice.text': 'No tracking, ads or analytics here. Only your language choice is saved, in your own browser.',
+  'notice.text': 'No tracking, ads or analytics here. Only your language and theme choices are saved, in your own browser.',
   'notice.more': 'Details', 'notice.ok': 'Got it',
   'page.defaultTitle': 'Demobilization timers',
   'timer.defaultLabel': 'Until demobilization', 'timer.defaultDone': 'Demobilized. Welcome home!',
@@ -34,8 +34,7 @@ const DICT = {
   'unit.home': { one: 'day at home', other: 'days at home' },
   'then': 'then {n} {days} of service',
   'hms.h': 'hrs', 'hms.m': 'min', 'hms.s': 'sec',
-  'served': '{p}% served', 'dayOf': 'day {n} of {t}', 'notStarted': 'not started yet', 'half': 'halfway',
-  'service': 'Service: {n} {days}',
+  'served': '{p}% served', 'dayOf': 'day {n} of {t}', 'half': 'halfway',
   'empty': 'No timers yet. Add one in the admin panel.',
   'admin.title': 'Timers admin', 'admin.password': 'Password', 'admin.login': 'Log in', 'admin.logout': 'Log out',
   'admin.loginHint': 'Enter the admin password from the server .env file.',
@@ -63,9 +62,9 @@ const DICT = {
   'privacy.title': 'Privacy notice', 'privacy.back': 'Back to timers',
 },
 'ru-RU': {
-  'lang.label': 'Язык',
+  'lang.label': 'Язык', 'theme.dark': 'Включить тёмную тему', 'theme.light': 'Включить светлую тему',
   'footer.privacy': 'Конфиденциальность', 'footer.source': 'Исходный код',
-  'notice.text': 'Здесь нет слежки, рекламы и аналитики. Сохраняется только выбранный язык – в вашем браузере.',
+  'notice.text': 'Здесь нет слежки, рекламы и аналитики. Сохраняются только выбранные язык и тема – в вашем браузере.',
   'notice.more': 'Подробнее', 'notice.ok': 'Понятно',
   'page.defaultTitle': 'Дембельские таймеры',
   'timer.defaultLabel': 'До дембеля', 'timer.defaultDone': 'Дембель! С возвращением домой!',
@@ -76,8 +75,7 @@ const DICT = {
   'unit.home': { one: 'день дома', few: 'дня дома', many: 'дней дома', other: 'дня дома' },
   'then': 'затем {n} {days} службы',
   'hms.h': 'ч', 'hms.m': 'мин', 'hms.s': 'сек',
-  'served': 'отслужено {p}%', 'dayOf': 'день {n} из {t}', 'notStarted': 'служба ещё не началась', 'half': 'экватор',
-  'service': 'Служба: {n} {days}',
+  'served': 'отслужено {p}%', 'dayOf': 'день {n} из {t}', 'half': 'экватор',
   'empty': 'Таймеров пока нет. Добавьте первый в панели администратора.',
   'admin.title': 'Управление таймерами', 'admin.password': 'Пароль', 'admin.login': 'Войти', 'admin.logout': 'Выйти',
   'admin.loginHint': 'Введите пароль администратора из файла .env на сервере.',
@@ -106,9 +104,9 @@ const DICT = {
   'privacy.title': 'Политика конфиденциальности', 'privacy.back': 'К таймерам',
 },
 'be-BY': {
-  'lang.label': 'Мова',
+  'lang.label': 'Мова', 'theme.dark': 'Уключыць цёмную тэму', 'theme.light': 'Уключыць светлую тэму',
   'footer.privacy': 'Канфідэнцыйнасць', 'footer.source': 'Зыходны код',
-  'notice.text': 'Тут няма сачэння, рэкламы і аналітыкі. Захоўваецца толькі абраная мова – у вашым браўзеры.',
+  'notice.text': 'Тут няма сачэння, рэкламы і аналітыкі. Захоўваюцца толькі абраныя мова і тэма – у вашым браўзеры.',
   'notice.more': 'Падрабязней', 'notice.ok': 'Зразумела',
   'page.defaultTitle': 'Дэмбельскія таймеры',
   'timer.defaultLabel': 'Да дэмбеля', 'timer.defaultDone': 'Дэмбель! З вяртаннем дадому!',
@@ -119,8 +117,7 @@ const DICT = {
   'unit.home': { one: 'дзень дома', few: 'дні дома', many: 'дзён дома', other: 'дня дома' },
   'then': 'потым {n} {days} службы',
   'hms.h': 'гад', 'hms.m': 'хв', 'hms.s': 'с',
-  'served': 'адслужана {p}%', 'dayOf': 'дзень {n} з {t}', 'notStarted': 'служба яшчэ не пачалася', 'half': 'экватар',
-  'service': 'Служба: {n} {days}',
+  'served': 'адслужана {p}%', 'dayOf': 'дзень {n} з {t}', 'half': 'экватар',
   'empty': 'Таймераў пакуль няма. Дадайце першы ў панэлі адміністратара.',
   'admin.title': 'Кіраванне таймерамі', 'admin.password': 'Пароль', 'admin.login': 'Увайсці', 'admin.logout': 'Выйсці',
   'admin.loginHint': 'Увядзіце пароль адміністратара з файла .env на серверы.',
@@ -197,8 +194,26 @@ function notice() { // one-time privacy notice; dismissing it is remembered in t
   el.querySelector('button').onclick = () => { store.set('privacyOk', '1'); el.remove(); };
   document.body.append(el); apply(el);
 }
+const ICONS = { // the icon shows the theme a click switches to
+  dark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
+  light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+};
+const systemDark = matchMedia('(prefers-color-scheme: dark)');
+const theme = () => document.documentElement.dataset.theme || (systemDark.matches ? 'dark' : 'light');
+function themeSwitch(el) { // light / dark toggle; until it is used the system setting decides
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'theme';
+  const draw = () => { const next = theme() === 'dark' ? 'light' : 'dark'; b.innerHTML = ICONS[next]; b.title = t('theme.' + next); b.setAttribute('aria-label', b.title); };
+  b.onclick = () => {
+    const next = theme() === 'dark' ? 'light' : 'dark', root = document.documentElement;
+    root.dataset.theme = next; root.style.colorScheme = next; store.set('theme', next); draw();
+  };
+  systemDark.addEventListener('change', draw); document.addEventListener('langchange', draw);
+  el.replaceWith(b); draw();
+}
 function init() {
   document.querySelectorAll('[data-lang-switch]').forEach(switcher);
+  document.querySelectorAll('[data-theme-switch]').forEach(themeSwitch);
   apply();
   if (!document.body.hasAttribute('data-no-notice')) notice();
 }

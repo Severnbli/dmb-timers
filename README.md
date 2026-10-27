@@ -17,7 +17,8 @@ A small self-hosted website for posting demob (demobilization) timers: countdown
 - A "starts soon" countdown before the call-up
 - Funny statuses that follow the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Each status has its own time window (days served or days left, season, time of day), so nobody is waiting at the train station two days early
 - Interface in English, Russian and Belarusian, with a language switch on every page
-- Works on phones and desktops, with light and dark themes that follow the system setting
+- Square timer cards that fit any screen, two per row on phones
+- Light and dark themes: they follow the system setting, or can be switched with the sun/moon button
 - A password-protected admin panel to add people and set service dates
 - No database, no dependencies, no tracking. One Node.js file and a JSON config file
 

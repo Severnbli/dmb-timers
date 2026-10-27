@@ -18,6 +18,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<script>try{const t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}}catch{}</script>
 <meta name="theme-color" content="#ebe8dc" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14170f" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b23a1e'/%3E%3Cpath d='M16 7l2.6 5.6 6.1.6-4.6 4.1 1.3 6L16 20.2 10.6 23.3l1.3-6-4.6-4.1 6.1-.6z' fill='%23fff'/%3E%3C/svg%3E">
@@ -25,8 +26,12 @@
 <style>
 :root{--bg:#ebe8dc;--surface:#f8f6ef;--ink:#22271c;--mute:#6a6e5b;--line:#d7d3c3;--track:#e3dfd0;--shadow:0 1px 2px rgb(40 45 30/.06),0 8px 24px -12px rgb(40 45 30/.25);
  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-@media(prefers-color-scheme:dark){:root{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--line:#30352a;--track:#2a2f23;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--line:#30352a;--track:#2a2f23;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}}
+:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--line:#30352a;--track:#2a2f23;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}
 *{box-sizing:border-box}
+.theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer}
+.theme:hover{border-color:var(--mute)}
+.theme svg{width:18px;height:18px}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);
  background-image:radial-gradient(1200px 500px at 10% -10%,color-mix(in srgb,var(--ink) 6%,transparent),transparent 70%)}
@@ -36,50 +41,52 @@ a{color:inherit}
 h1{margin:0;font-size:clamp(1.05rem,2.6vw,1.35rem);font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:10px;min-width:0}
 h1::before{content:"";flex:none;width:12px;height:12px;border-radius:3px;background:var(--ink);transform:rotate(45deg)}
 h1 span{overflow-wrap:anywhere}
+.tools{display:flex;align-items:center;gap:8px}
 .lang{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
 .lang button{font:600 .8rem/1 var(--sans);letter-spacing:.04em;color:var(--mute);background:none;border:0;border-radius:999px;padding:7px 11px;min-width:40px;cursor:pointer}
 .lang button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
 .lang button:focus-visible,a:focus-visible,.notice button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 main{flex:1;width:100%;max-width:1140px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 24px max(16px,env(safe-area-inset-left));
- display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));align-content:start}
-main.one{max-width:560px;grid-template-columns:1fr;padding-top:3vh}
-.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 16px 12px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+ display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));align-content:start}
+main.one{max-width:420px;grid-template-columns:1fr;padding-top:3vh}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px 10px;box-shadow:var(--shadow);overflow:hidden;min-width:0;
+ aspect-ratio:1;display:flex;flex-direction:column;container:card/inline-size} /* square at every width; top block and status/dates are pushed apart */
+.card>*{flex:none}
+.fill{flex:1 0 6px}
 .card::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--accent)}
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .head>div{min-width:0}
 h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wrap:anywhere}
-.label{margin:1px 0 0;color:var(--mute);font-size:.8rem;overflow-wrap:anywhere}
+.label{margin:1px 0 0;color:var(--mute);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chip{flex:none;display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;font:600 .62rem/1.4 var(--sans);letter-spacing:.05em;text-transform:uppercase;
  color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);white-space:nowrap}
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .chip.is-soon::before{animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.chip.is-soon::before{animation:none}}
-.count{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px;margin:12px 0 2px}
-.days{font:800 3rem/.9 var(--sans);letter-spacing:-.045em;color:var(--accent);font-variant-numeric:tabular-nums}
-.unit{color:var(--mute);font-size:.85rem;font-weight:500}
-.sub{color:var(--mute);font-size:.78rem;margin:0}
-.hms{display:flex;gap:6px;margin-top:10px}
-.hms span{flex:1;max-width:72px;display:flex;flex-direction:column;align-items:center;padding:5px 2px 4px;border-radius:9px;background:var(--track)}
-.hms b{font:600 1.1rem/1.1 var(--mono);font-variant-numeric:tabular-nums}
-.hms small{font-size:.58rem;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
-.bar{position:relative;height:7px;margin-top:14px;border-radius:999px;background:var(--track);overflow:visible}
+.count{display:flex;align-items:flex-end;gap:8px;margin:8px 0 0}
+.days{font:800 2.6rem/.85 var(--sans);letter-spacing:-.045em;color:var(--accent);font-variant-numeric:tabular-nums}
+.unit{display:flex;flex-direction:column;min-width:0;color:var(--mute);font-size:.78rem;font-weight:500;line-height:1.25}
+.clock{font:600 .82rem/1.2 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.sub{color:var(--mute);font-size:.74rem;margin:6px 0 0}
+.bar{position:relative;height:6px;margin-top:10px;border-radius:999px;background:var(--track);overflow:visible}
 .bar i{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 70%,var(--surface)),var(--accent))}
 .bar em{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--mute);opacity:.45;border-radius:2px}
-.meta{display:flex;justify-content:space-between;gap:2px 10px;flex-wrap:wrap;margin-top:6px;color:var(--mute);font-size:.74rem;font-variant-numeric:tabular-nums}
-.status{position:relative;margin:12px 0 0;padding:8px 10px 8px 28px;border-radius:9px;background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:.82rem;line-height:1.4}
-.status::before{content:"\201C";position:absolute;left:9px;top:3px;font:700 1.4rem/1 Georgia,serif;color:var(--accent)}
-.done{margin:12px 0 0;font:800 1.45rem/1.1 var(--sans);letter-spacing:-.02em;color:var(--accent);overflow-wrap:anywhere}
-.dates{display:flex;justify-content:space-between;flex-wrap:wrap;gap:2px 10px;margin-top:12px;padding-top:8px;border-top:1px dashed var(--line);color:var(--mute);font-size:.72rem;font-variant-numeric:tabular-nums}
+.meta{display:flex;justify-content:space-between;gap:8px;white-space:nowrap;margin-top:5px;color:var(--mute);font-size:.7rem;font-variant-numeric:tabular-nums}
+.status{position:relative;margin:0;padding:5px 8px 5px 24px;border-radius:8px;background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:.78rem;line-height:1.35}
+.status::before{content:"\201C";position:absolute;left:7px;top:3px;font:700 1.2rem/1 Georgia,serif;color:var(--accent)}
+.done{margin:8px 0 0;font:800 1.25rem/1.1 var(--sans);letter-spacing:-.02em;color:var(--accent);overflow-wrap:anywhere}
+.meta span{overflow:hidden;text-overflow:ellipsis}
+.dates{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);color:var(--mute);font-size:.68rem;font-variant-numeric:tabular-nums}
 .one .card{padding:clamp(18px,4vw,28px)}
 .one h2{font-size:clamp(1.15rem,3vw,1.4rem)}
 .one .label{font-size:.9rem}
-.one .days{font-size:clamp(4rem,18vw,7rem)}
-.one .unit{font-size:clamp(.9rem,2.5vw,1.05rem)}
-.one .hms span{max-width:88px}
-.one .hms b{font-size:clamp(1.2rem,4.5vw,1.6rem)}
+.one .days{font-size:clamp(3.6rem,16vw,6rem)}
+.one .unit{font-size:clamp(.85rem,2.4vw,1rem)}
+.one .clock{font-size:clamp(1rem,3.5vw,1.3rem)}
 .one .status{font-size:.9rem}
 .one .done{font-size:clamp(1.8rem,7vw,2.8rem)}
+.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 .empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:12vh 0}
 footer{max-width:1140px;width:100%;margin:0 auto;padding:12px max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
  display:flex;gap:6px 18px;flex-wrap:wrap;justify-content:center;color:var(--mute);font-size:.85rem}
@@ -91,30 +98,36 @@ footer a:hover{color:var(--ink)}
 .notice button{flex:none;font:600 .85rem var(--sans);border:0;border-radius:10px;padding:9px 14px;background:var(--surface);color:var(--ink);cursor:pointer}
 @media(max-width:600px){ /* phones: two compact cards per row when there is more than one timer */
  main:not(.one){grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
- main:not(.one) .card{padding:12px 10px 9px;border-radius:12px}
- main:not(.one) .head{flex-direction:column;gap:6px}
- main:not(.one) h2{font-size:.95rem}
- main:not(.one) .label{font-size:.72rem}
- main:not(.one) .chip{font-size:.56rem;padding:2px 7px}
- main:not(.one) .count{margin-top:10px}
- main:not(.one) .days{font-size:2.3rem}
- main:not(.one) .unit{font-size:.72rem;line-height:1.25}
- main:not(.one) .sub{font-size:.68rem}
- main:not(.one) .hms{gap:3px;margin-top:8px}
- main:not(.one) .hms span{padding:4px 0 3px;border-radius:7px}
- main:not(.one) .hms b{font-size:.88rem}
- main:not(.one) .hms small{font-size:.5rem;letter-spacing:.03em}
- main:not(.one) .bar{height:6px;margin-top:10px}
- main:not(.one) .meta,main:not(.one) .dates{flex-direction:column;font-size:.64rem}
- main:not(.one) .status{margin-top:9px;padding:7px 7px 7px 20px;font-size:.72rem;line-height:1.35}
- main:not(.one) .status::before{left:5px;top:3px;font-size:1.1rem}
- main:not(.one) .done{margin-top:10px;font-size:1.05rem}
- main:not(.one) .dates{margin-top:9px;padding-top:6px}
- .one .hms span{max-width:none}
+ main:not(.one) .card{padding:9px 9px 7px;border-radius:10px}
  .notice{flex-direction:column;align-items:stretch}
 }
+/* Small squares: sizes follow the card's own content width, secondary lines drop out as it shrinks */
+@container card (max-width:200px){ /* content width; cards up to about 218px */
+ .head{gap:4px}
+ h2{font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .label{display:none}
+ .chip{font-size:.5rem;padding:1px 6px;gap:4px}
+ .chip::before{width:5px;height:5px}
+ .count{margin-top:6px;gap:5px}
+ .days{font-size:1.9rem}
+ .unit{font-size:.6rem}
+ .clock{font-size:.66rem}
+ .sub{font-size:.6rem;margin-top:4px}
+ .bar{height:4px;margin-top:7px}
+ .meta{font-size:.52rem;margin-top:4px;gap:4px}
+ .dates{font-size:.56rem;margin-top:5px;padding-top:4px}
+ .status{padding:4px 5px 4px 15px;font-size:.62rem;line-height:1.3}
+ .status::before{left:4px;top:2px;font-size:.85rem}
+ .done{margin-top:6px;font-size:.9rem}
+}
+@container card (max-width:135px){ /* very narrow phones, about 150px cards */
+ .meta,.sub,.dates{display:none}
+ .days{font-size:1.6rem}
+ .status{font-size:.58rem}
+ .dates{font-size:.52rem}
+}
 </style></head><body>
-<header class="top"><h1><span id="ptitle"></span></h1><div data-lang-switch></div></header>
+<header class="top"><h1><span id="ptitle"></span></h1><div class="tools"><div data-lang-switch></div><div data-theme-switch></div></div></header>
 <main id="app" aria-live="off"></main>
 <footer><a href="/privacy" data-i18n="footer.privacy">Privacy</a><a href="https://github.com/Severnbli/dmb-timers" rel="noopener" data-i18n="footer.source">Source code</a></footer>
 <script src="/i18n.js"></script>
@@ -124,7 +137,7 @@ const {t,tp}=I18N, COL={'en-US':2,'ru-RU':3,'be-BY':4}; // STATUSES text column 
 let cfg=null, offset=0, clock=null;
 const $=document.getElementById('app'), pad=n=>String(n).padStart(2,'0');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const fmt=d=>new Date(d).toLocaleDateString(I18N.lang);
+const fmt=d=>new Date(d).toLocaleDateString(I18N.lang,{day:'numeric',month:'numeric',year:'2-digit'});
 const DAY=864e5;
 async function load(){
   try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();
@@ -149,8 +162,9 @@ function statusFor(phase,t,now,ctx){ // weighted pick among the statuses whose w
   const s=ok.find(e=>(x-=e[1].w||1)<0)||ok[0];
   return s[COL[I18N.lang]];
 }
-const hms=(ms,sec)=>{const h=Math.floor(ms/36e5)%24,m=Math.floor(ms/6e4)%60,s=Math.floor(ms/1e3)%60;
-  return `<div class="hms"><span><b>${pad(h)}</b><small>${t('hms.h')}</small></span><span><b>${pad(m)}</b><small>${t('hms.m')}</small></span>${sec?`<span><b>${pad(s)}</b><small>${t('hms.s')}</small></span>`:''}</div>`};
+const hmsText=(ms,sec)=>{const h=Math.floor(ms/36e5)%24,m=Math.floor(ms/6e4)%60,s=Math.floor(ms/1e3)%60;
+  return `<span class="clock" title="${t('hms.h')} : ${t('hms.m')}${sec?' : '+t('hms.s'):''}">${pad(h)}:${pad(m)}${sec?':'+pad(s):''}</span>`};
+const count=(d,unit,ms,sec)=>`<div class="count"><span class="days">${d}</span><span class="unit">${unit}${hmsText(ms,sec)}</span></div>`;
 function card(tm,p,now){
   const s=+new Date(tm.start), e=+new Date(tm.end), total=Math.round((e-s)/DAY);
   const phase=now<s?'soon':now<e?'serve':'done';
@@ -160,26 +174,69 @@ function card(tm,p,now){
   let main;
   if(phase==='soon'){ // counting to the call-up; the service length itself is shown separately
     const left=s-now, d=Math.floor(left/DAY);
-    main=`<div class="count"><span class="days">${d}</span><span class="unit">${tp('unit.toStart',d)}</span></div>
-    <p class="sub">${t('then',{n:total,days:tp('days',total)})}</p>${hms(left,p.showSeconds)}${bar(0,t('served',{p:0}),t('notStarted'))}`;
+    main=`${count(d,tp('unit.toStart',d),left,p.showSeconds)}<p class="sub">${t('then',{n:total,days:tp('days',total)})}</p>`;
   }else if(phase==='serve'){
     const left=e-now, d=Math.floor(left/DAY), dayNo=Math.min(total,Math.floor(ctx.d)+1);
-    main=`<div class="count"><span class="days">${d}</span><span class="unit">${tp('unit.left',d)}</span></div>${hms(left,p.showSeconds)}
-    ${bar(ctx.p,t('served',{p:ctx.p.toFixed(2)}),t('dayOf',{n:dayNo,t:total}))}`;
+    main=`${count(d,tp('unit.left',d),left,p.showSeconds)}${bar(ctx.p,t('served',{p:ctx.p.toFixed(2)}),t('dayOf',{n:dayNo,t:total}))}`;
   }else{
     const d=Math.floor(ctx.a);
-    main=`<p class="done">${esc(tm.doneMessage||t('timer.defaultDone'))}</p><p class="sub" style="margin-top:6px">${d} ${tp('unit.home',d)}</p>`;
+    main=`<p class="done">${esc(tm.doneMessage||t('timer.defaultDone'))}</p><p class="sub">${d} ${tp('unit.home',d)}</p>`;
   }
   const st=p.showStatuses===false?'':statusFor(phase,tm,now,ctx);
-  return `<article class="card" style="--accent:${tm.accent}">${head}${main}${st?`<p class="status">${esc(st)}</p>`:''}
-    <div class="dates"><span>${t('service',{n:total,days:tp('days',total)})}</span><span>${fmt(s)} → ${fmt(e)}</span></div></article>`;
+  return `<article class="card" data-id="${tm.id}" style="--accent:${tm.accent}">${head}${main}<div class="fill"></div>${st?`<p class="status">${esc(st)}</p>`:''}
+    <div class="dates">${fmt(s)} → ${fmt(e)}</div></article>`;
 }
 function render(){
   if(!cfg)return;
   const now=Date.now()+offset, ts=[...cfg.timers].sort((a,b)=>new Date(a.end)-new Date(b.end));
   $.className=ts.length===1?'one':'';
   $.innerHTML=ts.length?ts.map(x=>card(x,cfg.page,now)).join(''):`<p class="empty">${t('empty')}</p>`;
+  fitStatus();
 }
+const fitted=new Map(); // text scale that fits the square, per card + width + texts
+function fitStatus(){ // the status and the "welcome home" message are never cut off: they shrink until the card content fits
+  if(fitted.size>500)fitted.clear();
+  for(const c of $.querySelectorAll('.card')){
+    const els=[...c.querySelectorAll('.status,.done')];if(!els.length)continue;
+    const key=c.dataset.id+'|'+c.clientWidth+'|'+els.map(e=>e.textContent).join('|');
+    const base=els.map(e=>parseFloat(getComputedStyle(e).fontSize));
+    const set=k=>els.forEach((e,i)=>e.style.fontSize=base[i]*k+'px');
+    let k=fitted.get(key);
+    if(k){set(k);continue}
+    k=1;
+    while(c.scrollHeight>c.clientHeight+1&&k>.45){k-=.04;set(k)}
+    fitted.set(key,k);
+  }
+}
+addEventListener('resize',render);
+(()=>{ // while a card is hovered, accent-colored particles drift outward from its edges
+  if(!matchMedia('(hover:hover) and (pointer:fine)').matches||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const cv=document.createElement('canvas'),ctx=cv.getContext('2d');cv.className='fx';document.body.append(cv);
+  let ps=[],raf=0,hover=null,last=0; // hover = data-id of the card under the pointer (cards are re-rendered every second)
+  const size=()=>{const r=devicePixelRatio||1;cv.width=innerWidth*r;cv.height=innerHeight*r;ctx.setTransform(r,0,0,r,0,0)};
+  size();addEventListener('resize',size);
+  const start=()=>{if(!raf)raf=requestAnimationFrame(tick)};
+  addEventListener('pointermove',e=>{const id=e.target.closest?.('.card')?.dataset.id||null;if(id!==hover){hover=id;if(id)start()}});
+  document.addEventListener('pointerleave',()=>{hover=null});
+  function emit(c){ // one particle at a random point on the card border, moving away from it
+    const r=c.getBoundingClientRect(),col=c.style.getPropertyValue('--accent')||'#b23a1e';
+    let d=Math.random()*2*(r.width+r.height),x,y,nx=0,ny=0;
+    if(d<r.width){x=r.left+d;y=r.top;ny=-1}
+    else if((d-=r.width)<r.height){x=r.right;y=r.top+d;nx=1}
+    else if((d-=r.height)<r.width){x=r.right-d;y=r.bottom;ny=1}
+    else{x=r.left;y=r.bottom-(d-r.width);nx=-1}
+    const v=Math.random()*.6+.25;
+    ps.push({x,y,vx:nx*v+(Math.random()-.5)*.3,vy:ny*v+(Math.random()-.5)*.3-.15,r:Math.random()*1.6+.9,life:1,col});
+  }
+  function tick(now){
+    const c=hover&&$.querySelector(`.card[data-id="${hover}"]`);
+    if(c&&now-last>28){last=now;emit(c);if(ps.length>90)ps.shift()}
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    ps=ps.filter(p=>(p.life-=.018)>0);
+    for(const p of ps){p.x+=p.vx;p.y+=p.vy;ctx.globalAlpha=p.life*.8;ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.r*(.4+p.life*.6),0,7);ctx.fill()}
+    ctx.globalAlpha=1;raf=c||ps.length?requestAnimationFrame(tick):0;
+  }
+})();
 document.addEventListener('langchange',()=>{title();render()});
 I18N.init();
 load().then(render);setInterval(render,1000);setInterval(load,60000);

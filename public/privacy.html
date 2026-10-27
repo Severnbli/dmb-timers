@@ -18,17 +18,23 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<script>try{const t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}}catch{}</script>
 <title>Privacy notice</title>
 <style>
 :root{--bg:#ebe8dc;--surface:#f8f6ef;--ink:#22271c;--mute:#6a6e5b;--line:#d7d3c3;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif}
-@media(prefers-color-scheme:dark){:root{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d}}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d}}
+:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d}
 *{box-sizing:border-box}
+.theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer}
+.theme:hover{border-color:var(--mute)}
+.theme svg{width:18px;height:18px}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--sans)}
 .wrap{max-width:720px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(32px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .top a{color:var(--mute);text-decoration:none;font-size:.92rem}
 .top a:hover{color:var(--ink)}
+.tools{display:flex;align-items:center;gap:8px}
 .lang{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
 .lang button{font:600 .8rem/1 var(--sans);letter-spacing:.04em;color:var(--mute);background:none;border:0;border-radius:999px;padding:7px 11px;min-width:40px;cursor:pointer}
 .lang button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
@@ -43,7 +49,7 @@ code{font-size:.9em;background:var(--bg);padding:1px 5px;border-radius:5px}
 section[lang]{display:none}
 </style></head><body data-no-notice>
 <div class="wrap">
-<div class="top"><a href="/">← <span data-i18n="privacy.back">Back to timers</span></a><div data-lang-switch></div></div>
+<div class="top"><a href="/">← <span data-i18n="privacy.back">Back to timers</span></a><div class="tools"><div data-lang-switch></div><div data-theme-switch></div></div></div>
 <article>
 
 <section lang="en-US">
@@ -53,7 +59,7 @@ section[lang]{display:none}
 <h2>Visitors</h2>
 <ul>
 <li>You do not need an account. The site sets no cookies for visitors.</li>
-<li>Your browser's local storage keeps two settings: the chosen language (<code>lang</code>) and that you closed the privacy banner (<code>privacyOk</code>). They never leave your device. You can clear them in your browser settings at any time.</li>
+<li>Your browser's local storage keeps up to three settings: the chosen language (<code>lang</code>), the chosen theme (<code>theme</code>) and that you closed the privacy banner (<code>privacyOk</code>). They never leave your device. You can clear them in your browser settings at any time.</li>
 <li>No analytics, ads, tracking pixels, external fonts or third-party scripts are used. Pages load only from this server.</li>
 </ul>
 <h2>People on the timers</h2>
@@ -77,7 +83,7 @@ section[lang]{display:none}
 <h2>Посетители</h2>
 <ul>
 <li>Регистрация не нужна. Сайт не устанавливает посетителям файлы cookie.</li>
-<li>В локальном хранилище браузера сохраняются две настройки: выбранный язык (<code>lang</code>) и то, что вы закрыли баннер о конфиденциальности (<code>privacyOk</code>). Они не покидают ваше устройство. Их можно удалить в настройках браузера в любой момент.</li>
+<li>В локальном хранилище браузера сохраняются до трёх настроек: выбранный язык (<code>lang</code>), тема оформления (<code>theme</code>) и то, что вы закрыли баннер о конфиденциальности (<code>privacyOk</code>). Они не покидают ваше устройство. Их можно удалить в настройках браузера в любой момент.</li>
 <li>Не используются аналитика, реклама, трекинговые пиксели, внешние шрифты и сторонние скрипты. Страницы загружаются только с этого сервера.</li>
 </ul>
 <h2>Люди на таймерах</h2>
@@ -101,7 +107,7 @@ section[lang]{display:none}
 <h2>Наведвальнікі</h2>
 <ul>
 <li>Рэгістрацыя не патрэбна. Сайт не ўсталёўвае наведвальнікам файлы cookie.</li>
-<li>У лакальным сховішчы браўзера захоўваюцца дзве налады: абраная мова (<code>lang</code>) і тое, што вы закрылі банер пра канфідэнцыйнасць (<code>privacyOk</code>). Яны не пакідаюць вашу прыладу. Іх можна выдаліць у наладах браўзера ў любы момант.</li>
+<li>У лакальным сховішчы браўзера захоўваюцца да трох налад: абраная мова (<code>lang</code>), тэма афармлення (<code>theme</code>) і тое, што вы закрылі банер пра канфідэнцыйнасць (<code>privacyOk</code>). Яны не пакідаюць вашу прыладу. Іх можна выдаліць у наладах браўзера ў любы момант.</li>
 <li>Не выкарыстоўваюцца аналітыка, рэклама, трэкінгавыя пікселі, знешнія шрыфты і староннія скрыпты. Старонкі загружаюцца толькі з гэтага сервера.</li>
 </ul>
 <h2>Людзі на таймерах</h2>
