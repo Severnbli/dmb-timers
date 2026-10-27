@@ -1,0 +1,207 @@
+/*
+ * dmb-timers – A website for posting demob timers
+ * Copyright (C) 2026 Usevalad Buben usevaladbuben@gmail.com
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+// Site localization shared by all pages: dictionaries, language switcher and the privacy notice.
+// Plural forms are objects keyed by Intl.PluralRules categories (one / few / many / other).
+(() => {
+const LANGS = { 'en-US': 'EN', 'ru-RU': 'RU', 'be-BY': 'BY' };
+const NAMES = { 'en-US': 'English', 'ru-RU': 'Русский', 'be-BY': 'Беларуская' };
+const DICT = {
+'en-US': {
+  'lang.label': 'Language',
+  'footer.privacy': 'Privacy', 'footer.source': 'Source code',
+  'notice.text': 'No tracking, ads or analytics here. Only your language choice is saved, in your own browser.',
+  'notice.more': 'Details', 'notice.ok': 'Got it',
+  'page.defaultTitle': 'Demobilization timers',
+  'timer.defaultLabel': 'Until demobilization', 'timer.defaultDone': 'Demobilized. Welcome home!',
+  'state.soon': 'Starts soon', 'state.serve': 'Serving', 'state.done': 'Home',
+  'days': { one: 'day', other: 'days' },
+  'unit.left': { one: 'day left', other: 'days left' },
+  'unit.toStart': { one: 'day until call-up', other: 'days until call-up' },
+  'unit.home': { one: 'day at home', other: 'days at home' },
+  'then': 'then {n} {days} of service',
+  'hms.h': 'hrs', 'hms.m': 'min', 'hms.s': 'sec',
+  'served': '{p}% served', 'dayOf': 'day {n} of {t}', 'notStarted': 'not started yet', 'half': 'halfway',
+  'service': 'Service: {n} {days}',
+  'empty': 'No timers yet. Add one in the admin panel.',
+  'admin.title': 'Timers admin', 'admin.password': 'Password', 'admin.login': 'Log in', 'admin.logout': 'Log out',
+  'admin.loginHint': 'Enter the admin password from the server .env file.',
+  'admin.addTitle': 'Add a person', 'admin.namePh': 'Name', 'admin.add': 'Add',
+  'admin.timers': 'Timers', 'admin.emptyTimers': 'No timers yet. Add the first person above.',
+  'f.name': 'Name', 'f.label': 'Label', 'f.start': 'Service start', 'f.mode': 'Duration',
+  'mode.year': '1 year (12 months)', 'mode.half': 'Half year (6 months)', 'mode.custom': 'Custom end date',
+  'f.end': 'Demobilization date', 'f.endAuto': 'start + duration', 'f.done': 'Message when finished', 'f.accent': 'Accent color',
+  'f.defaultHint': 'Leave empty to use the default text in each visitor’s language.',
+  'btn.save': 'Save', 'btn.reset': 'Start from now', 'btn.keep': 'Restart, keep duration', 'btn.del': 'Delete',
+  'confirm.del': 'Delete "{name}"?', 'confirm.reset': 'Set start for "{name}" to now?',
+  'confirm.keep': 'Restart "{name}" from now with the same duration?',
+  'msg.added': 'Person added', 'msg.saved': 'Saved', 'msg.deleted': 'Deleted', 'msg.reset': 'Start reset',
+  'msg.restarted': 'Restarted', 'msg.settings': 'Page settings saved', 'msg.loggedOut': 'Logged out',
+  's.title': 'Page settings', 's.pageTitle': 'Page title', 's.seconds': 'Show seconds', 's.progress': 'Show progress bars',
+  's.statuses': 'Show funny statuses', 's.save': 'Save settings', 's.open': 'Open timers page',
+  'hist.title': 'Recent changes', 'hist.empty': 'No changes yet',
+  'hist.added': 'Added "{name}"', 'hist.saved': 'Saved "{name}"', 'hist.deleted': 'Deleted "{name}"',
+  'hist.restarted': 'Restarted "{name}"', 'hist.settings': 'Page settings saved',
+  'err.too_many': 'Too many attempts. Try again in a minute.', 'err.wrong_password': 'Wrong password',
+  'err.not_logged_in': 'Not logged in', 'err.limit': 'Timer limit reached', 'err.name_required': 'Name is required',
+  'err.bad_start': 'Invalid start date', 'err.bad_end': 'Invalid end date',
+  'err.end_before_start': 'End date must be after start date', 'err.not_found': 'Not found',
+  'err.timer_not_found': 'Timer not found', 'err.server': 'Server error', 'err.request': 'Request failed',
+  'privacy.title': 'Privacy notice', 'privacy.back': 'Back to timers',
+},
+'ru-RU': {
+  'lang.label': 'Язык',
+  'footer.privacy': 'Конфиденциальность', 'footer.source': 'Исходный код',
+  'notice.text': 'Здесь нет слежки, рекламы и аналитики. Сохраняется только выбранный язык — в вашем браузере.',
+  'notice.more': 'Подробнее', 'notice.ok': 'Понятно',
+  'page.defaultTitle': 'Дембельские таймеры',
+  'timer.defaultLabel': 'До дембеля', 'timer.defaultDone': 'Дембель! С возвращением домой!',
+  'state.soon': 'Скоро призыв', 'state.serve': 'Служит', 'state.done': 'Дома',
+  'days': { one: 'день', few: 'дня', many: 'дней', other: 'дня' },
+  'unit.left': { one: 'день до дембеля', few: 'дня до дембеля', many: 'дней до дембеля', other: 'дня до дембеля' },
+  'unit.toStart': { one: 'день до призыва', few: 'дня до призыва', many: 'дней до призыва', other: 'дня до призыва' },
+  'unit.home': { one: 'день дома', few: 'дня дома', many: 'дней дома', other: 'дня дома' },
+  'then': 'затем {n} {days} службы',
+  'hms.h': 'ч', 'hms.m': 'мин', 'hms.s': 'сек',
+  'served': 'отслужено {p}%', 'dayOf': 'день {n} из {t}', 'notStarted': 'служба ещё не началась', 'half': 'экватор',
+  'service': 'Служба: {n} {days}',
+  'empty': 'Таймеров пока нет. Добавьте первый в панели администратора.',
+  'admin.title': 'Управление таймерами', 'admin.password': 'Пароль', 'admin.login': 'Войти', 'admin.logout': 'Выйти',
+  'admin.loginHint': 'Введите пароль администратора из файла .env на сервере.',
+  'admin.addTitle': 'Добавить человека', 'admin.namePh': 'Имя', 'admin.add': 'Добавить',
+  'admin.timers': 'Таймеры', 'admin.emptyTimers': 'Таймеров пока нет. Добавьте первого человека выше.',
+  'f.name': 'Имя', 'f.label': 'Подпись', 'f.start': 'Начало службы', 'f.mode': 'Срок',
+  'mode.year': '1 год (12 месяцев)', 'mode.half': 'Полгода (6 месяцев)', 'mode.custom': 'Своя дата окончания',
+  'f.end': 'Дата дембеля', 'f.endAuto': 'начало + срок', 'f.done': 'Сообщение по окончании', 'f.accent': 'Цвет',
+  'f.defaultHint': 'Оставьте пустым — каждый посетитель увидит текст по умолчанию на своём языке.',
+  'btn.save': 'Сохранить', 'btn.reset': 'Начать с текущего момента', 'btn.keep': 'Перезапустить с тем же сроком', 'btn.del': 'Удалить',
+  'confirm.del': 'Удалить «{name}»?', 'confirm.reset': 'Сделать началом службы «{name}» текущий момент?',
+  'confirm.keep': 'Перезапустить «{name}» с текущего момента с тем же сроком?',
+  'msg.added': 'Человек добавлен', 'msg.saved': 'Сохранено', 'msg.deleted': 'Удалено', 'msg.reset': 'Начало сброшено',
+  'msg.restarted': 'Перезапущено', 'msg.settings': 'Настройки страницы сохранены', 'msg.loggedOut': 'Вы вышли',
+  's.title': 'Настройки страницы', 's.pageTitle': 'Заголовок страницы', 's.seconds': 'Показывать секунды',
+  's.progress': 'Показывать прогресс', 's.statuses': 'Показывать смешные статусы', 's.save': 'Сохранить настройки',
+  's.open': 'Открыть страницу таймеров',
+  'hist.title': 'Последние изменения', 'hist.empty': 'Изменений пока нет',
+  'hist.added': 'Добавлен «{name}»', 'hist.saved': 'Сохранён «{name}»', 'hist.deleted': 'Удалён «{name}»',
+  'hist.restarted': 'Перезапущен «{name}»', 'hist.settings': 'Сохранены настройки страницы',
+  'err.too_many': 'Слишком много попыток. Повторите через минуту.', 'err.wrong_password': 'Неверный пароль',
+  'err.not_logged_in': 'Вы не вошли', 'err.limit': 'Достигнут лимит таймеров', 'err.name_required': 'Укажите имя',
+  'err.bad_start': 'Неверная дата начала', 'err.bad_end': 'Неверная дата окончания',
+  'err.end_before_start': 'Дата окончания должна быть позже даты начала', 'err.not_found': 'Не найдено',
+  'err.timer_not_found': 'Таймер не найден', 'err.server': 'Ошибка сервера', 'err.request': 'Запрос не выполнен',
+  'privacy.title': 'Политика конфиденциальности', 'privacy.back': 'К таймерам',
+},
+'be-BY': {
+  'lang.label': 'Мова',
+  'footer.privacy': 'Канфідэнцыйнасць', 'footer.source': 'Зыходны код',
+  'notice.text': 'Тут няма сачэння, рэкламы і аналітыкі. Захоўваецца толькі абраная мова — у вашым браўзеры.',
+  'notice.more': 'Падрабязней', 'notice.ok': 'Зразумела',
+  'page.defaultTitle': 'Дэмбельскія таймеры',
+  'timer.defaultLabel': 'Да дэмбеля', 'timer.defaultDone': 'Дэмбель! З вяртаннем дадому!',
+  'state.soon': 'Хутка прызыў', 'state.serve': 'Служыць', 'state.done': 'Дома',
+  'days': { one: 'дзень', few: 'дні', many: 'дзён', other: 'дня' },
+  'unit.left': { one: 'дзень да дэмбеля', few: 'дні да дэмбеля', many: 'дзён да дэмбеля', other: 'дня да дэмбеля' },
+  'unit.toStart': { one: 'дзень да прызыву', few: 'дні да прызыву', many: 'дзён да прызыву', other: 'дня да прызыву' },
+  'unit.home': { one: 'дзень дома', few: 'дні дома', many: 'дзён дома', other: 'дня дома' },
+  'then': 'потым {n} {days} службы',
+  'hms.h': 'гад', 'hms.m': 'хв', 'hms.s': 'с',
+  'served': 'адслужана {p}%', 'dayOf': 'дзень {n} з {t}', 'notStarted': 'служба яшчэ не пачалася', 'half': 'экватар',
+  'service': 'Служба: {n} {days}',
+  'empty': 'Таймераў пакуль няма. Дадайце першы ў панэлі адміністратара.',
+  'admin.title': 'Кіраванне таймерамі', 'admin.password': 'Пароль', 'admin.login': 'Увайсці', 'admin.logout': 'Выйсці',
+  'admin.loginHint': 'Увядзіце пароль адміністратара з файла .env на серверы.',
+  'admin.addTitle': 'Дадаць чалавека', 'admin.namePh': 'Імя', 'admin.add': 'Дадаць',
+  'admin.timers': 'Таймеры', 'admin.emptyTimers': 'Таймераў пакуль няма. Дадайце першага чалавека вышэй.',
+  'f.name': 'Імя', 'f.label': 'Подпіс', 'f.start': 'Пачатак службы', 'f.mode': 'Тэрмін',
+  'mode.year': '1 год (12 месяцаў)', 'mode.half': 'Паўгода (6 месяцаў)', 'mode.custom': 'Свая дата заканчэння',
+  'f.end': 'Дата дэмбеля', 'f.endAuto': 'пачатак + тэрмін', 'f.done': 'Паведамленне па заканчэнні', 'f.accent': 'Колер',
+  'f.defaultHint': 'Пакіньце пустым — кожны наведвальнік убачыць тэкст па змаўчанні на сваёй мове.',
+  'btn.save': 'Захаваць', 'btn.reset': 'Пачаць з бягучага моманту', 'btn.keep': 'Перазапусціць з тым жа тэрмінам', 'btn.del': 'Выдаліць',
+  'confirm.del': 'Выдаліць «{name}»?', 'confirm.reset': 'Зрабіць пачаткам службы «{name}» бягучы момант?',
+  'confirm.keep': 'Перазапусціць «{name}» з бягучага моманту з тым жа тэрмінам?',
+  'msg.added': 'Чалавек дададзены', 'msg.saved': 'Захавана', 'msg.deleted': 'Выдалена', 'msg.reset': 'Пачатак скінуты',
+  'msg.restarted': 'Перазапушчана', 'msg.settings': 'Налады старонкі захаваны', 'msg.loggedOut': 'Вы выйшлі',
+  's.title': 'Налады старонкі', 's.pageTitle': 'Загаловак старонкі', 's.seconds': 'Паказваць секунды',
+  's.progress': 'Паказваць прагрэс', 's.statuses': 'Паказваць смешныя статусы', 's.save': 'Захаваць налады',
+  's.open': 'Адкрыць старонку таймераў',
+  'hist.title': 'Апошнія змены', 'hist.empty': 'Змен пакуль няма',
+  'hist.added': 'Дададзены «{name}»', 'hist.saved': 'Захаваны «{name}»', 'hist.deleted': 'Выдалены «{name}»',
+  'hist.restarted': 'Перазапушчаны «{name}»', 'hist.settings': 'Захаваны налады старонкі',
+  'err.too_many': 'Занадта шмат спроб. Паўтарыце праз хвіліну.', 'err.wrong_password': 'Няправільны пароль',
+  'err.not_logged_in': 'Вы не ўвайшлі', 'err.limit': 'Дасягнуты ліміт таймераў', 'err.name_required': 'Пазначце імя',
+  'err.bad_start': 'Няправільная дата пачатку', 'err.bad_end': 'Няправільная дата заканчэння',
+  'err.end_before_start': 'Дата заканчэння павінна быць пазней за дату пачатку', 'err.not_found': 'Не знойдзена',
+  'err.timer_not_found': 'Таймер не знойдзены', 'err.server': 'Памылка сервера', 'err.request': 'Запыт не выкананы',
+  'privacy.title': 'Палітыка канфідэнцыйнасці', 'privacy.back': 'Да таймераў',
+}};
+
+const store = { // localStorage can be unavailable (private mode, blocked site data)
+  get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+};
+function detect() {
+  const saved = store.get('lang');
+  if (DICT[saved]) return saved;
+  for (const l of navigator.languages || [navigator.language || '']) {
+    const p = l.toLowerCase().slice(0, 2);
+    if (p === 'ru') return 'ru-RU';
+    if (p === 'be') return 'be-BY';
+    if (p === 'en') return 'en-US';
+  }
+  return 'en-US';
+}
+
+let lang = detect(), rules = new Intl.PluralRules(lang);
+const raw = k => DICT[lang][k] ?? DICT['en-US'][k] ?? k;
+const fill = (s, v) => s.replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m);
+const t = (k, v = {}) => fill(raw(k), v);
+const tp = (k, n, v = {}) => { const f = raw(k); return fill(f[rules.select(n)] ?? f.other, { n, ...v }); };
+
+function apply(root = document) {
+  document.documentElement.lang = lang.slice(0, 2);
+  root.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  root.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  root.querySelectorAll('[data-i18n-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nLabel)); });
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
+}
+function setLang(l) {
+  if (!DICT[l] || l === lang) return;
+  lang = l; rules = new Intl.PluralRules(l); store.set('lang', l);
+  apply(); document.dispatchEvent(new CustomEvent('langchange', { detail: l }));
+}
+function switcher(el) { // segmented EN / RU / BY control
+  el.classList.add('lang'); el.setAttribute('role', 'group'); el.dataset.i18nLabel = 'lang.label';
+  el.innerHTML = Object.entries(LANGS).map(([l, s]) =>
+    `<button type="button" data-lang="${l}" title="${NAMES[l]}" lang="${l.slice(0, 2)}">${s}</button>`).join('');
+  el.onclick = e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.lang); };
+}
+function notice() { // one-time privacy notice; dismissing it is remembered in this browser only
+  if (store.get('privacyOk')) return;
+  const el = document.createElement('div');
+  el.className = 'notice'; el.setAttribute('role', 'region'); el.dataset.i18nLabel = 'footer.privacy';
+  el.innerHTML = '<p><span data-i18n="notice.text"></span> <a href="/privacy" data-i18n="notice.more"></a></p><button type="button" data-i18n="notice.ok"></button>';
+  el.querySelector('button').onclick = () => { store.set('privacyOk', '1'); el.remove(); };
+  document.body.append(el); apply(el);
+}
+function init() {
+  document.querySelectorAll('[data-lang-switch]').forEach(switcher);
+  apply();
+  if (!document.body.hasAttribute('data-no-notice')) notice();
+}
+
+window.I18N = { t, tp, apply, setLang, init, get lang() { return lang; } };
+})();

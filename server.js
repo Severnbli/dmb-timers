@@ -36,12 +36,15 @@ function addMonths(d, n) { // calendar months; day is clamped (31 Aug + 6 months
   r.setDate(Math.min(day, new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate()));
   return r;
 }
+// Empty label / doneMessage / pageTitle mean "use the localized default" on the client
 const newTimer = (o = {}) => {
   const s = now();
-  return { id: rid(), name: '', label: 'Until demobilization', mode: 'year', start: s.toISOString(),
-    end: addMonths(s, 12).toISOString(), doneMessage: 'Demobilized. Welcome home!', accent: '#b23a1e', ...o };
+  return { id: rid(), name: '', label: '', mode: 'year', start: s.toISOString(),
+    end: addMonths(s, 12).toISOString(), doneMessage: '', accent: '#b23a1e', ...o };
 };
-const defaults = () => ({ pageTitle: 'Demobilization timers', showSeconds: true, showProgress: true, showStatuses: true, timers: [], history: [] });
+const defaults = () => ({ pageTitle: '', showSeconds: true, showProgress: true, showStatuses: true, timers: [], history: [] });
+const OLD_DEFAULTS = { label: 'Until demobilization', doneMessage: 'Demobilized. Welcome home!', pageTitle: 'Demobilization timers' };
+const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 let cfg = defaults();
 try {
@@ -52,14 +55,18 @@ try {
   }
   cfg = { ...cfg, ...raw };
   cfg.timers = cfg.timers.map(t => ({ id: rid(), mode: 'custom', ...t })); // old timers keep their exact end date
+  // English defaults from older versions become empty, so every visitor sees them in their own language
+  if (cfg.pageTitle === OLD_DEFAULTS.pageTitle) cfg.pageTitle = '';
+  for (const t of cfg.timers) for (const k of ['label', 'doneMessage']) if (t[k] === OLD_DEFAULTS[k]) t[k] = '';
 } catch {}
 const save = () => { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(CFG_FILE, JSON.stringify(cfg, null, 2)); };
 save();
 
 const pub = () => ({ page: { pageTitle: cfg.pageTitle, showSeconds: cfg.showSeconds, showProgress: cfg.showProgress, showStatuses: cfg.showStatuses },
-  timers: cfg.timers, serverTime: now().toISOString() });
+  timers: cfg.timers, serverTime: now().toISOString(), tz: TZ });
 const full = () => ({ ...pub(), history: cfg.history });
-const log = msg => { cfg.history = [{ at: now().toISOString(), msg }, ...cfg.history].slice(0, 30); };
+// History keeps an action code + name, so the admin page can show it in any language
+const log = (act, name) => { cfg.history = [{ at: now().toISOString(), act, ...(name !== undefined && { name }) }, ...cfg.history].slice(0, 30); };
 
 const hash = s => crypto.createHash('sha256').update(String(s)).digest();
 const sign = v => crypto.createHmac('sha256', SECRET).update(v).digest('hex');
@@ -73,25 +80,35 @@ const validToken = t => {
 const cookie = req => Object.fromEntries((req.headers.cookie || '').split(';').map(c => c.trim().split('=')).filter(c => c[0]));
 const authed = req => validToken(cookie(req).session);
 
-const fails = new Map(); // 5 wrong passwords => 1 minute lock per IP
+const fails = new Map(); // 5 wrong passwords => 1 minute lock per IP; kept in memory only
 const locked = ip => (fails.get(ip)?.until || 0) > Date.now();
-const fail = ip => { const f = fails.get(ip) || { n: 0 }; f.n++; if (f.n >= 5) { f.until = Date.now() + 6e4; f.n = 0; } fails.set(ip, f); };
+const fail = ip => { const f = fails.get(ip) || { n: 0 }; f.n++; f.at = Date.now(); if (f.n >= 5) { f.until = f.at + 6e4; f.n = 0; } fails.set(ip, f); };
+setInterval(() => { // forget IPs a minute after their last failure or lock (see the privacy notice)
+  const old = Date.now() - 6e4;
+  for (const [ip, f] of fails) if (Math.max(f.at, f.until || 0) < old) fails.delete(ip);
+}, 6e4).unref();
 
+const ERRORS = { too_many: 'Too many attempts. Try again in a minute.', wrong_password: 'Wrong password', not_logged_in: 'Not logged in',
+  limit: 'Timer limit reached', name_required: 'Name is required', bad_start: 'Invalid start date', bad_end: 'Invalid end date',
+  end_before_start: 'End date must be after start date', not_found: 'Not found', timer_not_found: 'Timer not found', server: 'Server error' };
 const json = (res, code, obj, headers = {}) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers }); res.end(JSON.stringify(obj)); };
 const body = req => new Promise(r => { let d = ''; req.on('data', c => { d += c; if (d.length > 1e5) req.destroy(); }); req.on('end', () => { try { r(JSON.parse(d || '{}')); } catch { r({}); } }); });
-const page = (res, f) => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(fs.readFileSync(path.join(__dirname, 'public', f))); };
+const err = (res, status, code) => json(res, status, { code, error: ERRORS[code] });
+const FILES = { '/': 'index.html', '/admin': 'admin.html', '/privacy': 'privacy.html', '/i18n.js': 'i18n.js', '/statuses.js': 'statuses.js' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
+const page = (res, f) => { res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)], 'Cache-Control': 'no-cache' }); res.end(fs.readFileSync(path.join(__dirname, 'public', f))); };
 
 function parseTimer(b, base) {
   const o = { id: base.id };
   for (const k of ['name', 'label', 'doneMessage']) o[k] = typeof b[k] === 'string' ? b[k].trim().slice(0, 200) : base[k];
-  if (!o.name) return 'Name is required';
+  if (!o.name) return 'name_required';
   o.accent = /^#[0-9a-f]{6}$/i.test(b.accent) ? b.accent : base.accent;
   o.mode = ['year', 'half', 'custom'].includes(b.mode) ? b.mode : base.mode;
   const s = new Date(b.start ?? base.start);
-  if (isNaN(s)) return 'Invalid start date';
+  if (isNaN(s)) return 'bad_start';
   const e = o.mode === 'custom' ? new Date(b.end ?? base.end) : addMonths(s, MONTHS[o.mode]); // end = start + duration
-  if (isNaN(e)) return 'Invalid end date';
-  if (e <= s) return 'End date must be after start date';
+  if (isNaN(e)) return 'bad_end';
+  if (e <= s) return 'end_before_start';
   o.start = s.toISOString(); o.end = e.toISOString();
   return o;
 }
@@ -99,15 +116,14 @@ function parseTimer(b, base) {
 http.createServer(async (req, res) => {
   const url = req.url.split('?')[0], ip = req.socket.remoteAddress, M = req.method;
   try {
-    if (M === 'GET' && url === '/') return page(res, 'index.html');
-    if (M === 'GET' && url === '/admin') return page(res, 'admin.html');
+    if (M === 'GET' && FILES[url]) return page(res, FILES[url]);
     if (M === 'GET' && url === '/api/config') return json(res, 200, pub());
     if (M === 'GET' && url === '/healthz') return json(res, 200, { ok: true });
 
     if (M === 'POST' && url === '/api/login') {
-      if (locked(ip)) return json(res, 429, { error: 'Too many attempts. Try again in a minute.' });
+      if (locked(ip)) return err(res, 429, 'too_many');
       const b = await body(req);
-      if (!crypto.timingSafeEqual(hash(b.password), hash(PASS))) { fail(ip); return json(res, 401, { error: 'Wrong password' }); }
+      if (!crypto.timingSafeEqual(hash(b.password), hash(PASS))) { fail(ip); return err(res, 401, 'wrong_password'); }
       fails.delete(ip);
       return json(res, 200, { ok: true }, { 'Set-Cookie': `session=${makeToken()}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_HOURS * 3600}` });
     }
@@ -115,41 +131,41 @@ http.createServer(async (req, res) => {
       return json(res, 200, { ok: true }, { 'Set-Cookie': 'session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0' });
 
     if (url.startsWith('/api/admin/')) {
-      if (!authed(req)) return json(res, 401, { error: 'Not logged in' });
+      if (!authed(req)) return err(res, 401, 'not_logged_in');
       if (M === 'GET' && url === '/api/admin/config') return json(res, 200, full());
 
       if (M === 'PUT' && url === '/api/admin/settings') {
         const b = await body(req);
         if (typeof b.pageTitle === 'string') cfg.pageTitle = b.pageTitle.trim().slice(0, 200);
         for (const k of ['showSeconds', 'showProgress', 'showStatuses']) if (typeof b[k] === 'boolean') cfg[k] = b[k];
-        log('Page settings saved'); save(); return json(res, 200, full());
+        log('settings'); save(); return json(res, 200, full());
       }
       if (M === 'POST' && url === '/api/admin/timers') {
-        if (cfg.timers.length >= MAX_TIMERS) return json(res, 400, { error: 'Timer limit reached' });
+        if (cfg.timers.length >= MAX_TIMERS) return err(res, 400, 'limit');
         const t = newTimer(), r = parseTimer({ ...t, ...(await body(req)) }, t);
-        if (typeof r === 'string') return json(res, 400, { error: r });
-        cfg.timers.push(r); log(`Added "${r.name}"`); save(); return json(res, 200, full());
+        if (typeof r === 'string') return err(res, 400, r);
+        cfg.timers.push(r); log('added', r.name); save(); return json(res, 200, full());
       }
       const m = url.match(/^\/api\/admin\/timers\/(\w+)(\/reset)?$/);
       if (m) {
         const i = cfg.timers.findIndex(t => t.id === m[1]);
-        if (i < 0) return json(res, 404, { error: 'Timer not found' });
+        if (i < 0) return err(res, 404, 'timer_not_found');
         const t = cfg.timers[i];
         if (M === 'PUT' && !m[2]) {
           const r = parseTimer(await body(req), t);
-          if (typeof r === 'string') return json(res, 400, { error: r });
-          cfg.timers[i] = r; log(`Saved "${r.name}"`); save(); return json(res, 200, full());
+          if (typeof r === 'string') return err(res, 400, r);
+          cfg.timers[i] = r; log('saved', r.name); save(); return json(res, 200, full());
         }
-        if (M === 'DELETE' && !m[2]) { cfg.timers.splice(i, 1); log(`Deleted "${t.name}"`); save(); return json(res, 200, full()); }
+        if (M === 'DELETE' && !m[2]) { cfg.timers.splice(i, 1); log('deleted', t.name); save(); return json(res, 200, full()); }
         if (M === 'POST' && m[2]) {
           const b = await body(req), dur = new Date(t.end) - new Date(t.start), s = now();
           t.start = s.toISOString();
           if (t.mode !== 'custom') t.end = addMonths(s, MONTHS[t.mode]).toISOString();
           else if (b.keepDuration || new Date(t.end) <= s) t.end = new Date(+s + dur).toISOString();
-          log(`Restarted "${t.name}"`); save(); return json(res, 200, full());
+          log('restarted', t.name); save(); return json(res, 200, full());
         }
       }
     }
-    json(res, 404, { error: 'Not found' });
-  } catch (e) { console.error(e); json(res, 500, { error: 'Server error' }); }
+    err(res, 404, 'not_found');
+  } catch (e) { console.error(e); err(res, 500, 'server'); }
 }).listen(PORT, () => console.log('Listening on :' + PORT));
