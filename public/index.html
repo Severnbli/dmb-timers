@@ -76,7 +76,7 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .bar i{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 70%,var(--surface)),var(--accent))}
 .bar em{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--mute);opacity:.45;border-radius:2px}
 .meta{display:flex;justify-content:space-between;gap:8px;white-space:nowrap;margin-top:5px;color:var(--mute);font-size:.7rem;font-variant-numeric:tabular-nums}
-.status{position:relative;margin:0;padding:5px 8px 5px 24px;border-radius:8px;background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:.78rem;line-height:1.35}
+.status{position:relative;display:flex;align-items:center;margin:0;padding:5px 8px 5px 24px;border-radius:8px;background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:.78rem;line-height:1.35}
 .status::before{content:"\201C";position:absolute;left:7px;top:3px;font:700 1.2rem/1 Georgia,serif;color:var(--accent)}
 .done{margin:8px 0 0;font:800 1.25rem/1.1 var(--sans);letter-spacing:-.02em;color:var(--accent);overflow-wrap:anywhere}
 .meta span{overflow:hidden;text-overflow:ellipsis}
@@ -199,8 +199,8 @@ function render(){
   fitCards();
 }
 const fitted=new Map(); // fitted sizes per set of cards + width + texts, so the 1 s re-render does not measure again
-const KS=[.75,1.35]; // status font range, relative to its CSS size
-function fitCards(){ // every countdown gets one digit size, the largest all cards allow; then each status grows or shrinks into the space left
+const KS=[.75,1.8]; // status font range, relative to its CSS size
+function fitCards(){ // every countdown gets one digit size and every status box one height, the largest the tightest card allows; the status text then grows or shrinks inside its box
   if(fitted.size>50)fitted.clear();
   const cards=[...$.querySelectorAll('.card')].map(c=>{
     const st=c.querySelector('.status'), cnt=c.querySelector('.count'), done=c.querySelector('.done');
@@ -209,33 +209,50 @@ function fitCards(){ // every countdown gets one digit size, the largest all car
     const sBase=st&&px(st), gBase=grow.map(px);
     const CAP=[9,1.2,1.6]; // days grow freely, the unit label and clock only a little, so the space goes to the digits
     const fill=c.querySelector('.fill'); // the flexible gap: content fits while it keeps 1px more than its 6px minimum
-    return {c,cnt,
+    const gap=()=>fill.getBoundingClientRect().height;
+    return {c,st,cnt,gap,
       key:[c.dataset.id,c.getBoundingClientRect().width.toFixed(1),I18N.lang,st?.textContent,...grow.map(e=>e.textContent.length)].join('|'),
       setS:k=>{if(st)st.style.fontSize=sBase*k+'px'},
+      setH:h=>{if(st)st.style.height=h?h+'px':''},
       setG:(g,stack)=>{grow.forEach((e,i)=>e.style.fontSize=gBase[i]*Math.min(g,cnt?CAP[i]:9)+'px');cnt?.classList.toggle('stack',stack)},
-      fits:()=>fill.getBoundingClientRect().height>=7&&(!cnt||cnt.scrollWidth<=cnt.clientWidth),
-      gap:()=>fill.getBoundingClientRect().height};
+      fits:()=>gap()>=7&&(!cnt||cnt.scrollWidth<=cnt.clientWidth),
+      inBox:()=>st.scrollHeight<=st.clientHeight+.5};
   });
   const key=cards.map(x=>x.key).join('#');
   let plan=fitted.get(key);
   if(!plan){
-    const max=(x,set,lo,hi)=>{ // largest value in [lo, hi] that still fits, or lo when nothing does
-      set(lo);if(!x.fits())return lo;
-      for(let i=0;i<9;i++){const m=(lo+hi)/2;set(m);x.fits()?lo=m:hi=m}
+    const max=(set,ok,lo,hi)=>{ // largest value in [lo, hi] that still passes ok(), or lo when nothing does
+      set(lo);if(!ok())return lo;
+      for(let i=0;i<9;i++){const m=(lo+hi)/2;set(m);ok()?lo=m:hi=m}
       return lo*.98; // small margin against sub-pixel rounding
     };
-    let G=6; // with every status at its smallest, the tightest card sets the digit size for all
-    for(const x of cards)if(x.cnt){x.setS(KS[0]);G=Math.min(G,Math.max(...[false,true].map(stack=>max(x,g=>x.setG(g,stack),.3,6))))}
+    const cnts=cards.filter(x=>x.cnt);
+    cards.forEach(x=>{x.setS(KS[0]);x.setH(0)});
+    let G=6,H=Infinity; // the tightest card, with its status at the smallest size, sets the digit size for all
+    for(const x of cnts)G=Math.min(G,Math.max(...[false,true].map(stack=>max(g=>x.setG(g,stack),x.fits,.3,6))));
+    const lay=new Map(); // per countdown card the layout that leaves the most room for the status
+    for(const x of cards){
+      let room=-1;
+      for(const stack of x.cnt?[false,true]:[false]){
+        x.setG(x.cnt?G:1,stack);
+        const r=x.gap()-7+(x.st?x.st.getBoundingClientRect().height:0);
+        if(x.fits()&&r>room){room=r;lay.set(x,stack)}
+      }
+      if(x.st&&room>0)H=Math.min(H,room);
+    }
+    H=Math.floor(H);
     plan=cards.map(x=>{
-      let f;
-      if(x.cnt)for(const stack of [false,true]){x.setG(G,stack);const k=max(x,x.setS,KS[0],KS[1]);if(!f||k>f.k)f={k,g:G,stack}}
-      else{x.setS(1);f={k:1,g:max(x,g=>x.setG(g,false),.5,6),stack:false}} // "welcome home": the message grows, the status stays normal
-      x.setS(f.k);x.setG(f.g,f.stack);f.spread=x.gap()>16;
+      const stack=lay.get(x)||false, f={g:x.cnt?G:1,stack,h:x.st&&isFinite(H)?H:0,k:1};
+      x.setG(f.g,stack);x.setH(f.h);
+      if(x.st&&f.h)f.k=max(x.setS,x.inBox,KS[0],KS[1]);
+      x.setS(f.k);
+      if(!x.cnt)f.g=max(g=>x.setG(g,false),x.fits,.5,6); // "welcome home": the message grows into what is left
+      x.setG(f.g,stack);f.spread=x.gap()>16;
       return f;
     });
     fitted.set(key,plan);
   }
-  cards.forEach((x,i)=>{const f=plan[i];x.setS(f.k);x.setG(f.g,f.stack);x.c.classList.toggle('spread',f.spread)});
+  cards.forEach((x,i)=>{const f=plan[i];x.setS(f.k);x.setH(f.h);x.setG(f.g,f.stack);x.c.classList.toggle('spread',f.spread)});
 }
 addEventListener('resize',render);
 (()=>{ // while a card is hovered, accent-colored particles drift outward from its edges
