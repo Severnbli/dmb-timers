@@ -64,7 +64,8 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .chip.is-soon::before{animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.chip.is-soon::before{animation:none}}
-.count{display:flex;align-items:flex-end;gap:8px;margin:8px 0 0}
+.count{display:flex;align-items:flex-end;gap:.25em 8px;margin:8px 0 0}
+.count.stack{flex-direction:column;align-items:flex-start}
 .days{font:800 2.6rem/.85 var(--sans);letter-spacing:-.045em;color:var(--accent);font-variant-numeric:tabular-nums}
 .unit{display:flex;flex-direction:column;min-width:0;color:var(--mute);font-size:.78rem;font-weight:500;line-height:1.25}
 .clock{font:600 .82rem/1.2 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
@@ -191,21 +192,36 @@ function render(){
   const now=Date.now()+offset, ts=[...cfg.timers].sort((a,b)=>new Date(a.end)-new Date(b.end));
   $.className=ts.length===1?'one':'';
   $.innerHTML=ts.length?ts.map(x=>card(x,cfg.page,now)).join(''):`<p class="empty">${t('empty')}</p>`;
-  fitStatus();
+  fitCards();
 }
-const fitted=new Map(); // text scale that fits the square, per card + width + texts
-function fitStatus(){ // the status and the "welcome home" message are never cut off: they shrink until the card content fits
+const fitted=new Map(); // fitted sizes per card + width + texts, so the 1 s re-render does not measure again
+function fitCards(){ // fit each square: the status shrinks until it fits, then the countdown or "welcome home" text grows into the space left
   if(fitted.size>500)fitted.clear();
   for(const c of $.querySelectorAll('.card')){
-    const els=[...c.querySelectorAll('.status,.done')];if(!els.length)continue;
-    const key=c.dataset.id+'|'+c.clientWidth+'|'+els.map(e=>e.textContent).join('|');
-    const base=els.map(e=>parseFloat(getComputedStyle(e).fontSize));
-    const set=k=>els.forEach((e,i)=>e.style.fontSize=base[i]*k+'px');
-    let k=fitted.get(key);
-    if(k){set(k);continue}
-    k=1;
-    while(c.scrollHeight>c.clientHeight+1&&k>.45){k-=.04;set(k)}
-    fitted.set(key,k);
+    const st=c.querySelector('.status'), cnt=c.querySelector('.count'), done=c.querySelector('.done');
+    const grow=cnt?[cnt.querySelector('.days'),cnt.querySelector('.unit'),cnt.querySelector('.clock')]:done?[done]:[];
+    const key=[c.dataset.id,c.getBoundingClientRect().width.toFixed(1),I18N.lang,st?.textContent,...grow.map(e=>e.textContent.length)].join('|');
+    const px=e=>parseFloat(getComputedStyle(e).fontSize);
+    const sBase=st&&px(st), gBase=grow.map(px);
+    const CAP=[9,1.2,1.6]; // days grow freely, the unit label and clock only a little, so the space goes to the digits
+    const setS=k=>{if(st)st.style.fontSize=sBase*k+'px'};
+    const setG=(g,stack)=>{grow.forEach((e,i)=>e.style.fontSize=gBase[i]*Math.min(g,cnt?CAP[i]:9)+'px');cnt?.classList.toggle('stack',stack)};
+    const fill=c.querySelector('.fill'); // the flexible gap: content fits while it keeps 1px more than its 6px minimum
+    const fits=()=>fill.getBoundingClientRect().height>=7&&(!cnt||cnt.scrollWidth<=cnt.clientWidth);
+    let f=fitted.get(key);
+    if(!f){
+      let k=1,g=1;
+      while(!fits()&&k>.45){k-=.04;setS(k)} // status first
+      while(!fits()&&g>.5){g-=.05;setG(g,false)} // then the big text, only if the status alone could not make room
+      f={k,g,stack:false};
+      if(g===1&&grow.length)for(const stack of cnt?[false,true]:[false]){ // largest countdown / message in either layout
+        let lo=1,hi=6;setG(1,stack);if(!fits())continue;
+        for(let i=0;i<9;i++){const m=(lo+hi)/2;setG(m,stack);fits()?lo=m:hi=m}
+        if(lo*.98>f.g)f={k,g:lo*.98,stack}; // small margin against sub-pixel rounding
+      }
+      fitted.set(key,f);
+    }
+    setS(f.k);setG(f.g,f.stack);
   }
 }
 addEventListener('resize',render);
