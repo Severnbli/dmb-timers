@@ -42,7 +42,7 @@ const newTimer = (o = {}) => {
   return { id: rid(), name: '', label: '', mode: 'year', start: s.toISOString(),
     end: addMonths(s, 12).toISOString(), doneMessage: '', accent: '#b23a1e', ...o };
 };
-const defaults = () => ({ pageTitle: '', showSeconds: true, showProgress: true, showStatuses: true, timers: [], history: [] });
+const defaults = () => ({ pageTitle: '', showClock: false, showSeconds: true, showProgress: true, showStatuses: true, timers: [], history: [] });
 const OLD_DEFAULTS = { label: 'Until demobilization', doneMessage: 'Demobilized. Welcome home!', pageTitle: 'Demobilization timers' };
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -62,7 +62,7 @@ try {
 const save = () => { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(CFG_FILE, JSON.stringify(cfg, null, 2)); };
 save();
 
-const pub = () => ({ page: { pageTitle: cfg.pageTitle, showSeconds: cfg.showSeconds, showProgress: cfg.showProgress, showStatuses: cfg.showStatuses },
+const pub = () => ({ page: { pageTitle: cfg.pageTitle, showClock: cfg.showClock, showSeconds: cfg.showSeconds, showProgress: cfg.showProgress, showStatuses: cfg.showStatuses },
   timers: cfg.timers, serverTime: now().toISOString(), tz: TZ });
 const full = () => ({ ...pub(), history: cfg.history });
 // History keeps an action code + name, so the admin page can show it in any language
@@ -144,7 +144,7 @@ http.createServer(async (req, res) => {
       if (M === 'PUT' && url === '/api/admin/settings') {
         const b = await body(req);
         if (typeof b.pageTitle === 'string') cfg.pageTitle = b.pageTitle.trim().slice(0, 200);
-        for (const k of ['showSeconds', 'showProgress', 'showStatuses']) if (typeof b[k] === 'boolean') cfg[k] = b[k];
+        for (const k of ['showClock', 'showSeconds', 'showProgress', 'showStatuses']) if (typeof b[k] === 'boolean') cfg[k] = b[k];
         log('settings'); save(); return json(res, 200, full());
       }
       if (M === 'POST' && url === '/api/admin/timers') {

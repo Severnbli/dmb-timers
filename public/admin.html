@@ -123,6 +123,7 @@ details.timer form{padding:2px 16px 16px;border-top:1px solid var(--line)}
     <input id="pageTitle" type="text" maxlength="200">
     <p class="hint" data-i18n="f.defaultHint"></p>
     <div style="margin-top:8px">
+      <label class="chk"><span data-i18n="s.clock">Show hours, minutes and seconds next to days</span><input id="showClock" type="checkbox"></label>
       <label class="chk"><span data-i18n="s.seconds">Show seconds</span><input id="showSeconds" type="checkbox"></label>
       <label class="chk"><span data-i18n="s.progress">Show progress bars</span><input id="showProgress" type="checkbox"></label>
       <label class="chk"><span data-i18n="s.statuses">Show funny statuses</span><input id="showStatuses" type="checkbox"></label>
@@ -166,7 +167,7 @@ function summary(tm){ // short state line for the collapsed card
 function render(){
   if(!S)return;
   $('pageTitle').value=S.page.pageTitle;$('pageTitle').placeholder=t('page.defaultTitle');
-  $('showSeconds').checked=S.page.showSeconds;$('showProgress').checked=S.page.showProgress;$('showStatuses').checked=S.page.showStatuses;
+  $('showClock').checked=S.page.showClock;$('showSeconds').checked=S.page.showSeconds;$('showProgress').checked=S.page.showProgress;$('showStatuses').checked=S.page.showStatuses;
   const opt=(tm,v)=>`<option value="${v}"${tm.mode===v?' selected':''}>${t('mode.'+v)}</option>`;
   $('list').innerHTML=S.timers.map(tm=>`<details class="timer" data-id="${tm.id}" style="--c:${tm.accent}"${open.has(tm.id)?' open':''}>
     <summary><span class="who"><b>${esc(tm.name)}</b><small>${summary(tm)}</small></span></summary>
@@ -193,7 +194,7 @@ $('login').onsubmit=async e=>{e.preventDefault();try{await api('POST','/api/logi
 $('addForm').onsubmit=async e=>{e.preventDefault();const before=new Set(S.timers.map(x=>x.id));
   await run('POST','/api/admin/timers',{name:$('addName').value},'msg.added');$('addName').value='';
   const added=S.timers.find(x=>!before.has(x.id));if(added){open.add(added.id);render()}};
-$('settings').onsubmit=e=>{e.preventDefault();run('PUT','/api/admin/settings',{pageTitle:$('pageTitle').value,showSeconds:$('showSeconds').checked,showProgress:$('showProgress').checked,showStatuses:$('showStatuses').checked},'msg.settings')};
+$('settings').onsubmit=e=>{e.preventDefault();run('PUT','/api/admin/settings',{pageTitle:$('pageTitle').value,showClock:$('showClock').checked,showSeconds:$('showSeconds').checked,showProgress:$('showProgress').checked,showStatuses:$('showStatuses').checked},'msg.settings')};
 $('list').addEventListener('toggle',e=>{const id=e.target.dataset.id;if(id)e.target.open?open.add(id):open.delete(id)},true);
 $('list').onchange=e=>{ // live preview of the computed end date; the server recalculates on save
   const n=e.target.name;if(n!=='mode'&&n!=='start')return;
