@@ -43,7 +43,7 @@ function addMonths(d, n) { // calendar months; day is clamped (31 Aug + 6 months
 const newTimer = (o = {}) => {
   const s = now();
   return { id: rid(), name: '', label: '', mode: 'year', start: s.toISOString(),
-    end: addMonths(s, 12).toISOString(), doneMessage: '', accent: '#b23a1e', ...o };
+    end: addMonths(s, 12).toISOString(), doneMessage: '', accent: '#b23a1e', pending: false, ...o };
 };
 const defaults = () => ({ pageTitle: '', showBackground: true, showClock: false, showSeconds: true, showProgress: true, showStatuses: true,
   wordsAccept: true, wordsShow: true, wordsPerIp: 3, wordsPerHour: 21, wordsDays: 7, timers: [], history: [], words: [] });
@@ -129,6 +129,7 @@ function parseTimer(b, base) {
   for (const k of ['name', 'label', 'doneMessage']) o[k] = typeof b[k] === 'string' ? b[k].trim().slice(0, 200) : base[k];
   if (!o.name) return 'name_required';
   o.accent = /^#[0-9a-f]{6}$/i.test(b.accent) ? b.accent : base.accent;
+  o.pending = typeof b.pending === 'boolean' ? b.pending : !!base.pending; // the start is a call-up notice date, departure not confirmed yet
   o.mode = ['year', 'half', 'custom'].includes(b.mode) ? b.mode : base.mode;
   const s = new Date(b.start ?? base.start);
   if (isNaN(s)) return 'bad_start';
@@ -190,7 +191,7 @@ http.createServer(async (req, res) => {
       if (M === 'DELETE' && url === '/api/admin/words') { cfg.words = []; log('wordsCleared'); save(); return json(res, 200, full()); }
       const w = url.match(/^\/api\/admin\/words\/(\w+)$/);
       if (M === 'DELETE' && w) { cfg.words = cfg.words.filter(x => x.id !== w[1]); save(); return json(res, 200, full()); }
-      const m = url.match(/^\/api\/admin\/timers\/(\w+)(\/reset)?$/);
+      const m = url.match(/^\/api\/admin\/timers\/(\w+)(\/reset|\/confirm)?$/);
       if (m) {
         const i = cfg.timers.findIndex(t => t.id === m[1]);
         if (i < 0) return err(res, 404, 'timer_not_found');
@@ -201,6 +202,7 @@ http.createServer(async (req, res) => {
           cfg.timers[i] = r; log('saved', r.name); save(); return json(res, 200, full());
         }
         if (M === 'DELETE' && !m[2]) { cfg.timers.splice(i, 1); log('deleted', t.name); save(); return json(res, 200, full()); }
+        if (M === 'POST' && m[2] === '/confirm') { t.pending = false; log('confirmed', t.name); save(); return json(res, 200, full()); }
         if (M === 'POST' && m[2]) {
           const b = await body(req), dur = new Date(t.end) - new Date(t.start), s = now();
           t.start = s.toISOString();

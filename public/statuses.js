@@ -15,7 +15,8 @@
  */
 
 // Funny statuses. Each entry: [phases, rule, en-US, ru-RU, be-BY]
-// phases: space-separated list of soon (before call-up) | serve | done (after demobilization)
+// phases: space-separated list of soon (before call-up) | summons (the call-up date has come, departure not confirmed yet)
+//   | serve | done (after demobilization)
 // Rule keys; ranges are [min, max) in days, max may be omitted (= no upper limit):
 //   u: days until call-up        d: days served          l: days left
 //   a: days since demobilization p: percent served (0-100)
@@ -118,6 +119,14 @@ window.STATUSES = [
 ['soon', {u: [1, 60]}, 'Googling "what to take to the army" for the tenth time', 'В десятый раз гуглит «что взять в армию»', 'У дзясяты раз гугліць «што ўзяць у войска»'],
 
 ['soon', {u: [60], m: [9, 10]}, 'Back to school or college. The enlistment office is taking notes', 'Снова учёба. Военкомат делает пометки', 'Зноў вучоба. Ваенкамат робіць паметкі'],
+
+// ---- the call-up date has come, nobody has confirmed the departure yet ----
+['summons', {}, 'Left with the call-up notice. Or did he? Waiting for news', 'Ушёл по повестке. Или нет? Ждём новостей', 'Пайшоў па позве. Ці не? Чакаем навін'],
+['summons', {}, 'Somewhere between the enlistment office and the unit', 'Где-то между военкоматом и частью', 'Дзесьці паміж ваенкаматам і часткай'],
+['summons', {}, 'The phone is off. A good sign, probably', 'Телефон выключен. Наверное, это хороший знак', 'Тэлефон выключаны. Мусіць, гэта добры знак'],
+['summons', {d: [0, 1], h: [5, 12], w: 2}, 'Standing at the enlistment office with a bag and a sandwich', 'Стоит у военкомата с сумкой и бутербродом', 'Стаіць ля ваенкамата з сумкай і бутэрбродам'],
+['summons', {d: [0, 1]}, 'Everyone said goodbye. Waiting for the bus', 'Со всеми попрощался. Ждёт автобус', 'З усімі развітаўся. Чакае аўтобус'],
+['summons', {d: [2]}, 'Still no confirmation. The admin is probably out celebrating', 'Подтверждения всё нет. Админ, видимо, ещё празднует проводы', 'Пацвярджэння ўсё няма. Адмін, мабыць, яшчэ святкуе праводзіны'],
 
 // ---- arrival and basic training ----
 ['serve', {d: [0, 1], w: 3}, 'Got a new haircut. Everybody got the same one', 'Новая стрижка. У всех одинаковая', 'Новая стрыжка. Ва ўсіх аднолькавая'],

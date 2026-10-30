@@ -23,10 +23,10 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2322271c'/%3E%3Cpath d='M16 7l2.6 5.6 6.1.6-4.6 4.1 1.3 6L16 20.2 10.6 23.3l1.3-6-4.6-4.1 6.1-.6z' fill='%23fff'/%3E%3C/svg%3E">
 <title>Timers admin</title>
 <style>
-:root{--bg:#ebe8dc;--surface:#f8f6ef;--field:#fff;--ink:#22271c;--mute:#6a6e5b;--line:#d7d3c3;--accent:#b23a1e;--ok:#3d6b2f;--glass:color-mix(in srgb,var(--surface) 58%,transparent);--edge:rgb(255 255 255/.6);--hi:rgb(255 255 255/.75);--shadow:0 1px 2px rgb(40 45 30/.06),0 8px 24px -14px rgb(40 45 30/.25);
+:root{--bg:#ebe8dc;--surface:#f8f6ef;--field:#fff;--ink:#22271c;--mute:#6a6e5b;--line:#d7d3c3;--accent:#b23a1e;--ok:#3d6b2f;--summons:#8a5d06;--glass:color-mix(in srgb,var(--surface) 58%,transparent);--edge:rgb(255 255 255/.6);--hi:rgb(255 255 255/.75);--shadow:0 1px 2px rgb(40 45 30/.06),0 8px 24px -14px rgb(40 45 30/.25);
  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--field:#15180f;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d;--accent:#e0663f;--ok:#8fc27a;--glass:color-mix(in srgb,var(--surface) 52%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -16px rgb(0 0 0/.6)}}
-:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--field:#15180f;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d;--accent:#e0663f;--ok:#8fc27a;--glass:color-mix(in srgb,var(--surface) 52%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -16px rgb(0 0 0/.6)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--field:#15180f;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d;--accent:#e0663f;--ok:#8fc27a;--summons:#e0b45c;--glass:color-mix(in srgb,var(--surface) 52%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -16px rgb(0 0 0/.6)}}
+:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--field:#15180f;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d;--accent:#e0663f;--ok:#8fc27a;--summons:#e0b45c;--glass:color-mix(in srgb,var(--surface) 52%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -16px rgb(0 0 0/.6)}
 *{box-sizing:border-box}
 .box,details.timer,.lang,.theme{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--hi),var(--shadow)}
 .camo{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;filter:blur(14px);transform:scale(1.08)}
@@ -85,6 +85,8 @@ details.timer form{padding:2px 16px 16px;border-top:1px solid var(--line)}
 #words li time{flex:none;color:var(--mute);font-size:.78rem;font-variant-numeric:tabular-nums;padding-top:2px}
 #words li button{flex:none;min-height:0;width:30px;height:30px;padding:0;border-radius:50%;border-color:var(--line);background:transparent;color:var(--accent);font-size:1.1rem;line-height:1}
 #words li button:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.pill{flex:none;font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:999px;color:var(--summons);background:color-mix(in srgb,var(--summons) 16%,transparent)}
+button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background:var(--ok);border-color:var(--ok);color:#fff}
 #hist{list-style:none;padding:0;margin:0;font-size:.88rem}
 #hist li{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
 #hist li:last-child{border-bottom:0}
@@ -185,7 +187,7 @@ function show(on){$('login').hidden=on;$('panel').hidden=!on;$('logout').hidden=
 function summary(tm){ // short state line for the collapsed card
   const now=Date.now(),s=+new Date(tm.start),e=+new Date(tm.end);
   if(now<s){const d=Math.floor((s-now)/DAY);return `${t('state.soon')} · ${d} ${tp('unit.toStart',d)}`}
-  if(now<e){const d=Math.floor((e-now)/DAY);return `${t('state.serve')} · ${d} ${tp('unit.left',d)}`}
+  if(now<e){const d=Math.floor((e-now)/DAY);return `${t(tm.pending?'state.summons':'state.serve')} · ${d} ${tp('unit.left',d)}`}
   return t('state.done');
 }
 function render(){
@@ -194,12 +196,14 @@ function render(){
   $('showBackground').checked=S.page.showBackground;$('showClock').checked=S.page.showClock;$('showSeconds').checked=S.page.showSeconds;$('showProgress').checked=S.page.showProgress;$('showStatuses').checked=S.page.showStatuses;
   const opt=(tm,v)=>`<option value="${v}"${tm.mode===v?' selected':''}>${t('mode.'+v)}</option>`;
   $('list').innerHTML=S.timers.map(tm=>`<details class="timer" data-id="${tm.id}" style="--c:${tm.accent}"${open.has(tm.id)?' open':''}>
-    <summary><span class="who"><b>${esc(tm.name)}</b><small>${summary(tm)}</small></span></summary>
+    <summary><span class="who"><b>${esc(tm.name)}</b><small>${summary(tm)}</small></span>${tm.pending?`<span class="pill">${t('pending.badge')}</span>`:''}${tm.pending&&Date.now()>=+new Date(tm.start)?`<button type="button" class="ok" data-act="confirm" data-id="${tm.id}" data-name="${esc(tm.name)}">${t('btn.confirm')}</button>`:''}</summary>
     <form data-id="${tm.id}">
     <div class="grid"><div><label>${t('f.name')}</label><input type="text" name="name" value="${esc(tm.name)}" required maxlength="200"></div>
     <div><label>${t('f.label')}</label><input type="text" name="label" value="${esc(tm.label)}" maxlength="200"></div></div>
     <div class="grid"><div><label>${t('f.start')}</label><input type="datetime-local" name="start" value="${toLocal(tm.start)}" required></div>
     <div><label>${t('f.mode')}</label><select name="mode">${opt(tm,'year')}${opt(tm,'half')}${opt(tm,'custom')}</select></div></div>
+    <label class="chk"><span>${t('f.pending')}</span><input type="checkbox" name="pending"${tm.pending?' checked':''}></label>
+    <p class="hint">${t('f.pendingHint')}</p>
     <label>${t('f.end')} ${tm.mode==='custom'?'':`<small>(${t('f.endAuto')})</small>`}</label>
     <input type="datetime-local" name="end" value="${toLocal(tm.end)}" required${tm.mode==='custom'?'':' disabled'}>
     <label>${t('f.done')}</label><input type="text" name="doneMessage" value="${esc(tm.doneMessage)}" placeholder="${esc(t('timer.defaultDone'))}" maxlength="200">
@@ -234,9 +238,11 @@ $('list').onchange=e=>{ // live preview of the computed end date; the server rec
   if(m!=='custom'&&st)end.value=toLocal(addMonths(new Date(st),MONTHS[m]));
 };
 $('list').onsubmit=e=>{e.preventDefault();const f=e.target,b=Object.fromEntries(new FormData(f));
-  b.start=new Date(f.elements.start.value).toISOString();b.end=new Date(f.elements.end.value).toISOString();
+  b.pending=f.elements.pending.checked;b.start=new Date(f.elements.start.value).toISOString();b.end=new Date(f.elements.end.value).toISOString();
   run('PUT','/api/admin/timers/'+f.dataset.id,b,'msg.saved')};
-$('list').onclick=e=>{const a=e.target.dataset.act;if(!a)return;const f=e.target.closest('form'),id=f.dataset.id,name=f.querySelector('[name=name]').value;
+$('list').onclick=e=>{const a=e.target.dataset.act;if(!a)return;
+  if(a==='confirm'){e.preventDefault();const {id,name}=e.target.dataset;if(confirm(t('confirm.confirm',{name})))run('POST',`/api/admin/timers/${id}/confirm`,{},'msg.confirmed');return} // the button sits in the summary, so it must not toggle the card
+  const f=e.target.closest('form'),id=f.dataset.id,name=f.querySelector('[name=name]').value;
   if(a==='del'&&confirm(t('confirm.del',{name})))run('DELETE','/api/admin/timers/'+id,null,'msg.deleted');
   if(a==='reset'&&confirm(t('confirm.reset',{name})))run('POST',`/api/admin/timers/${id}/reset`,{},'msg.reset');
   if(a==='keep'&&confirm(t('confirm.keep',{name})))run('POST',`/api/admin/timers/${id}/reset`,{keepDuration:true},'msg.restarted')};
