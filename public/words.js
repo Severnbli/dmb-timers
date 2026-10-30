@@ -19,16 +19,19 @@
 (() => {
 const { t } = I18N;
 const MAX_ON_SCREEN = 3, HOLD = 6.5, still = matchMedia('(prefers-reduced-motion: reduce)');
-let words = [], acts = [], parts = [], holes = [], raf = 0, last = 0, next = 0, layer, cv, ctx, bag = [], by = '', dpr = 1;
+let acts = [], parts = [], holes = [], raf = 0, last = 0, layer, cv, ctx, by = '', dpr = 1;
 // Each word lives in its own box pinned to the page where the screen was when it arrived, so it scrolls away with the page;
 // particles and bullet holes remember that spot too. stage and org are the box and spot of the word being drawn right now
 let stage, org = { x: 0, y: 0 };
-// A cycle shows every word once; the admin sets the pause between words and the shortest cycle, so one word alone still waits the whole cycle
-let gap = 6, cycle = 120, cycleAt = -Infinity, cycleEnd = 0, shown = new Set(), lastId = '', lastKind = '';
+// The server runs one show for everyone (see server.js) and streams each word with its entrance and a seed;
+// the seed drives the word's place and directions, so every visitor sees the same thing at the same time
+let live, played = new Map();
 // Everything scales with the screen: 1 on a 1280×800 laptop, smaller on phones, larger on big monitors
 let S = 1;
 const scale = () => { S = Math.max(.75, Math.min(1.8, Math.min(innerWidth / 1280, innerHeight / 800) ** .7)); layer?.style.setProperty('--s', S.toFixed(3)); };
-const rnd = (a, b) => a + Math.random() * (b - a);
+let rand = Math.random;
+const rnd = (a, b) => a + rand() * (b - a);
+const seeded = n => () => { n = n + 0x6d2b79f5 | 0; let x = Math.imul(n ^ n >>> 15, 1 | n); x = x + Math.imul(x ^ x >>> 7, 61 | x) ^ x; return ((x ^ x >>> 14) >>> 0) / 4294967296; }; // mulberry32
 const ease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
 const TANK = `<svg viewBox="0 0 160 70" aria-hidden="true"><g class="gun"><rect x="88" y="17" width="64" height="6" rx="2" fill="#3b4428"/><rect x="146" y="15.5" width="9" height="9" rx="2" fill="#2e3520"/></g>
 <path d="M52 12h40l10 14H44z" fill="#56633a"/><rect x="58" y="6" width="22" height="7" rx="3" fill="#4a5632"/><path d="M10 28h138l-8 14H18z" fill="#4f5b37"/>
@@ -81,7 +84,7 @@ const ACTS = {
     };
   },
   burst(text) { // three shots from the edge of the screen; the word is pinned where they hit
-    const p = plate(text), [x, y] = spot(p), left = Math.random() < .5, fromX = left ? -20 : innerWidth + 20, fromY = y + rnd(-120, 120);
+    const p = plate(text), [x, y] = spot(p), left = rand() < .5, fromX = left ? -20 : innerWidth + 20, fromY = y + rnd(-120, 120);
     const hits = [0, 1, 2].map(i => [x + p.w * (.2 + .3 * i) + rnd(-8, 8), y + p.h / 2 + rnd(-10, 10)]); let shot = 0;
     p.el.style.opacity = 0;
     return s => {
@@ -159,7 +162,7 @@ const ACTS = {
   },
   flare(text) { // a signal flare goes up with a smoke trail, bursts into a green star, and the word glows under it
     const p = plate(text, 'glow'), [x, y] = spot(p), cx = x + p.w / 2, x0 = cx + rnd(-80, 80), y0 = innerHeight + 10, UP = 1.1;
-    const col = ['#7dff8a', '#ff5a4a', '#fff27a'][Math.floor(Math.random() * 3)]; let burst = false, trailAt = 0;
+    const col = ['#7dff8a', '#ff5a4a', '#fff27a'][Math.floor(rand() * 3)]; let burst = false, trailAt = 0;
     p.el.style.setProperty('--glow', col); p.el.style.opacity = 0;
     return s => {
       if (s < UP) {
@@ -194,15 +197,16 @@ const ACTS = {
   },
 };
 const KINDS = ['blast', 'burst', 'tank', 'para', 'heli', 'flare', 'radio'];
-function spawn(text, now, kind, author = '') {
+function spawn(text, now, kind, author = '', seed) {
   setup(); by = author;
   if (still.matches) kind = 'calm';
-  else if (!ACTS[kind]) { const k = KINDS.filter(x => x !== lastKind); kind = k[Math.floor(Math.random() * k.length)]; } // never the same entrance twice in a row
-  lastKind = kind;
+  else if (!ACTS[kind]) kind = KINDS[Math.floor(Math.random() * KINDS.length)];
   const box = document.createElement('div'), el = document.documentElement; box.className = 'act';
   org = { x: scrollX, y: scrollY }; stage = box; layer.append(box);
   Object.assign(box.style, { left: org.x + 'px', top: org.y + 'px', width: el.clientWidth + 'px', height: el.clientHeight + 'px' });
-  acts.push({ born: now, box, org, update: ACTS[kind](text) }); tag();
+  if (seed !== undefined) rand = seeded(seed);
+  try { acts.push({ born: now, box, org, update: ACTS[kind](text) }); } finally { rand = Math.random; } // only the setup is seeded; sparks stay random
+  tag();
 }
 const tag = () => { for (const q of parts) q.org ??= org; for (const h of holes) h.org ??= org; }; // new particles belong to the current word
 const at = q => ctx.setTransform(dpr, 0, 0, dpr, (q.org.x - scrollX) * dpr, (q.org.y - scrollY) * dpr);
@@ -237,42 +241,24 @@ function draw(dt, now) {
   ctx.globalAlpha = 1;
   parts = parts.filter(q => q.life > 0);
 }
-const key = w => w.text.toLowerCase();
-// Shuffled bag of ids: within one cycle no text shows twice, and the next cycle waits until this one has lasted long enough
-function refill(now) {
-  const byId = new Map(words.map(w => [w.id, w]));
-  bag = bag.filter(id => byId.has(id) && !shown.has(key(byId.get(id))));
-  if (!bag.length && now >= cycleEnd) {
-    const seen = new Set();
-    bag = words.filter(w => !seen.has(key(w)) && seen.add(key(w))).map(w => w.id).sort(() => Math.random() - .5);
-    if (bag.length > 1 && bag.at(-1) === lastId) bag.unshift(bag.pop()); // the last word of a cycle does not open the next one
-    shown.clear(); cycleAt = now; cycleEnd = now + cycle * 1000 * rnd(1, 1.3); // the cycle lasts at least the set time, sometimes a little longer
-  }
-  return byId;
-}
-function pick(now) {
-  const byId = refill(now); if (!bag.length) return null;
-  const w = byId.get(bag.pop()); shown.add(key(w)); lastId = w.id; next = now + pause(); return w;
-}
-const pause = () => Math.max(gap, cycle / words.length) * rnd(500, 1600); // spread over the cycle, unevenly
 function tick(now) {
   raf = 0;
   const dt = Math.min(.05, (now - (last || now)) / 1000); last = now;
-  if (words.length && now > next && acts.length < MAX_ON_SCREEN && !document.hidden) {
-    const w = pick(now);
-    if (w) spawn(w.text, now, null, w.author); else next = cycleEnd;
-  }
   acts = acts.filter(a => { stage = a.box; org = a.org; const done = a.update((now - a.born) / 1000); tag(); return !(done && (a.box.remove(), true)); });
   if (cv) draw(dt, now);
-  if (words.length || acts.length || parts.length) raf = requestAnimationFrame(tick);
+  if (acts.length || parts.length || holes.length) raf = requestAnimationFrame(tick);
 }
 const run = () => { if (!raf) raf = requestAnimationFrame(tick); };
 
-function set(list, page = {}) { // the current list and timing from /api/config; new words join the bag without restarting the show
-  const known = new Set(words.map(w => w.id)), fresh = list.filter(w => !known.has(w.id)).map(w => w.id);
-  if (known.size) bag = bag.concat(fresh);
-  gap = Math.max(1, page.wordsGap ?? gap); cycle = (page.wordsCycle ?? cycle / 60) * 60;
-  words = list; run();
+function play(e, own) { // one word from the show; a word arrives twice for its sender (the reply and the stream), so it plays once
+  const at = Date.now();
+  for (const [id, t] of played) if (at - t > 6e4) played.delete(id);
+  if (played.has(e.id) || (!own && (document.hidden || acts.length >= MAX_ON_SCREEN))) return;
+  played.set(e.id, at); spawn(e.text, performance.now(), e.kind, e.author, e.seed); run();
+}
+function set(page) { // follows the admin's "words fall on the page" switch from /api/config; EventSource reconnects on its own
+  if (page.wordsShow && !live) { live = new EventSource('/api/words/live'); live.onmessage = m => play(JSON.parse(m.data)); }
+  else if (!page.wordsShow && live) { live.close(); live = null; }
 }
 
 // The header button and its form; the button is hidden while the admin has closed the words
@@ -299,9 +285,7 @@ function button(el, open) {
       const d = await r.json().catch(() => ({}));
       if (!r.ok) { errEl.textContent = d.code ? t('err.' + d.code) : t('err.request'); return; }
       ta.value = ''; ta.oninput(); dlg.close();
-      // your own word arrives right away and takes the next turn: it counts for this cycle (or opens a new one) and the next word waits a full pause
-      const now = performance.now(); words = [d, ...words]; refill(now); shown.add(key(d)); lastId = d.id; next = now + pause();
-      spawn(d.text, now, null, d.author); run();
+      play(d, true); // your own word arrives right away; everyone else gets the same one from the stream
     } catch { errEl.textContent = t('err.request'); }
   };
   el.onclick = () => { dlg.showModal(); ta.focus(); };
