@@ -81,11 +81,13 @@ Put the site behind a reverse proxy with HTTPS if it is reachable from the inter
 
 ## Using the admin panel
 
-- **Add a person**, then open their card to set the service start and the duration: 1 year, half a year, or a custom end date.
+- The panel has four tabs: **People**, **Words**, **Settings** and **History**. It remembers the last one you opened.
+- **People** is a short list, one row per person, with a search box once there are six or more. Tap a row to edit that person in a window; **Save** closes it.
+- **Add a person**, and their editor opens right away: set the service start and the duration: 1 year, half a year, or a custom end date.
 - **Label** and **Message when finished** can be left empty. Each visitor then sees the default text in their own language.
 - **Start from now** restarts the timer from the current moment.
 - **Start is the call-up notice date** marks a start that is not confirmed yet. When the date comes, the person gets a **Confirm departure** button in the list.
-- **Page settings** are grouped into Look, Cards and Words of support, and save as soon as you change them: the background, the clock next to the days, seconds, progress bars, statuses, and whether visitors can send words.
+- **Settings** (Look and Cards) and the **Words** tab save as soon as you change them: the background, the clock next to the days, seconds, progress bars, statuses, and whether visitors can send words.
 - **Words of support** are limited to 3 per visitor and 21 for the whole site per hour by default, and kept for 7 days (0 keeps them). Set the pause between words (6 seconds by default) and the shortest cycle (2 minutes): in one cycle every word shows once in random order, so a single word appears once every 2 minutes. The server runs one show for everyone and streams it to open pages, so every visitor sees the same word with the same entrance at the same time, and a reload simply joins the show. If the site is behind a reverse proxy, let `/api/words/live` stream without buffering (the server sends `X-Accel-Buffering: no` for nginx). Delete one with its × button, or all at once.
 
 ## Localization
