@@ -24,12 +24,15 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b23a1e'/%3E%3Cpath d='M16 7l2.6 5.6 6.1.6-4.6 4.1 1.3 6L16 20.2 10.6 23.3l1.3-6-4.6-4.1 6.1-.6z' fill='%23fff'/%3E%3C/svg%3E">
 <title>Demobilization timers</title>
 <style>
-:root{--bg:#ebe8dc;--surface:#f8f6ef;--ink:#22271c;--mute:#6a6e5b;--wait:#4f8a3a;--soon:#c86a14;--line:#d7d3c3;--track:#e3dfd0;--shadow:0 1px 2px rgb(40 45 30/.06),0 8px 24px -12px rgb(40 45 30/.25);
+:root{--bg:#ebe8dc;--surface:#f8f6ef;--ink:#22271c;--mute:#6a6e5b;--wait:#4f8a3a;--soon:#c86a14;--line:#d7d3c3;--track:#e3dfd0;--glass:color-mix(in srgb,var(--surface) 55%,transparent);--edge:rgb(255 255 255/.6);--hi:rgb(255 255 255/.75);--shadow:0 1px 2px rgb(40 45 30/.06),0 8px 24px -12px rgb(40 45 30/.25);
  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--wait:#8fc27a;--soon:#f0a050;--line:#30352a;--track:#2a2f23;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}}
-:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--wait:#8fc27a;--soon:#f0a050;--line:#30352a;--track:#2a2f23;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--wait:#8fc27a;--soon:#f0a050;--line:#30352a;--track:#2a2f23;--glass:color-mix(in srgb,var(--surface) 50%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}}
+:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--wait:#8fc27a;--soon:#f0a050;--line:#30352a;--track:#2a2f23;--glass:color-mix(in srgb,var(--surface) 50%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}
 *{box-sizing:border-box}
-.theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer}
+/* iOS-like glass: translucent surfaces that blur the moving camouflage behind them */
+.glass,.card,.lang,.theme{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--hi),var(--shadow)}
+.camo{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;filter:blur(14px);transform:scale(1.08)}
+.theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border-radius:999px;color:var(--ink);cursor:pointer}
 .theme:hover{border-color:var(--mute)}
 .theme svg{width:18px;height:18px}
 html{-webkit-text-size-adjust:100%}
@@ -42,14 +45,14 @@ h1{margin:0;font-size:clamp(1.05rem,2.6vw,1.35rem);font-weight:700;letter-spacin
 h1::before{content:"";flex:none;width:12px;height:12px;border-radius:3px;background:var(--ink);transform:rotate(45deg)}
 h1 span{overflow-wrap:anywhere}
 .tools{display:flex;align-items:center;gap:8px}
-.lang{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.lang{display:inline-flex;padding:3px;border-radius:999px}
 .lang button{font:600 .8rem/1 var(--sans);letter-spacing:.04em;color:var(--mute);background:none;border:0;border-radius:999px;padding:7px 11px;min-width:40px;cursor:pointer}
 .lang button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
 .lang button:focus-visible,a:focus-visible,.notice button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 main{flex:1;width:100%;max-width:1140px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 24px max(16px,env(safe-area-inset-left));
  display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));align-content:start}
 main.one{max-width:420px;grid-template-columns:1fr;padding-top:3vh}
-.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px 10px;box-shadow:var(--shadow);overflow:hidden;min-width:0;
+.card{position:relative;border-radius:20px;padding:12px 14px 10px;box-shadow:var(--shadow);overflow:hidden;min-width:0;
  aspect-ratio:1;display:flex;flex-direction:column;container:card/inline-size} /* square at every width; top block and status/dates are pushed apart */
 .card>*{flex:none}
 .fill{flex:1 0 6px}
@@ -58,7 +61,7 @@ main.one{max-width:420px;grid-template-columns:1fr;padding-top:3vh}
 h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wrap:anywhere;max-height:2.5em;overflow:clip} /* two lines at most; clip, not hidden, so the text still flows around the chip */
 .label{margin:1px 0 0;color:var(--mute);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chip{float:right;margin-left:8px;display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;font:600 .62rem/1.4 var(--sans);letter-spacing:.05em;text-transform:uppercase;
- color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);white-space:nowrap}
+ color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);white-space:nowrap}
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .chip.is-soon::before{animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.25}}
@@ -98,7 +101,7 @@ footer a:hover{color:var(--ink)}
 .notice button{flex:none;font:600 .85rem var(--sans);border:0;border-radius:10px;padding:9px 14px;background:var(--surface);color:var(--ink);cursor:pointer}
 @media(max-width:600px){ /* phones: two compact cards per row when there is more than one timer */
  main:not(.one){grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
- main:not(.one) .card{padding:9px 9px 7px;border-radius:10px}
+ main:not(.one) .card{padding:9px 9px 7px;border-radius:16px}
  .notice{flex-direction:column;align-items:stretch}
 }
 /* Small squares: sizes follow the card's own content width, secondary lines drop out as it shrinks */
@@ -130,6 +133,7 @@ footer a:hover{color:var(--ink)}
 <footer><a href="/privacy" data-i18n="footer.privacy">Privacy</a><a href="https://github.com/Severnbli/dmb-timers" rel="noopener" data-i18n="footer.source">Source code</a></footer>
 <script src="/i18n.js"></script>
 <script src="/statuses.js"></script>
+<script src="/camo.js"></script>
 <script>
 const {t,tp}=I18N, COL={'en-US':2,'ru-RU':3,'be-BY':4}; // STATUSES text column per language
 let cfg=null, offset=0, clock=null;
@@ -138,7 +142,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const fmt=d=>new Date(d).toLocaleDateString(I18N.lang,{day:'numeric',month:'numeric',year:'2-digit'});
 const DAY=864e5;
 async function load(){
-  try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();
+  try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?CAMO.stop():CAMO.start();
   // hours and seasons follow the server (unit) time zone, not the visitor's
   try{clock=new Intl.DateTimeFormat('en-US',{timeZone:cfg.tz,month:'numeric',day:'numeric',hour:'numeric',hourCycle:'h23'})}catch{clock=null}
   title();}catch{}

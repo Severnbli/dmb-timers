@@ -42,7 +42,7 @@ const newTimer = (o = {}) => {
   return { id: rid(), name: '', label: '', mode: 'year', start: s.toISOString(),
     end: addMonths(s, 12).toISOString(), doneMessage: '', accent: '#b23a1e', ...o };
 };
-const defaults = () => ({ pageTitle: '', showClock: false, showSeconds: true, showProgress: true, showStatuses: true, timers: [], history: [] });
+const defaults = () => ({ pageTitle: '', showBackground: true, showClock: false, showSeconds: true, showProgress: true, showStatuses: true, timers: [], history: [] });
 const OLD_DEFAULTS = { label: 'Until demobilization', doneMessage: 'Demobilized. Welcome home!', pageTitle: 'Demobilization timers' };
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -62,7 +62,7 @@ try {
 const save = () => { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(CFG_FILE, JSON.stringify(cfg, null, 2)); };
 save();
 
-const pub = () => ({ page: { pageTitle: cfg.pageTitle, showClock: cfg.showClock, showSeconds: cfg.showSeconds, showProgress: cfg.showProgress, showStatuses: cfg.showStatuses },
+const pub = () => ({ page: { pageTitle: cfg.pageTitle, showBackground: cfg.showBackground, showClock: cfg.showClock, showSeconds: cfg.showSeconds, showProgress: cfg.showProgress, showStatuses: cfg.showStatuses },
   timers: cfg.timers, serverTime: now().toISOString(), tz: TZ });
 const full = () => ({ ...pub(), history: cfg.history });
 // History keeps an action code + name, so the admin page can show it in any language
@@ -94,14 +94,15 @@ const ERRORS = { too_many: 'Too many attempts. Try again in a minute.', wrong_pa
 const json = (res, code, obj, headers = {}) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers }); res.end(JSON.stringify(obj)); };
 const body = req => new Promise(r => { let d = ''; req.on('data', c => { d += c; if (d.length > 1e5) req.destroy(); }); req.on('end', () => { try { r(JSON.parse(d || '{}')); } catch { r({}); } }); });
 const err = (res, status, code) => json(res, status, { code, error: ERRORS[code] });
-const FILES = { '/': 'index.html', '/admin': 'admin.html', '/privacy': 'privacy.html', '/i18n.js': 'i18n.js', '/statuses.js': 'statuses.js' };
+const FILES = { '/': 'index.html', '/admin': 'admin.html', '/privacy': 'privacy.html', '/i18n.js': 'i18n.js', '/statuses.js': 'statuses.js', '/camo.js': 'camo.js' };
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
 const read = f => fs.readFileSync(path.join(__dirname, 'public', f), 'utf8');
 // Scripts are linked as /i18n.js?v=<hash of their contents>, so a browser holding an old copy fetches the new one after an update
-const VERSION = crypto.createHash('sha1').update(read('i18n.js') + read('statuses.js')).digest('hex').slice(0, 10);
+const SCRIPTS = Object.values(FILES).filter(f => f.endsWith('.js'));
+const VERSION = crypto.createHash('sha1').update(SCRIPTS.map(read).join('')).digest('hex').slice(0, 10);
 const page = (res, f) => {
   let out = read(f);
-  if (f.endsWith('.html')) out = out.replace(/src="\/(i18n|statuses)\.js"/g, `src="/$1.js?v=${VERSION}"`);
+  if (f.endsWith('.html')) out = out.replace(/src="\/([\w-]+)\.js"/g, `src="/$1.js?v=${VERSION}"`);
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)], 'Cache-Control': 'no-cache' }); res.end(out);
 };
 
@@ -144,7 +145,7 @@ http.createServer(async (req, res) => {
       if (M === 'PUT' && url === '/api/admin/settings') {
         const b = await body(req);
         if (typeof b.pageTitle === 'string') cfg.pageTitle = b.pageTitle.trim().slice(0, 200);
-        for (const k of ['showClock', 'showSeconds', 'showProgress', 'showStatuses']) if (typeof b[k] === 'boolean') cfg[k] = b[k];
+        for (const k of ['showBackground', 'showClock', 'showSeconds', 'showProgress', 'showStatuses']) if (typeof b[k] === 'boolean') cfg[k] = b[k];
         log('settings'); save(); return json(res, 200, full());
       }
       if (M === 'POST' && url === '/api/admin/timers') {
