@@ -17,7 +17,7 @@ A small self-hosted website for posting demob (demobilization) timers: countdown
 - Card states in their own colors: civilian (green), starts soon (orange), serving, and home
 - A call-up notice date can be the start of service: from that date the card says "Not clear yet" instead of a countdown, until the admin confirms that the person has left
 - Words of support: visitors send a word or a few sentences, and they arrive over the cards the army way: an explosion, a burst of fire, a tank, a parachute, a helicopter, a signal flare or a radiogram, with the sender's name if they gave one
-- A topographic map background (contour lines and map crosses) with glowing trig points, planned routes where units creep along, and now and then a gust of fire dust, behind translucent glass cards, in light and dark variants
+- A topographic map background (contour lines and map crosses) with glowing trig points, planned routes where units creep along, and small sparks of fire dust drifting on the wind, behind translucent glass cards, in light and dark variants
 - Funny statuses that follow the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Each status has its own time window (days served or days left, season, time of day), so nobody is waiting at the train station two days early
 - Interface in English, Russian and Belarusian, with a language switch on every page
 - Square timer cards that fit any screen, two per row on phones
