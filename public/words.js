@@ -19,7 +19,10 @@
 (() => {
 const { t } = I18N;
 const MAX_ON_SCREEN = 3, HOLD = 6.5, still = matchMedia('(prefers-reduced-motion: reduce)');
-let words = [], acts = [], parts = [], holes = [], raf = 0, last = 0, next = 0, layer, cv, ctx, bag = [], by = '';
+let words = [], acts = [], parts = [], holes = [], raf = 0, last = 0, next = 0, layer, cv, ctx, bag = [], by = '', dpr = 1;
+// Each word lives in its own box pinned to the page where the screen was when it arrived, so it scrolls away with the page;
+// particles and bullet holes remember that spot too. stage and org are the box and spot of the word being drawn right now
+let stage, org = { x: 0, y: 0 };
 // A cycle shows every word once; the admin sets the pause between words and the shortest cycle, so one word alone still waits the whole cycle
 let gap = 6, cycle = 120, cycleAt = -Infinity, cycleEnd = 0, shown = new Set(), lastId = '', lastKind = '';
 // Everything scales with the screen: 1 on a 1280×800 laptop, smaller on phones, larger on big monitors
@@ -35,7 +38,7 @@ function setup() {
   if (layer) return;
   layer = document.createElement('div'); layer.className = 'leaves'; layer.setAttribute('aria-hidden', 'true');
   cv = document.createElement('canvas'); ctx = cv.getContext('2d'); layer.append(cv); document.body.append(layer);
-  const size = () => { const r = devicePixelRatio || 1; cv.width = innerWidth * r; cv.height = innerHeight * r; ctx.setTransform(r, 0, 0, r, 0, 0); };
+  const size = () => { dpr = devicePixelRatio || 1; cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; };
   size(); scale(); addEventListener('resize', () => { size(); scale(); });
 }
 const PARA = `<svg viewBox="0 0 120 70" aria-hidden="true"><path d="M4 30C10 6 110 6 116 30c-8-5-16-5-22 0-6-5-16-5-22 0-6-5-18-5-24 0-6-5-16-5-22 0-6-5-14-5-22 0z" fill="#6b7a48" stroke="#4a5632" stroke-width="1.5"/>
@@ -46,7 +49,7 @@ const HELI = `<svg viewBox="0 0 170 60" aria-hidden="true"><rect class="rotor" x
 <path d="M56 46h60M64 40v6M108 40v6" stroke="#2b3120" stroke-width="3" stroke-linecap="round"/></svg>`;
 const sign = () => { const b = document.createElement('small'); b.className = 'by'; b.textContent = '– ' + by; return b; };
 function plate(text, cls = '') { // the word itself, on a glass plate, signed when the sender gave a name
-  const el = document.createElement('span'); el.className = 'leaf ' + cls; el.textContent = text; if (by && text) el.append(sign()); layer.append(el);
+  const el = document.createElement('span'); el.className = 'leaf ' + cls; el.textContent = text; if (by && text) el.append(sign()); stage.append(el);
   return { el, w: el.offsetWidth, h: el.offsetHeight };
 }
 const spot = p => [rnd(16, Math.max(16, innerWidth - p.w - 16)), rnd(innerHeight * .15, Math.max(innerHeight * .15, innerHeight * .75 - p.h))];
@@ -85,8 +88,9 @@ const ACTS = {
       while (shot < 3 && s > .2 + shot * .16) {
         const [hx, hy] = hits[shot++];
         parts.push({ type: 'tracer', x0: fromX, y0: fromY + rnd(-6, 6), x1: hx, y1: hy, life: 1 });
-        setTimeout(() => { for (let i = 0; i < 10; i++) { const a = rnd(0, 6.28), v = rnd(80, 220); parts.push({ type: 'spark', x: hx, y: hy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rnd(.25, .5), r: rnd(1, 2) }); }
-          holes.push({ x: hx, y: hy, r: rnd(3, 4.5), until: performance.now() + (HOLD + .6) * 1000, cracks: Array.from({ length: 5 }, () => [rnd(0, 6.28), rnd(6, 13)]) }); shake(2); }, 70);
+        const o = org;
+        setTimeout(() => { org = o; for (let i = 0; i < 10; i++) { const a = rnd(0, 6.28), v = rnd(80, 220); parts.push({ type: 'spark', x: hx, y: hy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rnd(.25, .5), r: rnd(1, 2) }); }
+          holes.push({ x: hx, y: hy, r: rnd(3, 4.5), until: performance.now() + (HOLD + .6) * 1000, cracks: Array.from({ length: 5 }, () => [rnd(0, 6.28), rnd(6, 13)]) }); tag(); shake(2); }, 70);
       }
       const a = s - .75, k = a < 0 ? 0 : ease(a / .12);
       p.el.style.transform = `translate(${x + (1 - k) * (left ? -30 : 30)}px,${y}px) rotate(${left ? -2 : 2}deg)`;
@@ -95,7 +99,7 @@ const ACTS = {
     };
   },
   tank(text) { // a tank rolls in with the word on board, fires once, waits, and rolls on
-    const p = plate(text), el = document.createElement('div'); el.className = 'tank'; el.innerHTML = TANK; layer.append(el);
+    const p = plate(text), el = document.createElement('div'); el.className = 'tank'; el.innerHTML = TANK; stage.append(el);
     const W = Math.min(190 * S, innerWidth * .38), H = W * 70 / 160, gun = el.querySelector('.gun'), wheels = [...el.querySelectorAll('.wh')];
     el.style.width = W + 'px';
     const y = rnd(innerHeight * .45, innerHeight - H - 24), stopX = rnd(16, Math.max(16, innerWidth - Math.max(W, p.w) - 16)), from = -W - p.w, to = innerWidth + 40;
@@ -118,7 +122,7 @@ const ACTS = {
     };
   },
   para(text) { // drifts down under a canopy, lands, and the canopy folds away
-    const p = plate(text), c = document.createElement('div'); c.className = 'chute'; c.innerHTML = PARA; layer.append(c);
+    const p = plate(text), c = document.createElement('div'); c.className = 'chute'; c.innerHTML = PARA; stage.append(c);
     const W = Math.max(110 * S, Math.min(170 * S, p.w * .9)), H = W * 70 / 120, [x, y] = spot(p), y0 = -p.h - H - 20, FALL = 4.2;
     c.style.width = W + 'px';
     return s => {
@@ -132,8 +136,8 @@ const ACTS = {
     };
   },
   heli(text) { // a helicopter brings the word on a sling, hovers, lowers it a little and flies on
-    const p = plate(text), h = document.createElement('div'); h.className = 'heli'; h.innerHTML = HELI; layer.append(h);
-    const rope = document.createElement('i'); rope.className = 'rope'; layer.append(rope);
+    const p = plate(text), h = document.createElement('div'); h.className = 'heli'; h.innerHTML = HELI; stage.append(h);
+    const rope = document.createElement('i'); rope.className = 'rope'; stage.append(rope);
     const W = Math.min(200 * S, innerWidth * .4), H = W * 60 / 170, rotor = h.querySelector('.rotor'), tail = h.querySelector('.tail');
     h.style.width = W + 'px';
     const y = rnd(innerHeight * .08, innerHeight * .3), stopX = rnd(16, Math.max(16, innerWidth - W - 16)), from = innerWidth + 30, to = -W - p.w - 40;
@@ -195,18 +199,25 @@ function spawn(text, now, kind, author = '') {
   if (still.matches) kind = 'calm';
   else if (!ACTS[kind]) { const k = KINDS.filter(x => x !== lastKind); kind = k[Math.floor(Math.random() * k.length)]; } // never the same entrance twice in a row
   lastKind = kind;
-  acts.push({ born: now, update: ACTS[kind](text) });
+  const box = document.createElement('div'), el = document.documentElement; box.className = 'act';
+  org = { x: scrollX, y: scrollY }; stage = box; layer.append(box);
+  Object.assign(box.style, { left: org.x + 'px', top: org.y + 'px', width: el.clientWidth + 'px', height: el.clientHeight + 'px' });
+  acts.push({ born: now, box, org, update: ACTS[kind](text) }); tag();
 }
+const tag = () => { for (const q of parts) q.org ??= org; for (const h of holes) h.org ??= org; }; // new particles belong to the current word
+const at = q => ctx.setTransform(dpr, 0, 0, dpr, (q.org.x - scrollX) * dpr, (q.org.y - scrollY) * dpr);
 function draw(dt, now) {
-  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
   holes = holes.filter(h => h.until > now);
   for (const h of holes) { // bullet holes with a few cracks
+    at(h);
     ctx.strokeStyle = 'rgb(30 30 25/.55)'; ctx.lineWidth = 1; ctx.beginPath();
     for (const [a, l] of h.cracks) { ctx.moveTo(h.x, h.y); ctx.lineTo(h.x + Math.cos(a) * l, h.y + Math.sin(a) * l); } ctx.stroke();
     ctx.fillStyle = '#1b1d16'; ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, 7); ctx.fill();
     ctx.strokeStyle = 'rgb(255 255 255/.35)'; ctx.beginPath(); ctx.arc(h.x, h.y, h.r + 1.5, 0, 7); ctx.stroke();
   }
   for (const q of parts) {
+    at(q);
     if (q.type === 'spark') { q.vy += (q.col ? 120 : 500) * dt; q.vx *= .98; q.x += q.vx * dt; q.y += q.vy * dt; q.life -= dt * (q.col ? .8 : 1.4);
       ctx.globalAlpha = Math.max(0, q.life); ctx.fillStyle = q.col || (q.life > .5 ? '#ffd27a' : '#ff7a2a'); ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, 7); ctx.fill(); }
     else if (q.type === 'smoke') { q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= .97; q.vy *= .97; q.r += 14 * dt; q.life -= dt * q.fade;
@@ -251,7 +262,7 @@ function tick(now) {
     const w = pick(now);
     if (w) spawn(w.text, now, null, w.author); else next = cycleEnd;
   }
-  acts = acts.filter(a => !a.update((now - a.born) / 1000));
+  acts = acts.filter(a => { stage = a.box; org = a.org; const done = a.update((now - a.born) / 1000); tag(); return !(done && (a.box.remove(), true)); });
   if (cv) draw(dt, now);
   if (words.length || acts.length || parts.length) raf = requestAnimationFrame(tick);
 }
