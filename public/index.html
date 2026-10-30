@@ -32,7 +32,7 @@
 [hidden]{display:none!important}
 /* iOS-like glass: translucent surfaces that blur the moving camouflage behind them */
 .glass,.card,.lang,.theme{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--hi),var(--shadow)}
-.camo{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;image-rendering:auto}
+.camo{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;z-index:-1;pointer-events:none;filter:blur(3px);transform:scale(1.03)}
 .theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border-radius:999px;color:var(--ink);cursor:pointer}
 .theme:hover{border-color:var(--mute)}
 .theme svg{width:18px;height:18px}

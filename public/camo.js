@@ -26,10 +26,13 @@ const PAL = { // base, then the layers from the largest patches to the smallest 
 const LAYERS = [{ r: [110, 230], k: .55 }, { r: [60, 130], k: .5 }, { r: [35, 75], k: .45 }, { r: [18, 40], k: .4 }, { r: [5, 13], k: .12 }];
 const RES = .5; // canvas pixels per CSS pixel; the CSS scales it up a little softly
 const theme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-let cv, ctx, patches = [], FW = 0, FH = 0;
+let cv, ctx, patches = [], FW = 0, FH = 0, VW = 0, VH = 0;
+// The canvas is as tall as the screen with the browser bars hidden (100lvh in the CSS), so on phones it does not
+// change size, and the picture does not move, when the address bar slides away while scrolling
+const box = () => [cv.clientWidth || innerWidth, cv.clientHeight || innerHeight];
 
 function layout() { // ragged patches over the whole field, stretched sideways like woodland camo
-  FW = Math.max(2560, innerWidth); FH = Math.max(1600, innerHeight); patches = [];
+  FW = Math.max(2560, VW); FH = Math.max(1600, VH); patches = [];
   LAYERS.forEach((L, li) => {
     const avg = (L.r[0] + L.r[1]) / 2, n = Math.round(FW * FH * L.k / (Math.PI * avg * avg * 1.3));
     for (let i = 0; i < n; i++) {
@@ -47,14 +50,14 @@ function grain(w, h) { // a small tile of fine noise, laid over everything
 }
 function draw() {
   if (!cv) return;
-  const W = Math.ceil(innerWidth * RES), H = Math.ceil(innerHeight * RES), pal = PAL[theme()], dark = theme() === 'dark';
+  const W = Math.ceil(VW * RES), H = Math.ceil(VH * RES), pal = PAL[theme()], dark = theme() === 'dark';
   cv.width = W; cv.height = H;
   ctx.setTransform(RES, 0, 0, RES, 0, 0);
-  ctx.fillStyle = pal[0]; ctx.fillRect(0, 0, innerWidth, innerHeight);
-  const ox = (FW - innerWidth) / 2, oy = (FH - innerHeight) / 2; // the middle of the field
+  ctx.fillStyle = pal[0]; ctx.fillRect(0, 0, VW, VH);
+  const ox = (FW - VW) / 2, oy = (FH - VH) / 2; // the middle of the field
   for (const p of patches) {
     const x = p.x - ox, y = p.y - oy, reach = p.R * 2;
-    if (x < -reach || y < -reach || x > innerWidth + reach || y > innerHeight + reach) continue;
+    if (x < -reach || y < -reach || x > VW + reach || y > VH + reach) continue;
     const n = p.pts.length, cos = Math.cos(p.rot), sin = Math.sin(p.rot);
     const pt = p.pts.map((k, i) => { const a = i / n * Math.PI * 2, px = Math.cos(a) * p.R * k * p.sx, py = Math.sin(a) * p.R * k * .8;
       return [x + px * cos - py * sin, y + px * sin + py * cos]; });
@@ -73,6 +76,7 @@ function start() {
   if (cv) return;
   cv = document.createElement('canvas'); cv.className = 'camo'; cv.setAttribute('aria-hidden', 'true');
   ctx = cv.getContext('2d'); document.body.prepend(cv);
+  [VW, VH] = box();
   if (!patches.length) layout();
   draw();
 }
@@ -85,7 +89,10 @@ function recolor() { // a theme change: the old picture stays on top as a copy a
   old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 450, easing: 'ease' }).onfinish = () => old.remove();
 }
 let resizing;
-addEventListener('resize', () => { clearTimeout(resizing); resizing = setTimeout(() => { if (innerWidth > FW || innerHeight > FH) layout(); draw(); }, 100); });
+addEventListener('resize', () => { clearTimeout(resizing); resizing = setTimeout(() => { // only a real change of the canvas size redraws
+  if (!cv) return; const [w, h] = box(); if (w === VW && h === VH) return;
+  VW = w; VH = h; if (VW > FW || VH > FH) layout(); draw();
+}, 100); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
 new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
