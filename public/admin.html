@@ -182,7 +182,7 @@ let toast;
 const say=(m,err)=>{const e=$('msg');e.textContent=m;e.className=m?'show'+(err?' err':''):'';clearTimeout(toast);if(m)toast=setTimeout(()=>e.className='',3000)};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const toLocal=v=>{const d=new Date(v);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
-const MONTHS={year:12,half:6}, DAY=864e5;
+const MONTHS={year:12,half:6}, DAY=864e5, SOON_DAYS=60; // same threshold as the timers page
 function addMonths(d,n){const r=new Date(d),day=r.getDate();r.setDate(1);r.setMonth(r.getMonth()+n);
   r.setDate(Math.min(day,new Date(r.getFullYear(),r.getMonth()+1,0).getDate()));return r}
 let S=null;
@@ -196,7 +196,7 @@ async function api(m,u,b){
 function show(on){$('login').hidden=on;$('panel').hidden=!on;$('logout').hidden=!on}
 function summary(tm){ // short state line for the collapsed card
   const now=Date.now(),s=+new Date(tm.start),e=+new Date(tm.end);
-  if(now<s){const d=Math.floor((s-now)/DAY);return `${t('state.soon')} · ${d} ${tp('unit.toStart',d)}`}
+  if(now<s){const d=Math.floor((s-now)/DAY);return `${t(d>SOON_DAYS?'state.wait':'state.soon')} · ${d} ${tp('unit.toStart',d)}`}
   if(now<e){const d=Math.floor((e-now)/DAY);return `${t(tm.pending?'state.summons':'state.serve')} · ${d} ${tp('unit.left',d)}`}
   return t('state.done');
 }
