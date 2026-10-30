@@ -75,45 +75,9 @@ const expire = () => {
 };
 expire(); save();
 setInterval(() => expire() && save(), 36e5).unref();
-const pub = () => ({ page: Object.fromEntries(PAGE_KEYS.map(k => [k, cfg[k]])), timers: cfg.timers, serverTime: now().toISOString(), tz: TZ });
+const pub = () => ({ page: Object.fromEntries(PAGE_KEYS.map(k => [k, cfg[k]])), timers: cfg.timers,
+  words: cfg.wordsShow ? cfg.words.map(w => ({ id: w.id, text: w.text, author: w.author || '' })) : [], serverTime: now().toISOString(), tz: TZ });
 const full = () => ({ ...pub(), words: cfg.words, history: cfg.history });
-
-// Words of support play as one show for everyone: the server picks each word, its entrance and a seed for its randomness
-// and streams them to every open page (GET /api/words/live), so a reload or a late visitor joins the same show.
-// In one cycle every text shows once in random order; the cycle lasts at least wordsCycle minutes, and few words are spread over it
-const KINDS = ['blast', 'burst', 'tank', 'para', 'heli', 'flare', 'radio'], MAX_LIVE = 1000;
-const live = new Set(); // open event streams
-const show = { bag: [], shown: new Set(), cycleEnd: 0, lastId: '', lastKind: '', timer: null };
-const rnd = (a, b) => a + Math.random() * (b - a);
-const wkey = w => w.text.toLowerCase();
-function refill() { // drops deleted and already shown words; a new cycle starts once the bag is empty and the cycle has lasted long enough
-  const byId = new Map(cfg.words.map(w => [w.id, w])), t = Date.now();
-  show.bag = show.bag.filter(id => byId.has(id) && !show.shown.has(wkey(byId.get(id))));
-  if (!show.bag.length && t >= show.cycleEnd) {
-    const seen = new Set();
-    show.bag = cfg.words.filter(w => !seen.has(wkey(w)) && seen.add(wkey(w))).map(w => w.id).sort(() => Math.random() - .5);
-    if (show.bag.length > 1 && show.bag.at(-1) === show.lastId) show.bag.unshift(show.bag.pop()); // the last word of a cycle does not open the next one
-    show.shown.clear(); show.cycleEnd = t + cfg.wordsCycle * 6e4 * rnd(1, 1.3); // sometimes a little longer than the set time
-  }
-  return byId;
-}
-const pause = () => Math.max(cfg.wordsGap, cfg.wordsCycle * 60 / Math.max(1, new Set(cfg.words.map(wkey)).size)) * rnd(500, 1600);
-const later = ms => { clearTimeout(show.timer); show.timer = setTimeout(step, ms); };
-function play(w) { // marks the word as shown in this cycle and sends it to every open page; never the same entrance twice in a row
-  const k = KINDS.filter(x => x !== show.lastKind);
-  const e = { id: w.id, text: w.text, author: w.author || '', kind: k[crypto.randomInt(k.length)], seed: crypto.randomInt(2 ** 31) };
-  show.shown.add(wkey(w)); show.lastId = w.id; show.lastKind = e.kind;
-  if (cfg.wordsShow) for (const r of live) r.write(`data: ${JSON.stringify(e)}\n\n`);
-  return e;
-}
-function step() { // the next word, then a random pause; with no words left in this cycle, wait for the next one
-  if (!cfg.wordsShow || !cfg.words.length) return later(5e3);
-  const byId = refill();
-  if (!show.bag.length) return later(Math.max(1e3, show.cycleEnd - Date.now()));
-  play(byId.get(show.bag.pop())); later(pause());
-}
-step();
-setInterval(() => { for (const r of live) r.write(': ping\n\n'); }, 25e3).unref(); // keeps proxies from closing idle streams
 // History keeps an action code + name, so the admin page can show it in any language
 const log = (act, name) => { cfg.history = [{ at: now().toISOString(), act, ...(name !== undefined && { name }) }, ...cfg.history].slice(0, 30); };
 
@@ -182,11 +146,6 @@ http.createServer(async (req, res) => {
   try {
     if (M === 'GET' && FILES[url]) return page(res, FILES[url]);
     if (M === 'GET' && url === '/api/config') return json(res, 200, pub());
-    if (M === 'GET' && url === '/api/words/live') {
-      if (live.size >= MAX_LIVE) return err(res, 503, 'server');
-      res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' });
-      res.write('retry: 5000\n\n'); live.add(res); req.on('close', () => live.delete(res)); return;
-    }
     if (M === 'GET' && url === '/healthz') return json(res, 200, { ok: true });
 
     if (M === 'POST' && url === '/api/words') { // a visitor's word of support; limited per IP and for the whole site per hour
@@ -200,8 +159,7 @@ http.createServer(async (req, res) => {
       sent.set(ip, [...mine, Date.now()]);
       const w = { id: rid(), text, author, at: now().toISOString() };
       cfg.words = [w, ...cfg.words].slice(0, MAX_WORDS); expire(); save();
-      refill(); const e = play(w); later(pause()); // a sent word plays for everyone right away and takes the next turn
-      return json(res, 200, e);
+      return json(res, 200, { id: w.id, text, author });
     }
     if (M === 'POST' && url === '/api/login') {
       if (locked(ip)) return err(res, 429, 'too_many');

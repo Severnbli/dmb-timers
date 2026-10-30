@@ -51,7 +51,7 @@ const DICT = {
   'confirm.keep': 'Restart "{name}" from now with the same duration?',
   'msg.added': 'Person added', 'msg.saved': 'Saved', 'msg.deleted': 'Deleted', 'msg.reset': 'Start reset',
   'msg.restarted': 'Restarted', 'msg.settings': 'Page settings saved', 'msg.loggedOut': 'Logged out',
-  's.title': 'Page settings', 's.pageTitle': 'Page title', 's.background': 'Moving camouflage background', 's.clock': 'Show hours, minutes and seconds next to days', 's.seconds': 'Show seconds', 's.progress': 'Show progress bars',
+  's.title': 'Page settings', 's.pageTitle': 'Page title', 's.background': 'Camouflage background', 's.clock': 'Show hours, minutes and seconds next to days', 's.seconds': 'Show seconds', 's.progress': 'Show progress bars',
   's.statuses': 'Show funny statuses', 's.save': 'Save settings', 's.open': 'Open timers page',
   'hist.title': 'Recent changes', 'hist.empty': 'No changes yet',
   'hist.added': 'Added "{name}"', 'hist.saved': 'Saved "{name}"', 'hist.deleted': 'Deleted "{name}"',
@@ -107,7 +107,7 @@ const DICT = {
   'confirm.keep': 'Перезапустить «{name}» с текущего момента с тем же сроком?',
   'msg.added': 'Человек добавлен', 'msg.saved': 'Сохранено', 'msg.deleted': 'Удалено', 'msg.reset': 'Начало сброшено',
   'msg.restarted': 'Перезапущено', 'msg.settings': 'Настройки страницы сохранены', 'msg.loggedOut': 'Вы вышли',
-  's.title': 'Настройки страницы', 's.pageTitle': 'Заголовок страницы', 's.background': 'Живой камуфляжный фон', 's.clock': 'Показывать часы, минуты и секунды рядом с днями', 's.seconds': 'Показывать секунды',
+  's.title': 'Настройки страницы', 's.pageTitle': 'Заголовок страницы', 's.background': 'Камуфляжный фон', 's.clock': 'Показывать часы, минуты и секунды рядом с днями', 's.seconds': 'Показывать секунды',
   's.progress': 'Показывать прогресс', 's.statuses': 'Показывать смешные статусы', 's.save': 'Сохранить настройки',
   's.open': 'Открыть страницу таймеров',
   'hist.title': 'Последние изменения', 'hist.empty': 'Изменений пока нет',
@@ -164,7 +164,7 @@ const DICT = {
   'confirm.keep': 'Перазапусціць «{name}» з бягучага моманту з тым жа тэрмінам?',
   'msg.added': 'Чалавек дададзены', 'msg.saved': 'Захавана', 'msg.deleted': 'Выдалена', 'msg.reset': 'Пачатак скінуты',
   'msg.restarted': 'Перазапушчана', 'msg.settings': 'Налады старонкі захаваны', 'msg.loggedOut': 'Вы выйшлі',
-  's.title': 'Налады старонкі', 's.pageTitle': 'Загаловак старонкі', 's.background': 'Жывы камуфляжны фон', 's.clock': 'Паказваць гадзіны, хвіліны і секунды побач з днямі', 's.seconds': 'Паказваць секунды',
+  's.title': 'Налады старонкі', 's.pageTitle': 'Загаловак старонкі', 's.background': 'Камуфляжны фон', 's.clock': 'Паказваць гадзіны, хвіліны і секунды побач з днямі', 's.seconds': 'Паказваць секунды',
   's.progress': 'Паказваць прагрэс', 's.statuses': 'Паказваць смешныя статусы', 's.save': 'Захаваць налады',
   's.open': 'Адкрыць старонку таймераў',
   'hist.title': 'Апошнія змены', 'hist.empty': 'Змен пакуль няма',
@@ -245,13 +245,26 @@ const ICONS = { // the icon shows the theme a click switches to
 };
 const systemDark = matchMedia('(prefers-color-scheme: dark)');
 const theme = () => document.documentElement.dataset.theme || (systemDark.matches ? 'dark' : 'light');
+// The theme changes with a short cross-fade of the whole page (the camouflage canvas too) where the browser can do it;
+// elsewhere colors, backgrounds and borders ease over. With reduced motion it switches at once
+const FADE = 450;
+function fade(swap) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return swap();
+  if (!document.getElementById('theme-fade')) document.head.insertAdjacentHTML('beforeend', `<style id="theme-fade">
+    ::view-transition-old(root),::view-transition-new(root){animation-duration:${FADE}ms;animation-timing-function:ease}
+    .theme-fading,.theme-fading *,.theme-fading *::before,.theme-fading *::after{transition:background-color ${FADE}ms ease,color ${FADE}ms ease,border-color ${FADE}ms ease,fill ${FADE}ms ease,stroke ${FADE}ms ease!important}</style>`);
+  if (document.startViewTransition) return document.startViewTransition(swap);
+  const root = document.documentElement; root.classList.add('theme-fading'); swap();
+  clearTimeout(fade.t); fade.t = setTimeout(() => root.classList.remove('theme-fading'), FADE + 50);
+}
 function themeSwitch(el) { // light / dark toggle; until it is used the system setting decides
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'theme';
   const draw = () => { const next = theme() === 'dark' ? 'light' : 'dark'; b.innerHTML = ICONS[next]; b.title = t('theme.' + next); b.setAttribute('aria-label', b.title); };
   b.onclick = () => {
     const next = theme() === 'dark' ? 'light' : 'dark', root = document.documentElement;
-    root.dataset.theme = next; root.style.colorScheme = next; store.set('theme', next); draw();
+    const swap = () => { root.dataset.theme = next; root.style.colorScheme = next; store.set('theme', next); draw(); };
+    fade(swap);
   };
   systemDark.addEventListener('change', draw); document.addEventListener('langchange', draw);
   el.replaceWith(b); draw();

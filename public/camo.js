@@ -14,72 +14,73 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Living camouflage background: soft blobs that wander, turn and change shape behind the glass cards.
-// Drawn on a small canvas and scaled up, so the blur is nearly free. Colors follow the current theme.
+// Still woodland camouflage behind the glass cards: layers of ragged patches from large to small, a fine grain and a soft vignette.
+// The pattern is laid out once per page load on a field larger than most screens, so resizing only shows more or less of it.
+// Colors follow the current theme. Nothing moves, so it costs nothing after the first paint.
 (() => {
-const PAL = {
+const PAL = { // base, then the layers from the largest patches to the smallest specks
   light: ['#c9c3a4', '#a9a77e', '#8c9466', '#b49f74', '#6f7a4f', '#d8d2b6'],
   dark: ['#181d12', '#2c3521', '#3d4831', '#48422c', '#27301f', '#11150c'],
 };
-const SCALE = 1 / 5, FPS = 60; // the CSS blur is light, so the canvas needs more pixels than it used to
-const still = matchMedia('(prefers-reduced-motion: reduce)');
+// Patch radius range in CSS pixels and how densely each layer covers the field
+const LAYERS = [{ r: [110, 230], k: .55 }, { r: [60, 130], k: .5 }, { r: [35, 75], k: .45 }, { r: [18, 40], k: .4 }, { r: [5, 13], k: .12 }];
+const RES = .5; // canvas pixels per CSS pixel; the CSS scales it up a little softly
 const theme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-let cv, ctx, blobs = [], raf = 0, last = 0, W = 0, H = 0;
+let cv, ctx, patches = [], FW = 0, FH = 0;
 
-function size() {
-  W = Math.ceil(innerWidth * SCALE); H = Math.ceil(innerHeight * SCALE);
+function layout() { // ragged patches over the whole field, stretched sideways like woodland camo
+  FW = Math.max(2560, innerWidth); FH = Math.max(1600, innerHeight); patches = [];
+  LAYERS.forEach((L, li) => {
+    const avg = (L.r[0] + L.r[1]) / 2, n = Math.round(FW * FH * L.k / (Math.PI * avg * avg * 1.3));
+    for (let i = 0; i < n; i++) {
+      const R = L.r[0] + Math.random() * (L.r[1] - L.r[0]), m = 9 + Math.floor(Math.random() * 5);
+      patches.push({ li, x: Math.random() * FW, y: Math.random() * FH, R, sx: 1.2 + Math.random() * .6, rot: (Math.random() - .5) * .9,
+        pts: Array.from({ length: m }, () => .55 + Math.random() * .6) });
+    }
+  });
+}
+function grain(w, h) { // a small tile of fine noise, laid over everything
+  const g = document.createElement('canvas'); g.width = w; g.height = h;
+  const c = g.getContext('2d'), img = c.createImageData(w, h);
+  for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() * 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 18; }
+  c.putImageData(img, 0, 0); return g;
+}
+function draw() {
+  if (!cv) return;
+  const W = Math.ceil(innerWidth * RES), H = Math.ceil(innerHeight * RES), pal = PAL[theme()], dark = theme() === 'dark';
   cv.width = W; cv.height = H;
-}
-function seed() { // enough blobs to cover the screen several times over, in every color of the palette
-  const n = 26, pal = PAL[theme()];
-  blobs = Array.from({ length: n }, (_, i) => ({
-    x: Math.random(), y: Math.random(), r: .08 + Math.random() * .12, col: pal[i % pal.length],
-    dir: Math.random() * 7, speed: .006 + Math.random() * .01, ph: Math.random() * 7,
-    pts: Array.from({ length: 7 }, () => .7 + Math.random() * .5), // lumpy outline
-  }));
-}
-function recolor() { const pal = PAL[theme()]; blobs.forEach((b, i) => b.col = pal[i % pal.length]); draw(performance.now()); }
-function draw(t) {
-  const s = t / 1000, m = Math.max(W, H);
-  ctx.fillStyle = PAL[theme()][0]; ctx.fillRect(0, 0, W, H);
-  for (const b of blobs) {
-    const R = b.r * m, cx = b.x * W, cy = b.y * H, n = b.pts.length;
-    const p = b.pts.map((k, i) => { // wobbling outline points; the shape turns slowly with its heading
-      const a = i / n * Math.PI * 2 + b.dir * .3, rr = R * k * (1 + .18 * Math.sin(s * .4 + b.ph + i * 1.7));
-      return [cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * .75];
-    });
-    const mid = i => { const a = p[i % n], c = p[(i + 1) % n]; return [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2]; };
-    ctx.fillStyle = b.col; ctx.beginPath(); ctx.moveTo(...mid(0));
-    for (let i = 1; i <= n; i++) ctx.quadraticCurveTo(...p[i % n], ...mid(i)); // smooth closed curve through the midpoints
+  ctx.setTransform(RES, 0, 0, RES, 0, 0);
+  ctx.fillStyle = pal[0]; ctx.fillRect(0, 0, innerWidth, innerHeight);
+  const ox = (FW - innerWidth) / 2, oy = (FH - innerHeight) / 2; // the middle of the field
+  for (const p of patches) {
+    const x = p.x - ox, y = p.y - oy, reach = p.R * 2;
+    if (x < -reach || y < -reach || x > innerWidth + reach || y > innerHeight + reach) continue;
+    const n = p.pts.length, cos = Math.cos(p.rot), sin = Math.sin(p.rot);
+    const pt = p.pts.map((k, i) => { const a = i / n * Math.PI * 2, px = Math.cos(a) * p.R * k * p.sx, py = Math.sin(a) * p.R * k * .8;
+      return [x + px * cos - py * sin, y + px * sin + py * cos]; });
+    const mid = i => { const a = pt[i % n], b = pt[(i + 1) % n]; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; };
+    ctx.fillStyle = pal[p.li + 1]; ctx.beginPath(); ctx.moveTo(...mid(0));
+    for (let i = 1; i <= n; i++) ctx.quadraticCurveTo(...pt[i % n], ...mid(i)); // a smooth closed curve through the midpoints
     ctx.fill();
   }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = ctx.createPattern(grain(128, 128), 'repeat'); ctx.fillRect(0, 0, W, H);
+  const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .25, W / 2, H / 2, Math.hypot(W, H) * .6);
+  v.addColorStop(0, 'rgb(0 0 0/0)'); v.addColorStop(1, dark ? 'rgb(0 0 0/.45)' : 'rgb(60 52 30/.22)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
 }
-function step(t) {
-  raf = requestAnimationFrame(step);
-  // a little slack, so frames that arrive a hair early are not skipped: skipping makes the motion jerk (33 ms, then 50 ms)
-  if (t - last < 1000 / FPS - 4) return;
-  const dt = Math.min(.1, (t - last) / 1000); last = t;
-  for (const b of blobs) { // a slow random walk that wraps around the edges
-    b.dir += Math.sin(t / 4000 + b.ph) * .4 * dt + (Math.random() - .5) * .3 * dt;
-    b.x += Math.cos(b.dir) * b.speed * dt; b.y += Math.sin(b.dir) * b.speed * dt;
-    const pad = b.r * 1.4;
-    if (b.x < -pad) b.x = 1 + pad; if (b.x > 1 + pad) b.x = -pad;
-    if (b.y < -pad) b.y = 1 + pad; if (b.y > 1 + pad) b.y = -pad;
-  }
-  draw(t);
-}
-function play() { cancelAnimationFrame(raf); raf = 0; if (!cv) return; draw(performance.now()); if (!still.matches) raf = requestAnimationFrame(step); }
 function start() {
   if (cv) return;
   cv = document.createElement('canvas'); cv.className = 'camo'; cv.setAttribute('aria-hidden', 'true');
   ctx = cv.getContext('2d'); document.body.prepend(cv);
-  size(); seed(); play();
+  if (!patches.length) layout();
+  draw();
 }
-function stop() { cancelAnimationFrame(raf); raf = 0; cv?.remove(); cv = null; }
-addEventListener('resize', () => { if (cv) { size(); draw(performance.now()); } });
-still.addEventListener('change', play);
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => cv && recolor());
-new MutationObserver(() => cv && recolor()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+function stop() { cv?.remove(); cv = null; }
+let resizing;
+addEventListener('resize', () => { clearTimeout(resizing); resizing = setTimeout(() => { if (innerWidth > FW || innerHeight > FH) layout(); draw(); }, 100); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 window.CAMO = { start, stop };
 })();

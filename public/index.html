@@ -32,7 +32,7 @@
 [hidden]{display:none!important}
 /* iOS-like glass: translucent surfaces that blur the moving camouflage behind them */
 .glass,.card,.lang,.theme{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--hi),var(--shadow)}
-.camo{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;filter:blur(5px);transform:scale(1.08)}
+.camo{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;image-rendering:auto}
 .theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border-radius:999px;color:var(--ink);cursor:pointer}
 .theme:hover{border-color:var(--mute)}
 .theme svg{width:18px;height:18px}
@@ -172,7 +172,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const fmt=d=>new Date(d).toLocaleDateString(I18N.lang,{day:'numeric',month:'numeric',year:'2-digit'});
 const DAY=864e5;
 async function load(){
-  try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?CAMO.stop():CAMO.start();WORDS.set(cfg.page);WORDS.button(document.getElementById('wordsBtn'),cfg.page.wordsAccept);
+  try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?CAMO.stop():CAMO.start();WORDS.set(cfg.words||[],cfg.page);WORDS.button(document.getElementById('wordsBtn'),cfg.page.wordsAccept);
   // hours and seasons follow the server (unit) time zone, not the visitor's
   try{clock=new Intl.DateTimeFormat('en-US',{timeZone:cfg.tz,month:'numeric',day:'numeric',hour:'numeric',hourCycle:'h23'})}catch{clock=null}
   title();}catch{}
