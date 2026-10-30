@@ -103,6 +103,7 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .leaf.radio{display:flex;flex-direction:column;gap:.2em;width:min(calc(300px*var(--s,1)),70vw);border-radius:6px;font:500 calc(.9rem*var(--s,1))/1.35 var(--mono);padding:.7em 1em .8em}
 .leaf.radio b{font:700 .68em/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);border-bottom:1px dashed var(--line);padding-bottom:5px;margin-bottom:2px}
 .leaf.radio i{font-style:normal;margin-left:1px}
+.leaf .by{display:block;margin-top:.25em;text-align:right;font:italic 500 .8em/1.2 var(--sans);color:var(--mute)}
 .leaf{position:absolute;left:0;top:0;max-width:min(calc(280px*var(--s,1)),70vw);padding:.45em .9em;border-radius:1.1em .25em 1.1em .25em;font:500 calc(.95rem*var(--s,1))/1.3 var(--sans);color:var(--ink);will-change:transform,opacity;opacity:0;
  background:var(--glass);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--hi),0 10px 30px -12px rgb(0 0 0/.35)}
 dialog.words{width:min(440px,calc(100% - 32px));padding:20px;border-radius:24px;color:var(--ink);background:var(--glass);-webkit-backdrop-filter:blur(28px) saturate(170%);backdrop-filter:blur(28px) saturate(170%);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--hi),0 24px 60px -20px rgb(0 0 0/.5)}
@@ -110,7 +111,8 @@ dialog.words::backdrop{background:rgb(20 23 15/.25);-webkit-backdrop-filter:blur
 dialog.words h2{margin:0 0 4px;font-size:1.15rem;max-height:none}
 .words .hint{margin:0 0 12px;color:var(--mute);font-size:.85rem}
 .words textarea{width:100%;resize:vertical;min-height:84px;padding:10px 12px;font:16px/1.4 var(--sans);color:var(--ink);background:color-mix(in srgb,var(--surface) 70%,transparent);border:1px solid var(--line);border-radius:14px}
-.words textarea:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.words input{width:100%;margin-top:8px;padding:10px 12px;font:16px/1.4 var(--sans);color:var(--ink);background:color-mix(in srgb,var(--surface) 70%,transparent);border:1px solid var(--line);border-radius:14px}
+.words textarea:focus-visible,.words input:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
 .wrow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
 .wrow small{color:var(--mute);font-size:.78rem}.wrow .err{color:#c0392b;text-align:right}
 .words button{flex:1;font:600 .92rem var(--sans);padding:11px 16px;border-radius:14px;border:1px solid var(--ink);background:var(--ink);color:var(--surface);cursor:pointer}
@@ -169,7 +171,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const fmt=d=>new Date(d).toLocaleDateString(I18N.lang,{day:'numeric',month:'numeric',year:'2-digit'});
 const DAY=864e5;
 async function load(){
-  try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?CAMO.stop():CAMO.start();WORDS.set(cfg.words||[]);WORDS.button(document.getElementById('wordsBtn'),cfg.page.wordsAccept);
+  try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?CAMO.stop():CAMO.start();WORDS.set(cfg.words||[],cfg.page);WORDS.button(document.getElementById('wordsBtn'),cfg.page.wordsAccept);
   // hours and seasons follow the server (unit) time zone, not the visitor's
   try{clock=new Intl.DateTimeFormat('en-US',{timeZone:cfg.tz,month:'numeric',day:'numeric',hour:'numeric',hourCycle:'h23'})}catch{clock=null}
   title();}catch{}

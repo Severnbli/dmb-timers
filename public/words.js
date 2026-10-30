@@ -19,7 +19,9 @@
 (() => {
 const { t } = I18N;
 const MAX_ON_SCREEN = 3, HOLD = 6.5, still = matchMedia('(prefers-reduced-motion: reduce)');
-let words = [], acts = [], parts = [], holes = [], raf = 0, last = 0, next = 0, layer, cv, ctx, bag = [];
+let words = [], acts = [], parts = [], holes = [], raf = 0, last = 0, next = 0, layer, cv, ctx, bag = [], by = '';
+// A cycle shows every word once; the admin sets the pause between words and the shortest cycle, so one word alone still waits the whole cycle
+let gap = 6, cycle = 120, cycleAt = -Infinity, cycleEnd = 0, shown = new Set(), lastId = '', lastKind = '';
 // Everything scales with the screen: 1 on a 1280×800 laptop, smaller on phones, larger on big monitors
 let S = 1;
 const scale = () => { S = Math.max(.75, Math.min(1.8, Math.min(innerWidth / 1280, innerHeight / 800) ** .7)); layer?.style.setProperty('--s', S.toFixed(3)); };
@@ -42,8 +44,9 @@ const HELI = `<svg viewBox="0 0 170 60" aria-hidden="true"><rect class="rotor" x
 <path d="M40 22c0-6 8-10 20-10h34c16 0 28 8 30 20l-2 8H52c-8 0-12-6-12-12z" fill="#4f5b37"/><path d="M100 16c10 1 18 7 21 15h-21z" fill="#a9c4c9" opacity=".75"/>
 <path d="M42 24H8l-4-8h-4l4 14h40z" fill="#4f5b37"/><rect class="tail" x="0" y="10" width="3" height="16" rx="1.5" fill="#2b3120"/>
 <path d="M56 46h60M64 40v6M108 40v6" stroke="#2b3120" stroke-width="3" stroke-linecap="round"/></svg>`;
-function plate(text, cls = '') { // the word itself, on a glass plate
-  const el = document.createElement('span'); el.className = 'leaf ' + cls; el.textContent = text; layer.append(el);
+const sign = () => { const b = document.createElement('small'); b.className = 'by'; b.textContent = '– ' + by; return b; };
+function plate(text, cls = '') { // the word itself, on a glass plate, signed when the sender gave a name
+  const el = document.createElement('span'); el.className = 'leaf ' + cls; el.textContent = text; if (by && text) el.append(sign()); layer.append(el);
   return { el, w: el.offsetWidth, h: el.offsetHeight };
 }
 const spot = p => [rnd(16, Math.max(16, innerWidth - p.w - 16)), rnd(innerHeight * .15, Math.max(innerHeight * .15, innerHeight * .75 - p.h))];
@@ -171,7 +174,7 @@ const ACTS = {
   },
   radio(text) { // a radiogram types itself out letter by letter, with a blinking cursor
     const p = plate('', 'radio'), [x, y] = spot({ w: Math.min(300 * S, innerWidth * .7), h: 80 * S });
-    p.el.innerHTML = `<b>${t('words.radio')}</b><div><span></span><i>▌</i></div>`;
+    p.el.innerHTML = `<b>${t('words.radio')}</b><div><span></span><i>▌</i></div>`; if (by) p.el.append(sign());
     const body = p.el.querySelector('span'), cur = p.el.querySelector('i'), TYPE = Math.min(3.5, text.length * .06);
     p.el.style.transform = `translate(${x}px,${y}px) rotate(${rnd(-2, 2)}deg)`;
     return s => {
@@ -187,9 +190,11 @@ const ACTS = {
   },
 };
 const KINDS = ['blast', 'burst', 'tank', 'para', 'heli', 'flare', 'radio'];
-function spawn(text, now, kind) {
-  setup();
-  kind = still.matches ? 'calm' : ACTS[kind] ? kind : KINDS[Math.floor(Math.random() * KINDS.length)];
+function spawn(text, now, kind, author = '') {
+  setup(); by = author;
+  if (still.matches) kind = 'calm';
+  else if (!ACTS[kind]) { const k = KINDS.filter(x => x !== lastKind); kind = k[Math.floor(Math.random() * k.length)]; } // never the same entrance twice in a row
+  lastKind = kind;
   acts.push({ born: now, update: ACTS[kind](text) });
 }
 function draw(dt, now) {
@@ -221,15 +226,26 @@ function draw(dt, now) {
   ctx.globalAlpha = 1;
   parts = parts.filter(q => q.life > 0);
 }
-function pick() { // shuffled bag, so every word shows up before any repeats
-  if (!bag.length) bag = words.map(w => w.text).sort(() => Math.random() - .5);
-  return bag.pop();
+const key = w => w.text.toLowerCase();
+function pick(now) { // shuffled bag of ids: within one cycle no text shows twice, and the next cycle waits until this one has lasted long enough
+  const byId = new Map(words.map(w => [w.id, w]));
+  bag = bag.filter(id => byId.has(id) && !shown.has(key(byId.get(id))));
+  if (!bag.length) {
+    if (now < cycleEnd) return null;
+    const seen = new Set();
+    bag = words.filter(w => !seen.has(key(w)) && seen.add(key(w))).map(w => w.id).sort(() => Math.random() - .5);
+    if (bag.length > 1 && bag.at(-1) === lastId) bag.unshift(bag.pop()); // the last word of a cycle does not open the next one
+    shown.clear(); cycleAt = now; cycleEnd = now + cycle * 1000 * rnd(1, 1.3); // the cycle lasts at least the set time, sometimes a little longer
+  }
+  const w = byId.get(bag.pop()); shown.add(key(w)); lastId = w.id; return w;
 }
 function tick(now) {
   raf = 0;
   const dt = Math.min(.05, (now - (last || now)) / 1000); last = now;
   if (words.length && now > next && acts.length < MAX_ON_SCREEN && !document.hidden) {
-    spawn(pick(), now); next = now + rnd(4500, 8000);
+    const w = pick(now);
+    if (w) { spawn(w.text, now, null, w.author); next = now + Math.max(gap, cycle / words.length) * rnd(500, 1600); } // spread over the cycle, unevenly
+    else next = cycleEnd;
   }
   acts = acts.filter(a => !a.update((now - a.born) / 1000));
   if (cv) draw(dt, now);
@@ -237,9 +253,10 @@ function tick(now) {
 }
 const run = () => { if (!raf) raf = requestAnimationFrame(tick); };
 
-function set(list) { // the current list from /api/config; new words join the bag without restarting the show
-  const known = new Set(words.map(w => w.id)), fresh = list.filter(w => !known.has(w.id)).map(w => w.text);
+function set(list, page = {}) { // the current list and timing from /api/config; new words join the bag without restarting the show
+  const known = new Set(words.map(w => w.id)), fresh = list.filter(w => !known.has(w.id)).map(w => w.id);
   if (known.size) bag = bag.concat(fresh);
+  gap = Math.max(1, page.wordsGap ?? gap); cycle = (page.wordsCycle ?? cycle / 60) * 60;
   words = list; run();
 }
 
@@ -251,10 +268,11 @@ function button(el, open) {
   dlg.className = 'words';
   dlg.innerHTML = `<form method="dialog"><h2 data-i18n="words.title"></h2><p class="hint" data-i18n="words.hint"></p>
     <textarea name="text" rows="3" maxlength="160" required data-i18n-ph="words.ph"></textarea>
+    <input name="author" maxlength="40" autocomplete="nickname" data-i18n-ph="words.author" data-i18n-label="words.author">
     <div class="wrow"><small class="cnt">0 / 160</small><small class="err" role="alert"></small></div>
     <div class="wrow"><button type="button" class="alt" value="cancel" data-i18n="words.cancel"></button><button data-i18n="words.send"></button></div></form>`;
   document.body.append(dlg); I18N.apply(dlg);
-  const f = dlg.querySelector('form'), ta = f.elements.text, errEl = dlg.querySelector('.err');
+  const f = dlg.querySelector('form'), ta = f.elements.text, au = f.elements.author, errEl = dlg.querySelector('.err');
   ta.oninput = () => { dlg.querySelector('.cnt').textContent = `${ta.value.length} / 160`; errEl.textContent = ''; };
   f.querySelector('.alt').onclick = () => dlg.close();
   dlg.onclick = e => { if (e.target === dlg) dlg.close(); }; // a tap outside the form closes it
@@ -262,16 +280,16 @@ function button(el, open) {
     e.preventDefault();
     if (!ta.value.trim()) { errEl.textContent = t('err.words_empty'); return; }
     try {
-      const r = await fetch('/api/words', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: ta.value }) });
+      const r = await fetch('/api/words', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: ta.value, author: au.value }) });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) { errEl.textContent = d.code ? t('err.' + d.code) : t('err.request'); return; }
       ta.value = ''; ta.oninput(); dlg.close();
-      words = [d, ...words]; spawn(d.text, performance.now()); run(); // your own word arrives right away
+      words = [d, ...words]; shown.add(key(d)); spawn(d.text, performance.now(), null, d.author); run(); // your own word arrives right away and counts for this cycle
     } catch { errEl.textContent = t('err.request'); }
   };
   el.onclick = () => { dlg.showModal(); ta.focus(); };
 }
 
 // play() shows one word with a chosen effect, handy for trying them out from the console
-window.WORDS = { set, button, play: (text, kind) => { spawn(text, performance.now(), kind); run(); } };
+window.WORDS = { set, button, play: (text, kind, author) => { spawn(text, performance.now(), kind, author); run(); } };
 })();

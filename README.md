@@ -16,7 +16,7 @@ A small self-hosted website for posting demob (demobilization) timers: countdown
 - Days until the end of service, a progress bar, and the current day of service. In the last day the hours, minutes and seconds become the big number; next to the days they are optional
 - Card states in their own colors: civilian (green), starts soon (orange), serving, and home
 - A call-up notice date can be the start of service: from that date the card says "Not clear yet" instead of a countdown, until the admin confirms that the person has left
-- Words of support: visitors send a word or a few sentences, and they arrive over the cards the army way: an explosion, a burst of fire, a tank, a parachute, a helicopter, a signal flare or a radiogram
+- Words of support: visitors send a word or a few sentences, and they arrive over the cards the army way: an explosion, a burst of fire, a tank, a parachute, a helicopter, a signal flare or a radiogram, with the sender's name if they gave one
 - A moving camouflage background behind translucent glass cards, in light and dark variants
 - Funny statuses that follow the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Each status has its own time window (days served or days left, season, time of day), so nobody is waiting at the train station two days early
 - Interface in English, Russian and Belarusian, with a language switch on every page
@@ -86,7 +86,7 @@ Put the site behind a reverse proxy with HTTPS if it is reachable from the inter
 - **Start from now** restarts the timer from the current moment.
 - **Start is the call-up notice date** marks a start that is not confirmed yet. When the date comes, the person gets a **Confirm departure** button in the list.
 - **Page settings** are grouped into Look, Cards and Words of support, and save as soon as you change them: the background, the clock next to the days, seconds, progress bars, statuses, and whether visitors can send words.
-- **Words of support** are limited to 3 per visitor and 21 for the whole site per hour by default, and kept for 7 days (0 keeps them). Delete one with its × button, or all at once.
+- **Words of support** are limited to 3 per visitor and 21 for the whole site per hour by default, and kept for 7 days (0 keeps them). Set the pause between words (6 seconds by default) and the shortest cycle (2 minutes): in one cycle every word shows once in random order, so a single word appears once every 2 minutes. Delete one with its × button, or all at once.
 
 ## Localization
 
@@ -120,7 +120,7 @@ Calendar and clock keys use the server time zone:
 
 ## Privacy
 
-The site sets no cookies for visitors and loads nothing from third parties. Words of support are stored without names; the IP address used for their limit stays in memory for an hour. The full notice is at `/privacy` and is linked from every page. Names and dates entered in the admin panel are public, so get people's consent before you add them.
+The site sets no cookies for visitors and loads nothing from third parties. Words of support are stored with only the name the sender chose to type; the IP address used for their limit stays in memory for an hour. The full notice is at `/privacy` and is linked from every page. Names and dates entered in the admin panel are public, so get people's consent before you add them.
 
 ## License
 
