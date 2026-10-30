@@ -227,25 +227,29 @@ function draw(dt, now) {
   parts = parts.filter(q => q.life > 0);
 }
 const key = w => w.text.toLowerCase();
-function pick(now) { // shuffled bag of ids: within one cycle no text shows twice, and the next cycle waits until this one has lasted long enough
+// Shuffled bag of ids: within one cycle no text shows twice, and the next cycle waits until this one has lasted long enough
+function refill(now) {
   const byId = new Map(words.map(w => [w.id, w]));
   bag = bag.filter(id => byId.has(id) && !shown.has(key(byId.get(id))));
-  if (!bag.length) {
-    if (now < cycleEnd) return null;
+  if (!bag.length && now >= cycleEnd) {
     const seen = new Set();
     bag = words.filter(w => !seen.has(key(w)) && seen.add(key(w))).map(w => w.id).sort(() => Math.random() - .5);
     if (bag.length > 1 && bag.at(-1) === lastId) bag.unshift(bag.pop()); // the last word of a cycle does not open the next one
     shown.clear(); cycleAt = now; cycleEnd = now + cycle * 1000 * rnd(1, 1.3); // the cycle lasts at least the set time, sometimes a little longer
   }
-  const w = byId.get(bag.pop()); shown.add(key(w)); lastId = w.id; return w;
+  return byId;
 }
+function pick(now) {
+  const byId = refill(now); if (!bag.length) return null;
+  const w = byId.get(bag.pop()); shown.add(key(w)); lastId = w.id; next = now + pause(); return w;
+}
+const pause = () => Math.max(gap, cycle / words.length) * rnd(500, 1600); // spread over the cycle, unevenly
 function tick(now) {
   raf = 0;
   const dt = Math.min(.05, (now - (last || now)) / 1000); last = now;
   if (words.length && now > next && acts.length < MAX_ON_SCREEN && !document.hidden) {
     const w = pick(now);
-    if (w) { spawn(w.text, now, null, w.author); next = now + Math.max(gap, cycle / words.length) * rnd(500, 1600); } // spread over the cycle, unevenly
-    else next = cycleEnd;
+    if (w) spawn(w.text, now, null, w.author); else next = cycleEnd;
   }
   acts = acts.filter(a => !a.update((now - a.born) / 1000));
   if (cv) draw(dt, now);
@@ -284,7 +288,9 @@ function button(el, open) {
       const d = await r.json().catch(() => ({}));
       if (!r.ok) { errEl.textContent = d.code ? t('err.' + d.code) : t('err.request'); return; }
       ta.value = ''; ta.oninput(); dlg.close();
-      words = [d, ...words]; shown.add(key(d)); spawn(d.text, performance.now(), null, d.author); run(); // your own word arrives right away and counts for this cycle
+      // your own word arrives right away and takes the next turn: it counts for this cycle (or opens a new one) and the next word waits a full pause
+      const now = performance.now(); words = [d, ...words]; refill(now); shown.add(key(d)); lastId = d.id; next = now + pause();
+      spawn(d.text, now, null, d.author); run();
     } catch { errEl.textContent = t('err.request'); }
   };
   el.onclick = () => { dlg.showModal(); ta.focus(); };
