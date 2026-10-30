@@ -214,7 +214,9 @@ function card(tm,p,now){
   if(phase==='soon'){ // counting to the call-up; the service length itself is shown separately
     const left=s-now, d=Math.floor(left/DAY);
     main=`${count(d,tp('unit.toStart',d),t('unit.toStartShort'),left,p)}<p class="sub">${t('then',{n:total,days:tp('days',total)})}</p>`;
-  }else if(phase==='serve'||phase==='summons'){ // after a call-up notice the countdown runs as if he left, until the admin confirms
+  }else if(phase==='summons'){ // after a call-up notice nobody knows yet when he is back, until the admin confirms he has left
+    main=`<p class="done">${t('summons.big')}</p><p class="sub">${t('summons.sub',{date:fmt(s)})}</p>`;
+  }else if(phase==='serve'){
     const left=e-now, d=Math.floor(left/DAY), dayNo=Math.min(total,Math.floor(ctx.d)+1);
     main=`${count(d,tp('unit.left',d),t('unit.leftShort'),left,p)}${bar(ctx.p,t('served',{p:ctx.p.toFixed(2)}),t('dayOf',{n:dayNo,t:total}))}`;
   }else{
@@ -223,7 +225,7 @@ function card(tm,p,now){
   }
   const st=p.showStatuses===false?'':statusFor(phase,tm,now,ctx);
   return `<article class="card${chip==='summons'?' is-summons':''}" data-id="${tm.id}" style="--accent:${accent}">${head}${main}<div class="fill"></div>${st?`<p class="status">${esc(st)}</p>`:''}
-    <div class="dates">${fmt(s)} → ${fmt(e)}</div></article>`;
+    <div class="dates">${fmt(s)} → ${phase==='summons'?'?':fmt(e)}</div></article>`;
 }
 function render(){
   if(!cfg)return;

@@ -197,7 +197,7 @@ function show(on){$('login').hidden=on;$('panel').hidden=!on;$('logout').hidden=
 function summary(tm){ // short state line for the collapsed card
   const now=Date.now(),s=+new Date(tm.start),e=+new Date(tm.end);
   if(now<s){const d=Math.floor((s-now)/DAY);return `${t(d>SOON_DAYS?'state.wait':'state.soon')} · ${d} ${tp('unit.toStart',d)}`}
-  if(now<e){const d=Math.floor((e-now)/DAY);return `${t(tm.pending?'state.summons':'state.serve')} · ${d} ${tp('unit.left',d)}`}
+  if(now<e){if(tm.pending)return t('state.summons');const d=Math.floor((e-now)/DAY);return `${t('state.serve')} · ${d} ${tp('unit.left',d)}`}
   return t('state.done');
 }
 function render(){
