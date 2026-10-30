@@ -45,7 +45,7 @@ h2{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08e
 .box{border-radius:20px;padding:18px;margin-bottom:12px}
 label{display:block;margin:14px 0 6px;font-size:.88rem;font-weight:600}
 label small{font-weight:400;color:var(--mute)}
-input[type=text],input[type=password],input[type=datetime-local],select{width:100%;min-height:44px;padding:9px 12px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);appearance:none;-webkit-appearance:none}
+input[type=text],input[type=password],input[type=number],input[type=datetime-local],select{width:100%;min-height:44px;padding:9px 12px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);appearance:none;-webkit-appearance:none}
 select{background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
 input:disabled{opacity:.6}
 input[type=color]{width:56px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--field);padding:4px;cursor:pointer}
@@ -77,6 +77,14 @@ details.timer form{padding:2px 16px 16px;border-top:1px solid var(--line)}
 .chk input{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .15s;margin:0}
 .chk input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.3);transition:transform .15s}
 .chk input:checked{background:var(--ok)}.chk input:checked::after{transform:translateX(18px)}
+.whead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.whead button.danger{flex:none!important;margin:0;min-height:34px;padding:5px 12px;font-size:.84rem}
+#words{list-style:none;padding:0;margin:8px 0 0;max-height:420px;overflow:auto}
+#words li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:.92rem}
+#words li span{flex:1;min-width:0;overflow-wrap:anywhere}
+#words li time{flex:none;color:var(--mute);font-size:.78rem;font-variant-numeric:tabular-nums;padding-top:2px}
+#words li button{flex:none;min-height:0;width:30px;height:30px;padding:0;border-radius:50%;border-color:var(--line);background:transparent;color:var(--accent);font-size:1.1rem;line-height:1}
+#words li button:hover{background:var(--accent);border-color:var(--accent);color:#fff}
 #hist{list-style:none;padding:0;margin:0;font-size:.88rem}
 #hist li{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
 #hist li:last-child{border-bottom:0}
@@ -134,6 +142,18 @@ details.timer form{padding:2px 16px 16px;border-top:1px solid var(--line)}
     <div class="row"><button data-i18n="s.save">Save settings</button><a class="btn alt" href="/" target="_blank" data-i18n="s.open">Open timers page</a></div>
   </form>
 
+  <h2 data-i18n="w.title">Words of support</h2>
+  <form id="wordsSet" class="box">
+    <label class="chk" style="padding-top:0"><span data-i18n="w.accept">Visitors can send words</span><input id="wordsAccept" type="checkbox"></label>
+    <label class="chk"><span data-i18n="w.show">Words fall on the timers page</span><input id="wordsShow" type="checkbox"></label>
+    <div class="grid"><div><label for="wordsPerIp" data-i18n="w.perIp">Per visitor (IP) per hour</label><input id="wordsPerIp" type="number" min="0" max="1000" required></div>
+    <div><label for="wordsPerHour" data-i18n="w.perHour">For the whole site per hour</label><input id="wordsPerHour" type="number" min="0" max="1000" required></div></div>
+    <label for="wordsDays" data-i18n="w.days">Keep words, days</label><input id="wordsDays" type="number" min="0" max="1000" required>
+    <p class="hint" data-i18n="w.daysHint"></p>
+    <div class="row"><button data-i18n="s.save">Save settings</button></div>
+  </form>
+  <section class="box"><div class="whead"><b id="wordsCount"></b><button type="button" class="danger" id="wordsClear" data-i18n="w.clear">Delete all</button></div><ul id="words"></ul></section>
+
   <h2 data-i18n="hist.title">Recent changes</h2>
   <section class="box"><ul id="hist"></ul></section>
 </div>
@@ -189,6 +209,10 @@ function render(){
     <button type="button" class="alt" data-act="reset">${t('btn.reset')}</button>
     ${tm.mode==='custom'?`<button type="button" class="alt" data-act="keep">${t('btn.keep')}</button>`:''}
     <button type="button" class="danger" data-act="del">${t('btn.del')}</button></div></form></details>`).join('')||`<div class="box"><p class="empty">${t('admin.emptyTimers')}</p></div>`;
+  for(const k of ['wordsAccept','wordsShow'])$(k).checked=S.page[k];
+  for(const k of ['wordsPerIp','wordsPerHour','wordsDays'])$(k).value=S.page[k];
+  $('wordsCount').textContent=t('w.count',{n:S.words.length});$('wordsClear').hidden=!S.words.length;
+  $('words').innerHTML=S.words.map(w=>`<li><span>${esc(w.text)}</span><time>${new Date(w.at).toLocaleString(I18N.lang,{dateStyle:'short',timeStyle:'short'})}</time><button type="button" data-word="${w.id}" aria-label="${esc(t('btn.del'))}" title="${esc(t('btn.del'))}">×</button></li>`).join('');
   $('hist').innerHTML=S.history.map(h=>`<li><time>${new Date(h.at).toLocaleString(I18N.lang,{dateStyle:'short',timeStyle:'short'})}</time><span>${esc(h.act?t('hist.'+h.act,{name:h.name}):h.msg)}</span></li>`).join('')||`<li class="empty">${t('hist.empty')}</li>`;
 }
 const run=async(m,u,b,ok)=>{try{S=await api(m,u,b);render();say(t(ok))}catch(x){say(x.message,1)}};
@@ -199,6 +223,9 @@ $('addForm').onsubmit=async e=>{e.preventDefault();const before=new Set(S.timers
   await run('POST','/api/admin/timers',{name:$('addName').value},'msg.added');$('addName').value='';
   const added=S.timers.find(x=>!before.has(x.id));if(added){open.add(added.id);render()}};
 $('settings').onsubmit=e=>{e.preventDefault();run('PUT','/api/admin/settings',{pageTitle:$('pageTitle').value,showBackground:$('showBackground').checked,showClock:$('showClock').checked,showSeconds:$('showSeconds').checked,showProgress:$('showProgress').checked,showStatuses:$('showStatuses').checked},'msg.settings')};
+$('wordsSet').onsubmit=e=>{e.preventDefault();run('PUT','/api/admin/settings',{wordsAccept:$('wordsAccept').checked,wordsShow:$('wordsShow').checked,wordsPerIp:+$('wordsPerIp').value,wordsPerHour:+$('wordsPerHour').value,wordsDays:+$('wordsDays').value},'msg.settings')};
+$('words').onclick=e=>{const id=e.target.dataset.word;if(id)run('DELETE','/api/admin/words/'+id,null,'msg.deleted')}; // one click, no confirmation: quick cleanup
+$('wordsClear').onclick=()=>{if(confirm(t('confirm.words',{n:S.words.length})))run('DELETE','/api/admin/words',null,'msg.deleted')};
 $('list').addEventListener('toggle',e=>{const id=e.target.dataset.id;if(id)e.target.open?open.add(id):open.delete(id)},true);
 $('list').onchange=e=>{ // live preview of the computed end date; the server recalculates on save
   const n=e.target.name;if(n!=='mode'&&n!=='start')return;
