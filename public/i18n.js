@@ -245,15 +245,13 @@ const ICONS = { // the icon shows the theme a click switches to
 };
 const systemDark = matchMedia('(prefers-color-scheme: dark)');
 const theme = () => document.documentElement.dataset.theme || (systemDark.matches ? 'dark' : 'light');
-// The theme changes with a short cross-fade of the whole page (the camouflage canvas too) where the browser can do it;
-// elsewhere colors, backgrounds and borders ease over. With reduced motion it switches at once
+// The theme changes with colors, backgrounds, borders and shadows easing over; the camouflage canvas cross-fades itself (camo.js).
+// No View Transitions: their snapshots drop the cards' backdrop blur, and it snaps back when they end. With reduced motion it switches at once
 const FADE = 450;
 function fade(swap) {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return swap();
   if (!document.getElementById('theme-fade')) document.head.insertAdjacentHTML('beforeend', `<style id="theme-fade">
-    ::view-transition-old(root),::view-transition-new(root){animation-duration:${FADE}ms;animation-timing-function:ease}
-    .theme-fading,.theme-fading *,.theme-fading *::before,.theme-fading *::after{transition:background-color ${FADE}ms ease,color ${FADE}ms ease,border-color ${FADE}ms ease,fill ${FADE}ms ease,stroke ${FADE}ms ease!important}</style>`);
-  if (document.startViewTransition) return document.startViewTransition(swap);
+    .theme-fading,.theme-fading *,.theme-fading *::before,.theme-fading *::after{transition:background-color ${FADE}ms ease,color ${FADE}ms ease,border-color ${FADE}ms ease,box-shadow ${FADE}ms ease,fill ${FADE}ms ease,stroke ${FADE}ms ease!important}</style>`);
   const root = document.documentElement; root.classList.add('theme-fading'); swap();
   clearTimeout(fade.t); fade.t = setTimeout(() => root.classList.remove('theme-fading'), FADE + 50);
 }

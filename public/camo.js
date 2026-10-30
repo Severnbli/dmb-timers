@@ -77,10 +77,17 @@ function start() {
   draw();
 }
 function stop() { cv?.remove(); cv = null; }
+function recolor() { // a theme change: the old picture stays on top as a copy and fades out over the new one
+  if (!cv) return;
+  if (!cv.width || matchMedia('(prefers-reduced-motion: reduce)').matches) return draw();
+  const old = document.createElement('canvas'); old.className = 'camo'; old.width = cv.width; old.height = cv.height;
+  old.getContext('2d').drawImage(cv, 0, 0); cv.after(old); draw();
+  old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 450, easing: 'ease' }).onfinish = () => old.remove();
+}
 let resizing;
 addEventListener('resize', () => { clearTimeout(resizing); resizing = setTimeout(() => { if (innerWidth > FW || innerHeight > FH) layout(); draw(); }, 100); });
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
-new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
+new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 window.CAMO = { start, stop };
 })();
