@@ -21,7 +21,7 @@ const PAL = {
   light: ['#c9c3a4', '#a9a77e', '#8c9466', '#b49f74', '#6f7a4f', '#d8d2b6'],
   dark: ['#181d12', '#2c3521', '#3d4831', '#48422c', '#27301f', '#11150c'],
 };
-const SCALE = 1 / 8, FPS = 30;
+const SCALE = 1 / 5, FPS = 60; // the CSS blur is light, so the canvas needs more pixels than it used to
 const still = matchMedia('(prefers-reduced-motion: reduce)');
 const theme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 let cv, ctx, blobs = [], raf = 0, last = 0, W = 0, H = 0;
@@ -56,7 +56,8 @@ function draw(t) {
 }
 function step(t) {
   raf = requestAnimationFrame(step);
-  if (t - last < 1000 / FPS) return;
+  // a little slack, so frames that arrive a hair early are not skipped: skipping makes the motion jerk (33 ms, then 50 ms)
+  if (t - last < 1000 / FPS - 4) return;
   const dt = Math.min(.1, (t - last) / 1000); last = t;
   for (const b of blobs) { // a slow random walk that wraps around the edges
     b.dir += Math.sin(t / 4000 + b.ph) * .4 * dt + (Math.random() - .5) * .3 * dt;
