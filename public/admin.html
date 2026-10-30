@@ -29,7 +29,7 @@
 :root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--field:#15180f;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d;--accent:#e0663f;--ok:#8fc27a;--summons:#e0b45c;--glass:color-mix(in srgb,var(--surface) 52%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -16px rgb(0 0 0/.6)}
 *{box-sizing:border-box}
 .box,.lang,.theme{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--hi),var(--shadow)}
-.camo{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;z-index:-1;pointer-events:none;filter:blur(14px);transform:scale(1.08)}
+.backdrop{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;z-index:-1;pointer-events:none}
 .theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border-radius:999px;color:var(--ink);cursor:pointer}
 .theme:hover{border-color:var(--mute)}
 .theme svg{width:18px;height:18px}
@@ -180,7 +180,7 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
     <label for="pageTitle" data-i18n="s.pageTitle">Page title</label>
     <input id="pageTitle" data-k="pageTitle" type="text" maxlength="200">
     <p class="hint" data-i18n="f.defaultHint"></p>
-    <label class="chk" style="margin-top:8px"><span data-i18n="s.background">Moving camouflage background</span><input data-k="showBackground" type="checkbox"></label>
+    <label class="chk" style="margin-top:8px"><span data-i18n="s.background">Topographic map background</span><input data-k="showBackground" type="checkbox"></label>
   </section>
   <section class="box">
     <h3 data-i18n="s.cards">Cards</h3>
@@ -201,7 +201,7 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
 <div id="msg" role="status" aria-live="polite"></div>
 
 <script src="/i18n.js"></script>
-<script src="/camo.js"></script>
+<script src="/backdrop.js"></script>
 <script>
 const {t,tp}=I18N;
 const $=id=>document.getElementById(id);
@@ -311,7 +311,7 @@ $('edit').onclick=e=>{const a=e.target.dataset.act;
 $('logout').onclick=async()=>{await api('POST','/api/logout');S=null;show(false);say(t('msg.loggedOut'))};
 const title=()=>document.title=t('admin.title');
 document.addEventListener('langchange',()=>{title();render()});
-I18N.init();title();CAMO.start();
+I18N.init();title();BACKDROP.start();
 try{tab(localStorage.getItem('adminTab')||'people')}catch{tab('people')}
 init();
 </script></body></html>

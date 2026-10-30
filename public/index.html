@@ -30,9 +30,9 @@
 :root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--wait:#8fc27a;--soon:#f0a050;--summons:#dcae55;--line:#30352a;--track:#2a2f23;--glass:color-mix(in srgb,var(--surface) 50%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-/* iOS-like glass: translucent surfaces that blur the moving camouflage behind them */
+/* iOS-like glass: translucent surfaces that blur the map behind them */
 .glass,.card,.lang,.theme{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--hi),var(--shadow)}
-.camo{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;z-index:-1;pointer-events:none;filter:blur(3px);transform:scale(1.03)}
+.backdrop{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;z-index:-1;pointer-events:none}
 .theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border-radius:999px;color:var(--ink);cursor:pointer}
 .theme:hover{border-color:var(--mute)}
 .theme svg{width:18px;height:18px}
@@ -162,7 +162,7 @@ footer a:hover{color:var(--ink)}
 <footer><a href="/privacy" data-i18n="footer.privacy">Privacy</a><a href="https://github.com/Severnbli/dmb-timers" rel="noopener" data-i18n="footer.source">Source code</a></footer>
 <script src="/i18n.js"></script>
 <script src="/statuses.js"></script>
-<script src="/camo.js"></script>
+<script src="/backdrop.js"></script>
 <script src="/words.js"></script>
 <script>
 const {t,tp}=I18N, COL={'en-US':2,'ru-RU':3,'be-BY':4}; // STATUSES text column per language
@@ -172,7 +172,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const fmt=d=>new Date(d).toLocaleDateString(I18N.lang,{day:'numeric',month:'numeric',year:'2-digit'});
 const DAY=864e5;
 async function load(){
-  try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?CAMO.stop():CAMO.start();WORDS.set(cfg.words||[],cfg.page);WORDS.button(document.getElementById('wordsBtn'),cfg.page.wordsAccept);
+  try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?BACKDROP.stop():BACKDROP.start();WORDS.set(cfg.words||[],cfg.page);WORDS.button(document.getElementById('wordsBtn'),cfg.page.wordsAccept);
   // hours and seasons follow the server (unit) time zone, not the visitor's
   try{clock=new Intl.DateTimeFormat('en-US',{timeZone:cfg.tz,month:'numeric',day:'numeric',hour:'numeric',hourCycle:'h23'})}catch{clock=null}
   title();}catch{}

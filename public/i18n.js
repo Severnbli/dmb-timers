@@ -51,7 +51,7 @@ const DICT = {
   'confirm.keep': 'Restart "{name}" from now with the same duration?',
   'msg.added': 'Person added', 'msg.saved': 'Saved', 'msg.deleted': 'Deleted', 'msg.reset': 'Start reset',
   'msg.restarted': 'Restarted', 'msg.settings': 'Page settings saved', 'msg.loggedOut': 'Logged out',
-  's.title': 'Page settings', 's.pageTitle': 'Page title', 's.background': 'Camouflage background', 's.clock': 'Show hours, minutes and seconds next to days', 's.seconds': 'Show seconds', 's.progress': 'Show progress bars',
+  's.title': 'Page settings', 's.pageTitle': 'Page title', 's.background': 'Topographic map background', 's.clock': 'Show hours, minutes and seconds next to days', 's.seconds': 'Show seconds', 's.progress': 'Show progress bars',
   's.statuses': 'Show funny statuses', 's.save': 'Save settings', 's.open': 'Open timers page',
   'hist.title': 'Recent changes', 'hist.empty': 'No changes yet',
   'hist.added': 'Added "{name}"', 'hist.saved': 'Saved "{name}"', 'hist.deleted': 'Deleted "{name}"',
@@ -107,7 +107,7 @@ const DICT = {
   'confirm.keep': 'Перезапустить «{name}» с текущего момента с тем же сроком?',
   'msg.added': 'Человек добавлен', 'msg.saved': 'Сохранено', 'msg.deleted': 'Удалено', 'msg.reset': 'Начало сброшено',
   'msg.restarted': 'Перезапущено', 'msg.settings': 'Настройки страницы сохранены', 'msg.loggedOut': 'Вы вышли',
-  's.title': 'Настройки страницы', 's.pageTitle': 'Заголовок страницы', 's.background': 'Камуфляжный фон', 's.clock': 'Показывать часы, минуты и секунды рядом с днями', 's.seconds': 'Показывать секунды',
+  's.title': 'Настройки страницы', 's.pageTitle': 'Заголовок страницы', 's.background': 'Фон с топографической картой', 's.clock': 'Показывать часы, минуты и секунды рядом с днями', 's.seconds': 'Показывать секунды',
   's.progress': 'Показывать прогресс', 's.statuses': 'Показывать смешные статусы', 's.save': 'Сохранить настройки',
   's.open': 'Открыть страницу таймеров',
   'hist.title': 'Последние изменения', 'hist.empty': 'Изменений пока нет',
@@ -164,7 +164,7 @@ const DICT = {
   'confirm.keep': 'Перазапусціць «{name}» з бягучага моманту з тым жа тэрмінам?',
   'msg.added': 'Чалавек дададзены', 'msg.saved': 'Захавана', 'msg.deleted': 'Выдалена', 'msg.reset': 'Пачатак скінуты',
   'msg.restarted': 'Перазапушчана', 'msg.settings': 'Налады старонкі захаваны', 'msg.loggedOut': 'Вы выйшлі',
-  's.title': 'Налады старонкі', 's.pageTitle': 'Загаловак старонкі', 's.background': 'Камуфляжны фон', 's.clock': 'Паказваць гадзіны, хвіліны і секунды побач з днямі', 's.seconds': 'Паказваць секунды',
+  's.title': 'Налады старонкі', 's.pageTitle': 'Загаловак старонкі', 's.background': 'Фон з тапаграфічнай картай', 's.clock': 'Паказваць гадзіны, хвіліны і секунды побач з днямі', 's.seconds': 'Паказваць секунды',
   's.progress': 'Паказваць прагрэс', 's.statuses': 'Паказваць смешныя статусы', 's.save': 'Захаваць налады',
   's.open': 'Адкрыць старонку таймераў',
   'hist.title': 'Апошнія змены', 'hist.empty': 'Змен пакуль няма',
@@ -245,7 +245,7 @@ const ICONS = { // the icon shows the theme a click switches to
 };
 const systemDark = matchMedia('(prefers-color-scheme: dark)');
 const theme = () => document.documentElement.dataset.theme || (systemDark.matches ? 'dark' : 'light');
-// The theme changes with colors, backgrounds, borders and shadows easing over; the camouflage canvas cross-fades itself (camo.js).
+// The theme changes with colors, backgrounds, borders and shadows easing over; the background canvas cross-fades itself (backdrop.js).
 // No View Transitions: their snapshots drop the cards' backdrop blur, and it snaps back when they end. With reduced motion it switches at once
 const FADE = 450;
 function fade(swap) {
