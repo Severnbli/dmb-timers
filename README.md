@@ -2,7 +2,7 @@
 
 A small self-hosted website with demob (demobilization) timers: countdowns to the end of military service for one or many people on one page.
 
-![Timers page in a browser and on a phone, dark theme](docs/screenshots/dark.png)
+![Timers page in a browser and on a phone, dark theme](docs/screenshots/dark-wave.png)
 
 No database, no dependencies, no tracking: one Node.js file and one JSON config file.
 
