@@ -2,13 +2,11 @@
 
 A small self-hosted website with demob (demobilization) timers: countdowns to the end of military service for one or many people on one page.
 
+![Timers page in a browser and on a phone, dark theme](docs/screenshots/dark.png)
+
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/timers-light.png" alt="Timers page, light theme" width="100%"></td>
-    <td width="50%"><img src="docs/screenshots/timers-dark.png" alt="Timers page, dark theme" width="100%"></td>
-  </tr>
-  <tr>
-    <td width="50%" align="center"><img src="docs/screenshots/timers-phone.png" alt="Timers page on a phone, with the tip about the fire button" width="60%"></td>
+    <td width="50%"><img src="docs/screenshots/light.png" alt="Timers page in a browser and on a phone with two cards per row, light theme" width="100%"></td>
     <td width="50%"><img src="docs/screenshots/admin.png" alt="Admin panel, Fire tab" width="100%"></td>
   </tr>
 </table>
