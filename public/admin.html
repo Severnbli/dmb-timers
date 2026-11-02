@@ -16,118 +16,302 @@
 
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<script>try{const t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}}catch{}</script>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2322271c'/%3E%3Cpath d='M16 7l2.6 5.6 6.1.6-4.6 4.1 1.3 6L16 20.2 10.6 23.3l1.3-6-4.6-4.1 6.1-.6z' fill='%23fff'/%3E%3C/svg%3E">
 <title>Timers admin</title>
 <style>
-:root{--bg:#d8d3bd;--ink:#2a3021;--mute:#6b6f57;--accent:#b23a1e;--card:#e6e2d0}
-@media(prefers-color-scheme:dark){:root{--bg:#20251a;--ink:#e3dfc9;--mute:#8f9377;--card:#2a3022}}
+:root{--bg:#ebe8dc;--surface:#f8f6ef;--field:#fff;--ink:#22271c;--mute:#6a6e5b;--line:#d7d3c3;--accent:#b23a1e;--ok:#3d6b2f;--summons:#8a5d06;--glass:color-mix(in srgb,var(--surface) 58%,transparent);--edge:rgb(255 255 255/.6);--hi:rgb(255 255 255/.75);--shadow:0 1px 2px rgb(40 45 30/.06),0 8px 24px -14px rgb(40 45 30/.25);
+ --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--field:#15180f;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d;--accent:#e0663f;--ok:#8fc27a;--summons:#e0b45c;--glass:color-mix(in srgb,var(--surface) 52%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -16px rgb(0 0 0/.6)}}
+:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--field:#15180f;--ink:#e9e6d7;--mute:#9b9e88;--line:#343a2d;--accent:#e0663f;--ok:#8fc27a;--summons:#e0b45c;--glass:color-mix(in srgb,var(--surface) 52%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -16px rgb(0 0 0/.6)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,serif;padding:24px}
-main{max-width:640px;margin:0 auto}
-h1{font-size:1.5rem;margin:0 0 1rem} h2{font-size:1.1rem;margin:1.6rem 0 .6rem}
-form,section{background:var(--card);border:2px solid var(--ink);padding:16px;margin-bottom:14px}
-label{display:block;margin:.7rem 0 .2rem;font-weight:700}
-input[type=text],input[type=password],input[type=datetime-local],select{width:100%;padding:8px;font:inherit;border:2px solid var(--ink);background:var(--bg);color:var(--ink)}
+.box,.lang,.theme{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--hi),var(--shadow)}
+.backdrop{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;z-index:-1;pointer-events:none}
+.theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border-radius:999px;color:var(--ink);cursor:pointer}
+.theme:hover{border-color:var(--mute)}
+.theme svg{width:18px;height:18px}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);min-height:100vh}
+.wrap{max-width:720px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) max(32px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.top{position:sticky;top:0;z-index:3;background:color-mix(in srgb,var(--bg) 55%,transparent);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);border-bottom:1px solid var(--edge);margin-bottom:8px}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:max(12px,env(safe-area-inset-top));padding-bottom:12px}
+h1{margin:0;font-size:clamp(.98rem,3.6vw,1.15rem);line-height:1.2;display:flex;align-items:center;gap:10px;min-width:0}
+h1 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+h1::before{content:"";flex:none;width:11px;height:11px;border-radius:3px;background:var(--ink);transform:rotate(45deg)}
+.tools{display:flex;align-items:center;gap:6px;flex:none}
+h2{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin:28px 6px 10px}
+h3{margin:0 0 2px;font-size:1rem}
+.box>.hint:first-of-type{margin-top:0}
+.group{margin-top:18px;padding-top:4px;border-top:1px solid var(--line)}
+.group>b{display:block;margin:10px 0 0;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mute)}
+.inline{display:flex;gap:12px;align-items:flex-end}.inline>div{flex:1;min-width:0}
+.box{border-radius:20px;padding:18px;margin-bottom:12px}
+label{display:block;margin:14px 0 6px;font-size:.88rem;font-weight:600}
+label small{font-weight:400;color:var(--mute)}
+input[type=text],input[type=password],input[type=number],input[type=datetime-local],select{width:100%;min-height:44px;padding:9px 12px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);appearance:none;-webkit-appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
 input:disabled{opacity:.6}
-input[type=color]{width:64px;height:36px;border:2px solid var(--ink);background:none;padding:0}
-.chk{display:flex;gap:8px;align-items:center;font-weight:400}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:480px){.two{grid-template-columns:1fr}}
-button{font:inherit;font-weight:700;padding:8px 14px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
-button.alt{background:none;color:var(--ink)} button.danger{background:var(--accent);border-color:var(--accent);color:#fff}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-#msg{min-height:1.5rem;font-weight:700} .err{color:var(--accent)}
-ul{padding-left:1.2rem;color:var(--mute);margin:.5rem 0 0} small,.empty{color:var(--mute)}
-.add{display:flex;gap:10px} .add input{flex:1}
-[hidden]{display:none}
-</style></head><body><main>
-<h1>Timers admin</h1>
+input[type=color]{width:56px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--field);padding:4px;cursor:pointer}
+.hint{margin:6px 0 0;font-size:.8rem;color:var(--mute)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.grid>div{min-width:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;font:600 .92rem var(--sans);padding:9px 16px;border:1px solid var(--ink);border-radius:10px;background:var(--ink);color:var(--surface);cursor:pointer;text-decoration:none}
+button.alt,.btn.alt{background:transparent;color:var(--ink);border-color:var(--line)}
+button.alt:hover,.btn.alt:hover{border-color:var(--ink)}
+button.danger{background:transparent;border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent);margin-left:auto}
+button.danger:hover{background:var(--accent);color:#fff}
+button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.lang{display:inline-flex;padding:3px;border-radius:999px}
+.lang button{min-height:0;font:600 .78rem/1 var(--sans);letter-spacing:.04em;color:var(--mute);background:none;border:0;border-radius:999px;padding:7px 10px;min-width:38px}
+.lang button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
+.add{display:flex;gap:8px}.add input{flex:1;min-width:0}
+.tabs{display:flex;width:100%;margin:14px 0 12px}
+.tabs button{flex:1;font-size:.86rem;padding:9px 6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--surface)}
+input[type=search]{width:100%;min-height:44px;padding:9px 14px;margin:0 0 10px;font:inherit;font-size:16px;border:1px solid var(--edge);border-radius:999px;background:var(--glass);color:var(--ink);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px)}
+/* People: one short row each; the editor opens in a dialog */
+.people{padding:0;overflow:hidden}
+.person{display:flex;align-items:center;gap:8px;border-left:4px solid var(--c);padding-right:12px}
+.person+.person{border-top:1px solid var(--line)}
+.person .open{flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:58px;padding:9px 6px 9px 14px;border:0;border-radius:0;background:none;color:var(--ink);text-align:left;font:inherit}
+.person .open>span{flex:1;min-width:0}
+.person .open::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--mute);border-top:2px solid var(--mute);transform:rotate(45deg);margin-right:4px}
+.person .open:hover b{text-decoration:underline}
+.person b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person small{display:block;color:var(--mute);font-size:.84rem}
+.people .empty{padding:18px}
+dialog#edit{width:min(560px,calc(100% - 24px));max-height:calc(100dvh - 24px);padding:0;border:1px solid var(--edge);border-radius:20px;background:var(--surface);color:var(--ink);box-shadow:0 30px 80px -20px rgb(0 0 0/.55);overflow:auto}
+dialog#edit::backdrop{background:rgb(20 23 15/.45)}
+.ehead{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:10px;padding:12px 12px 12px 16px;background:var(--surface);border-bottom:1px solid var(--line);border-top:4px solid var(--c)}
+.ehead b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.05rem}
+.ehead .theme{flex:none;background:none;box-shadow:none;font-size:1.3rem;line-height:1}
+#edit form{padding:2px 16px 16px}
+.chk{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:12px 0;font-weight:500;border-bottom:1px solid var(--line);cursor:pointer}
+.chk:last-child,.chk:has(+:not(.chk)){border-bottom:0}
+.chk input{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .15s;margin:0}
+.chk input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.3);transition:transform .15s}
+.chk input:checked{background:var(--ok)}.chk input:checked::after{transform:translateX(18px)}
+.whead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.whead button.danger{flex:none!important;margin:0;min-height:34px;padding:5px 12px;font-size:.84rem}
+#words{list-style:none;padding:0;margin:8px 0 0;max-height:420px;overflow:auto}
+#words li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:.92rem}
+#words li span{flex:1;min-width:0;overflow-wrap:anywhere}
+#words li .by{display:block;color:var(--mute);font-size:.82rem;font-style:italic}
+#words li time{flex:none;color:var(--mute);font-size:.78rem;font-variant-numeric:tabular-nums;padding-top:2px}
+#words li button{flex:none;min-height:0;width:30px;height:30px;padding:0;border-radius:50%;border-color:var(--line);background:transparent;color:var(--accent);font-size:1.1rem;line-height:1}
+#words li button:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.pill{flex:none;font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:999px;color:var(--summons);background:color-mix(in srgb,var(--summons) 16%,transparent)}
+button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background:var(--ok);border-color:var(--ok);color:#fff}
+#hist{list-style:none;padding:0;margin:0;font-size:.88rem}
+#hist li{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+#hist li:last-child{border-bottom:0}
+#hist time{flex:none;color:var(--mute);font-variant-numeric:tabular-nums;min-width:8.5em}
+.empty{color:var(--mute);margin:0}
+.login{max-width:400px;margin:10vh auto 0}
+.login p{color:var(--mute);margin:4px 0 0;font-size:.9rem}
+#msg{position:fixed;z-index:6;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:.2s;
+ padding:11px 18px;border-radius:12px;background:var(--ink);color:var(--surface);font-weight:600;font-size:.92rem;box-shadow:0 12px 40px -10px rgb(0 0 0/.5);max-width:calc(100% - 32px);text-align:center}
+#msg.show{opacity:1;transform:translate(-50%,0)}
+#msg.err{background:var(--accent);color:#fff}
+[hidden]{display:none!important}
+@media(max-width:520px){
+ .grid{grid-template-columns:1fr}
+ .row button,.row .btn{flex:1 1 100%}
+ .row button.danger{margin-left:0}
+ .lang button{padding:7px 7px;min-width:30px}
+ .theme{width:34px;height:34px}
+ #hist li{flex-direction:column;gap:0}
+ .person .pill{display:none} /* the row's state line already says it */
+ .box{padding:16px}
+}
+</style></head><body data-no-notice>
+<header class="top"><div class="wrap"><h1><span data-i18n="admin.title">Timers admin</span></h1>
+  <div class="tools"><a class="theme" href="/" data-i18n-label="nav.timers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></a><div data-lang-switch></div><div data-theme-switch></div><button id="logout" class="theme" type="button" hidden data-i18n-label="admin.logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button></div></div></header>
+<main class="wrap">
 
-<form id="login" hidden>
-  <label for="pw">Password</label>
+<form id="login" class="box login" hidden>
+  <label for="pw" style="margin-top:0" data-i18n="admin.password">Password</label>
   <input id="pw" type="password" autocomplete="current-password" autofocus>
-  <div class="row"><button>Log in</button></div>
+  <p data-i18n="admin.loginHint"></p>
+  <div class="row"><button style="flex:1" data-i18n="admin.login">Log in</button></div>
 </form>
 
 <div id="panel" hidden>
-  <h2>Add a person</h2>
-  <form id="addForm" class="add">
-    <input id="addName" type="text" placeholder="Name" aria-label="Name" required>
-    <button>Add person</button>
+  <nav class="tabs lang" id="tabs" role="tablist">
+    <button type="button" role="tab" data-tab="people" data-i18n="tab.people">People</button>
+    <button type="button" role="tab" data-tab="words" data-i18n="tab.words">Words</button>
+    <button type="button" role="tab" data-tab="settings" data-i18n="tab.settings">Settings</button>
+    <button type="button" role="tab" data-tab="history" data-i18n="tab.history">History</button>
+  </nav>
+
+  <div data-pane="people">
+  <form id="addForm" class="box add">
+    <input id="addName" type="text" data-i18n-ph="admin.namePh" data-i18n-label="admin.namePh" required maxlength="200">
+    <button data-i18n="admin.add">Add</button>
   </form>
+  <input id="find" type="search" data-i18n-ph="admin.find" data-i18n-label="admin.find" hidden>
+  <div id="list" class="box people"></div>
+  </div>
 
-  <h2>Timers</h2>
-  <div id="list"></div>
+  <div data-pane="words" hidden>
+  <section class="box">
+    <h3 data-i18n="w.title">Words of support</h3>
+    <label class="chk"><span data-i18n="w.accept">Visitors can send words</span><input data-k="wordsAccept" type="checkbox"></label>
+    <label class="chk"><span data-i18n="w.show">Words fall on the timers page</span><input data-k="wordsShow" type="checkbox"></label>
+    <div class="grid"><div><label for="wordsPerIp" data-i18n="w.perIp">Per visitor (IP) per hour</label><input id="wordsPerIp" data-k="wordsPerIp" type="number" min="0" max="1000" inputmode="numeric"></div>
+    <div><label for="wordsPerHour" data-i18n="w.perHour">For the whole site per hour</label><input id="wordsPerHour" data-k="wordsPerHour" type="number" min="0" max="1000" inputmode="numeric"></div></div>
+    <div class="grid"><div><label for="wordsGap" data-i18n="w.gap">Pause between words, seconds</label><input id="wordsGap" data-k="wordsGap" type="number" min="1" max="1000" inputmode="numeric"></div>
+    <div><label for="wordsCycle" data-i18n="w.cycle">Shortest cycle, minutes</label><input id="wordsCycle" data-k="wordsCycle" type="number" min="0" max="1000" inputmode="numeric"></div></div>
+    <p class="hint" data-i18n="w.cycleHint"></p>
+    <label for="wordsDays" data-i18n="w.days">Keep words, days</label><input id="wordsDays" data-k="wordsDays" type="number" min="0" max="1000" inputmode="numeric">
+    <p class="hint" data-i18n="w.daysHint"></p>
+  </section>
+  <section class="box"><div class="whead"><h3 id="wordsCount" style="margin:0"></h3><button type="button" class="danger" id="wordsClear" data-i18n="w.clear">Delete all</button></div><ul id="words"></ul></section>
 
-  <h2>Page settings</h2>
-  <form id="settings">
-    <label for="pageTitle">Page title</label><input id="pageTitle" type="text">
-    <label class="chk"><input id="showSeconds" type="checkbox"> Show seconds</label>
-    <label class="chk"><input id="showProgress" type="checkbox"> Show progress bars</label>
-    <label class="chk"><input id="showStatuses" type="checkbox"> Show funny statuses</label>
-    <div class="row"><button>Save page settings</button><a href="/" target="_blank"><button type="button" class="alt">Open timers page</button></a></div>
-  </form>
+  </div>
 
-  <section><b>Recent changes</b><ul id="hist"></ul></section>
-  <div class="row"><button id="logout" class="alt">Log out</button></div>
+  <div data-pane="settings" hidden>
+  <section class="box">
+    <h3 data-i18n="s.look">Look</h3><p class="hint" data-i18n="s.autosave"></p>
+    <label for="pageTitle" data-i18n="s.pageTitle">Page title</label>
+    <input id="pageTitle" data-k="pageTitle" type="text" maxlength="200">
+    <p class="hint" data-i18n="f.defaultHint"></p>
+    <label class="chk" style="margin-top:8px"><span data-i18n="s.background">Topographic map background</span><input data-k="showBackground" type="checkbox"></label>
+  </section>
+  <section class="box">
+    <h3 data-i18n="s.cards">Cards</h3>
+    <label class="chk"><span data-i18n="s.clock">Show hours, minutes and seconds next to days</span><input data-k="showClock" type="checkbox"></label>
+    <label class="chk"><span data-i18n="s.seconds">Show seconds</span><input data-k="showSeconds" type="checkbox"></label>
+    <label class="chk"><span data-i18n="s.progress">Show progress bars</span><input data-k="showProgress" type="checkbox"></label>
+    <label class="chk"><span data-i18n="s.statuses">Show funny statuses</span><input data-k="showStatuses" type="checkbox"></label>
+  </section>
+  </div>
+
+  <div data-pane="history" hidden>
+  <section class="box"><ul id="hist"></ul></section>
+  </div>
 </div>
-<div id="msg" role="status"></div>
+<dialog id="edit"></dialog>
+<p style="text-align:center;margin-top:28px;font-size:.85rem"><a href="/privacy" style="color:var(--mute)" data-i18n="footer.privacy">Privacy</a></p>
+</main>
+<div id="msg" role="status" aria-live="polite"></div>
 
+<script src="/i18n.js"></script>
+<script src="/backdrop.js"></script>
 <script>
+const {t,tp}=I18N;
 const $=id=>document.getElementById(id);
-const say=(t,err)=>{$('msg').textContent=t;$('msg').className=err?'err':''};
+let toast;
+const say=(m,err)=>{const e=$('msg');e.textContent=m;e.className=m?'show'+(err?' err':''):'';clearTimeout(toast);if(m)toast=setTimeout(()=>e.className='',3000)};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const toLocal=v=>{const d=new Date(v);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
-const MONTHS={year:12,half:6};
+const MONTHS={year:12,half:6}, DAY=864e5, SOON_DAYS=60; // same threshold as the timers page
 function addMonths(d,n){const r=new Date(d),day=r.getDate();r.setDate(1);r.setMonth(r.getMonth()+n);
   r.setDate(Math.min(day,new Date(r.getFullYear(),r.getMonth()+1,0).getDate()));return r}
 let S=null;
+let editing=null; // id of the person open in the editor dialog
 async function api(m,u,b){
   const r=await fetch(u,{method:m,headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});
   const d=await r.json().catch(()=>({}));
   if(r.status===401&&u.startsWith('/api/admin'))show(false);
-  if(!r.ok)throw new Error(d.error||'Request failed');return d;
+  if(!r.ok)throw new Error(d.code?t('err.'+d.code):d.error||t('err.request'));return d;
 }
-function show(on){$('login').hidden=on;$('panel').hidden=!on}
+function show(on){$('login').hidden=on;$('panel').hidden=!on;$('logout').hidden=!on}
+function summary(tm){ // short state line for the list row
+  const now=Date.now(),s=+new Date(tm.start),e=+new Date(tm.end);
+  if(now<s){const d=Math.floor((s-now)/DAY);return `${t(d>SOON_DAYS?'state.wait':'state.soon')} · ${d} ${tp('unit.toStart',d)}`}
+  if(now<e){if(tm.pending)return t('state.summons');const d=Math.floor((e-now)/DAY);return `${t('state.serve')} · ${d} ${tp('unit.left',d)}`}
+  return t('state.done');
+}
+function renderEdit(){ // the editor dialog for one person; closes when that person is gone
+  const d=$('edit'),tm=editing&&S.timers.find(x=>x.id===editing);
+  if(!tm){if(d.open)d.close();return}
+  const opt=(tm,v)=>`<option value="${v}"${tm.mode===v?' selected':''}>${t('mode.'+v)}</option>`;
+  d.innerHTML=`<div class="ehead" style="--c:${tm.accent}"><b>${esc(tm.name)}</b><button type="button" class="theme" data-act="close" aria-label="${esc(t('btn.close'))}" title="${esc(t('btn.close'))}">×</button></div>
+    <form data-id="${tm.id}">
+    <div class="group" style="border:0;margin-top:0"><b>${t('g.who')}</b>
+    <div class="grid"><div><label>${t('f.name')}</label><input type="text" name="name" value="${esc(tm.name)}" required maxlength="200"></div>
+    <div><label>${t('f.label')}</label><input type="text" name="label" value="${esc(tm.label)}" maxlength="200"></div></div>
+    <label>${t('f.accent')}</label><input type="color" name="accent" value="${tm.accent}"></div>
+    <div class="group"><b>${t('g.service')}</b>
+    <div class="grid"><div><label>${t('f.start')}</label><input type="datetime-local" name="start" value="${toLocal(tm.start)}" required></div>
+    <div><label>${t('f.mode')}</label><select name="mode">${opt(tm,'year')}${opt(tm,'half')}${opt(tm,'custom')}</select></div></div>
+    <label>${t('f.end')} ${tm.mode==='custom'?'':`<small>(${t('f.endAuto')})</small>`}</label>
+    <input type="datetime-local" name="end" value="${toLocal(tm.end)}" required${tm.mode==='custom'?'':' disabled'}>
+    <label class="chk" style="margin-top:8px"><span>${t('f.pending')}</span><input type="checkbox" name="pending"${tm.pending?' checked':''}></label>
+    <p class="hint" style="margin-top:0">${t('f.pendingHint')}</p></div>
+    <div class="group"><b>${t('g.after')}</b>
+    <label>${t('f.done')}</label><input type="text" name="doneMessage" value="${esc(tm.doneMessage)}" placeholder="${esc(t('timer.defaultDone'))}" maxlength="200">
+    <p class="hint">${t('f.defaultHint')}</p></div>
+    <div class="row"><button>${t('btn.save')}</button>
+    <button type="button" class="alt" data-act="reset">${t('btn.reset')}</button>
+    ${tm.mode==='custom'?`<button type="button" class="alt" data-act="keep">${t('btn.keep')}</button>`:''}
+    <button type="button" class="danger" data-act="del">${t('btn.del')}</button></div></form>`;
+  if(!d.open)d.showModal();
+}
+const edit=id=>{editing=id;renderEdit()};
+function find(){const q=$('find').value.trim().toLowerCase();$('list').querySelectorAll('.person').forEach(p=>p.hidden=!!q&&!p.dataset.name.includes(q))}
+function tab(name){ // the panel shows one section at a time; the choice is remembered in this browser
+  if(!document.querySelector(`[data-pane="${name}"]`))name='people';
+  document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==name);
+  $('tabs').querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===name));
+  try{localStorage.setItem('adminTab',name)}catch{}
+}
 function render(){
-  $('pageTitle').value=S.page.pageTitle;$('showSeconds').checked=S.page.showSeconds;
-  $('showProgress').checked=S.page.showProgress;$('showStatuses').checked=S.page.showStatuses;
-  const opt=(t,v,l)=>`<option value="${v}"${t.mode===v?' selected':''}>${l}</option>`;
-  $('list').innerHTML=S.timers.map(t=>`<form data-id="${t.id}">
-    <label>Name</label><input type="text" name="name" value="${esc(t.name)}" required>
-    <label>Label</label><input type="text" name="label" value="${esc(t.label)}">
-    <div class="two"><div><label>Service start</label><input type="datetime-local" name="start" value="${toLocal(t.start)}" required></div>
-    <div><label>Duration</label><select name="mode">${opt(t,'year','1 year (12 months)')}${opt(t,'half','Half year (6 months)')}${opt(t,'custom','Custom end date')}</select></div></div>
-    <label>Demobilization date ${t.mode==='custom'?'':'<small>(start + duration)</small>'}</label>
-    <input type="datetime-local" name="end" value="${toLocal(t.end)}" required${t.mode==='custom'?'':' disabled'}>
-    <label>Message when finished</label><input type="text" name="doneMessage" value="${esc(t.doneMessage)}">
-    <label>Accent color</label><input type="color" name="accent" value="${t.accent}">
-    <div class="row"><button>Save</button>
-    <button type="button" class="alt" data-act="reset">Start from now</button>
-    ${t.mode==='custom'?'<button type="button" class="alt" data-act="keep">Restart, keep duration</button>':''}
-    <button type="button" class="danger" data-act="del">Delete</button></div></form>`).join('')||'<p class="empty">No timers yet. Add the first person above.</p>';
-  $('hist').innerHTML=S.history.map(h=>`<li>${new Date(h.at).toLocaleString()}: ${esc(h.msg)}</li>`).join('')||'<li>No changes yet</li>';
+  if(!S)return;
+  $('pageTitle').placeholder=t('page.defaultTitle');
+  $('panel').querySelectorAll('[data-k]').forEach(el=>el.type==='checkbox'?el.checked=S.page[el.dataset.k]:el.value=S.page[el.dataset.k]);
+  $('list').innerHTML=S.timers.map(tm=>`<div class="person" data-name="${esc(tm.name.toLowerCase())}" style="--c:${tm.accent}">
+    <button type="button" class="open" data-open="${tm.id}"><span><b>${esc(tm.name)}</b><small>${summary(tm)}</small></span></button>${tm.pending?`<span class="pill">${t('pending.badge')}</span>${Date.now()>=+new Date(tm.start)?`<button type="button" class="ok" data-act="confirm" data-id="${tm.id}" data-name="${esc(tm.name)}">${t('btn.confirm')}</button>`:''}`:''}</div>`).join('')||`<p class="empty">${t('admin.emptyTimers')}</p>`;
+  $('find').hidden=S.timers.length<6;find();
+  renderEdit();
+  $('wordsCount').textContent=t('w.count',{n:S.words.length});$('wordsClear').hidden=!S.words.length;
+  $('words').innerHTML=S.words.map(w=>`<li><span>${esc(w.text)}${w.author?`<small class="by">– ${esc(w.author)}</small>`:''}</span><time>${new Date(w.at).toLocaleString(I18N.lang,{dateStyle:'short',timeStyle:'short'})}</time><button type="button" data-word="${w.id}" aria-label="${esc(t('btn.del'))}" title="${esc(t('btn.del'))}">×</button></li>`).join('');
+  $('hist').innerHTML=S.history.map(h=>`<li><time>${new Date(h.at).toLocaleString(I18N.lang,{dateStyle:'short',timeStyle:'short'})}</time><span>${esc(h.act?t('hist.'+h.act,{name:h.name}):h.msg)}</span></li>`).join('')||`<li class="empty">${t('hist.empty')}</li>`;
 }
-const run=async(m,u,b,ok)=>{try{S=await api(m,u,b);render();say(ok)}catch(x){say(x.message,1)}};
+const run=async(m,u,b,ok)=>{try{S=await api(m,u,b);render();say(t(ok));return true}catch(x){say(x.message,1)}};
 async function init(){try{S=await api('GET','/api/admin/config');render();show(true)}catch{show(false)}}
 
 $('login').onsubmit=async e=>{e.preventDefault();try{await api('POST','/api/login',{password:$('pw').value});$('pw').value='';say('');init()}catch(x){say(x.message,1)}};
-$('addForm').onsubmit=async e=>{e.preventDefault();await run('POST','/api/admin/timers',{name:$('addName').value},'Person added');$('addName').value=''};
-$('settings').onsubmit=e=>{e.preventDefault();run('PUT','/api/admin/settings',{pageTitle:$('pageTitle').value,showSeconds:$('showSeconds').checked,showProgress:$('showProgress').checked,showStatuses:$('showStatuses').checked},'Page settings saved')};
-$('list').onchange=e=>{ // live preview of the computed end date; the server recalculates on save
+$('addForm').onsubmit=async e=>{e.preventDefault();const before=new Set(S.timers.map(x=>x.id));
+  await run('POST','/api/admin/timers',{name:$('addName').value},'msg.added');$('addName').value='';
+  const added=S.timers.find(x=>!before.has(x.id));if(added)edit(added.id)}; // straight into the editor
+$('panel').onchange=e=>{ // every page setting saves as soon as it changes, like iOS settings
+  const el=e.target,k=el.dataset.k;if(!k)return;
+  const v=el.type==='checkbox'?el.checked:el.type==='number'?Math.round(+el.value):el.value;
+  if(el.type==='number'&&!(v>=0&&v<=1000)){el.value=S.page[k];return say(t('err.number'),1)}
+  run('PUT','/api/admin/settings',{[k]:v},'msg.settings')};
+$('words').onclick=e=>{const id=e.target.dataset.word;if(id)run('DELETE','/api/admin/words/'+id,null,'msg.deleted')}; // one click, no confirmation: quick cleanup
+$('wordsClear').onclick=()=>{if(confirm(t('confirm.words',{n:S.words.length})))run('DELETE','/api/admin/words',null,'msg.deleted')};
+$('edit').onchange=e=>{ // live preview of the computed end date; the server recalculates on save
   const n=e.target.name;if(n!=='mode'&&n!=='start')return;
   const f=e.target.form,m=f.elements.mode.value,end=f.elements.end,st=f.elements.start.value;
   end.disabled=m!=='custom';
   if(m!=='custom'&&st)end.value=toLocal(addMonths(new Date(st),MONTHS[m]));
 };
-$('list').onsubmit=e=>{e.preventDefault();const f=e.target,b=Object.fromEntries(new FormData(f));
-  b.start=new Date(f.elements.start.value).toISOString();b.end=new Date(f.elements.end.value).toISOString();
-  run('PUT','/api/admin/timers/'+f.dataset.id,b,'Saved')};
-$('list').onclick=e=>{const a=e.target.dataset.act;if(!a)return;const f=e.target.closest('form'),id=f.dataset.id,n=f.querySelector('[name=name]').value;
-  if(a==='del'&&confirm(`Delete "${n}"?`))run('DELETE','/api/admin/timers/'+id,null,'Deleted');
-  if(a==='reset'&&confirm(`Set start for "${n}" to now?`))run('POST',`/api/admin/timers/${id}/reset`,{},'Start reset');
-  if(a==='keep'&&confirm(`Restart "${n}" from now with the same duration?`))run('POST',`/api/admin/timers/${id}/reset`,{keepDuration:true},'Restarted')};
-$('logout').onclick=async()=>{await api('POST','/api/logout');show(false);say('Logged out')};
+$('edit').onsubmit=async e=>{e.preventDefault();const f=e.target,b=Object.fromEntries(new FormData(f));
+  b.pending=f.elements.pending.checked;b.start=new Date(f.elements.start.value).toISOString();b.end=new Date(f.elements.end.value).toISOString();
+  if(await run('PUT','/api/admin/timers/'+f.dataset.id,b,'msg.saved'))$('edit').close()};
+$('list').onclick=e=>{const o=e.target.closest('[data-open]');if(o)return edit(o.dataset.open);
+  if(e.target.dataset.act==='confirm'){const {id,name}=e.target.dataset;if(confirm(t('confirm.confirm',{name})))run('POST',`/api/admin/timers/${id}/confirm`,{},'msg.confirmed')}};
+$('find').oninput=find;
+$('tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b)tab(b.dataset.tab)};
+$('edit').onclose=()=>{editing=null};
+$('edit').onclick=e=>{const a=e.target.dataset.act;
+  if(e.target===$('edit')||a==='close')return $('edit').close(); // a tap on the backdrop closes the editor
+  if(!a)return;
+  const f=e.target.closest('form'),id=f.dataset.id,name=f.querySelector('[name=name]').value;
+  if(a==='del'&&confirm(t('confirm.del',{name})))run('DELETE','/api/admin/timers/'+id,null,'msg.deleted');
+  if(a==='reset'&&confirm(t('confirm.reset',{name})))run('POST',`/api/admin/timers/${id}/reset`,{},'msg.reset');
+  if(a==='keep'&&confirm(t('confirm.keep',{name})))run('POST',`/api/admin/timers/${id}/reset`,{keepDuration:true},'msg.restarted')};
+$('logout').onclick=async()=>{await api('POST','/api/logout');S=null;show(false);say(t('msg.loggedOut'))};
+const title=()=>document.title=t('admin.title');
+document.addEventListener('langchange',()=>{title();render()});
+I18N.init();title();BACKDROP.start();
+try{tab(localStorage.getItem('adminTab')||'people')}catch{tab('people')}
 init();
-</script></main></body></html>
+</script></body></html>
