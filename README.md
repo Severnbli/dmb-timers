@@ -16,7 +16,8 @@ A small self-hosted website for posting demob (demobilization) timers: countdown
 - Days until the end of service, a progress bar, and the current day of service. In the last day the hours, minutes and seconds become the big number; next to the days they are optional
 - Card states in their own colors: civilian (green), starts soon (orange), serving, and home
 - A call-up notice date can be the start of service: from that date the card says "Not clear yet" instead of a countdown, until the admin confirms that the person has left
-- A topographic map background (contour lines and map crosses) with glowing trig points, planned routes where units creep along, and small sparks of fire dust drifting on the wind, behind translucent glass cards, in light and dark variants
+- A topographic map background (contour lines and map crosses) with glowing trig points and planned routes where units creep along, behind translucent glass cards, in light and dark variants
+- A fire button, so the guys can see that people visit and wait for them: every visitor can add a log to the fire once every 12 hours (counted by IP), and the count starts over every 45 days. The more logs, the more sparks of fire dust drift over the cards, the bigger and hotter they burn, and the brighter the glow rising from the bottom of the screen. A tap throws a burst of sparks, logs added by others arrive as sparks from below, and the first visit shows a short tip about the button
 - Funny statuses that follow the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Each status has its own time window (days served or days left, season, time of day), so nobody is waiting at the train station two days early
 - Interface in English, Russian and Belarusian, with a language switch on every page
 - Square timer cards that fit any screen, two per row on phones
@@ -73,20 +74,21 @@ ADMIN_PASSWORD=change-me DATA_DIR=./data TZ=Europe/Minsk node server.js
 | `SESSION_HOURS` | `12` | How long an admin session lasts |
 | `TZ` | `Europe/Minsk` | Time zone for month arithmetic (start + 6 or 12 months) and for status timing (seasons, wake-up, lights-out) |
 | `PORT` | `3000` | HTTP port inside the container |
-| `TRUST_PROXY` | (off) | Set to `1` behind a reverse proxy, so the login limit uses the visitor's address from `X-Forwarded-For` |
+| `TRUST_PROXY` | (off) | Set to `1` behind a reverse proxy, so the login and fire button limits use the visitor's address from `X-Forwarded-For` |
 | `DATA_DIR` | `/data` | Where `config.json` is stored |
 
 Put the site behind a reverse proxy with HTTPS if it is reachable from the internet.
 
 ## Using the admin panel
 
-- The panel has three tabs: **People**, **Settings** and **History**. It remembers the last one you opened.
+- The panel has four tabs: **People**, **Fire**, **Settings** and **History**. It remembers the last one you opened.
 - **People** is a short list, one row per person, with a search box once there are six or more. Tap a row to edit that person in a window; **Save** closes it.
 - **Add a person**, and their editor opens right away: set the service start and the duration: 1 year, half a year, or a custom end date.
 - **Label** and **Message when finished** can be left empty. Each visitor then sees the default text in their own language.
 - **Start from now** restarts the timer from the current moment.
 - **Start is the call-up notice date** marks a start that is not confirmed yet. When the date comes, the person gets a **Confirm departure** button in the list.
-- **Settings** (Look and Cards) save as soon as you change them: the background, the clock next to the days, seconds, progress bars and statuses.
+- **Fire** sets the button and the fire dust: whether the button is shown, how many hours one visitor waits between logs (12), after how many days the count starts over (45), and the sparks per 1440×900 screen with no logs (15) and at full fire (120), reached at 100 logs. It shows the current count and when it starts over, with a button to start over now.
+- **Fire**, **Settings** (Look and Cards) save as soon as you change them: the background, the clock next to the days, seconds, progress bars and statuses.
 
 ## Localization
 
@@ -120,7 +122,7 @@ Calendar and clock keys use the server time zone:
 
 ## Privacy
 
-The site sets no cookies for visitors and loads nothing from third parties. The full notice is at `/privacy` and is linked from every page. Names and dates entered in the admin panel are public, so get people's consent before you add them.
+The site sets no cookies for visitors and loads nothing from third parties. The fire button keeps only a shared count; to allow one log per visitor, a salted hash of the IP address stays in memory until the wait is over. The full notice is at `/privacy` and is linked from every page. Names and dates entered in the admin panel are public, so get people's consent before you add them.
 
 ## License
 

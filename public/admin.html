@@ -95,6 +95,9 @@ dialog#edit::backdrop{background:rgb(20 23 15/.45)}
 .chk input{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .15s;margin:0}
 .chk input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.3);transition:transform .15s}
 .chk input:checked{background:var(--ok)}.chk input:checked::after{transform:translateX(18px)}
+.count{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.count b{display:block;font-size:1.05rem}.count small{display:block;color:var(--mute);font-size:.82rem}
+.count button.danger{flex:none;margin:0;min-height:36px;padding:6px 14px;font-size:.86rem}
 .pill{flex:none;font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:999px;color:var(--summons);background:color-mix(in srgb,var(--summons) 16%,transparent)}
 button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background:var(--ok);border-color:var(--ok);color:#fff}
 #hist{list-style:none;padding:0;margin:0;font-size:.88rem}
@@ -134,6 +137,7 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
 <div id="panel" hidden>
   <nav class="tabs lang" id="tabs" role="tablist">
     <button type="button" role="tab" data-tab="people" data-i18n="tab.people">People</button>
+    <button type="button" role="tab" data-tab="fire" data-i18n="tab.fire">Fire</button>
     <button type="button" role="tab" data-tab="settings" data-i18n="tab.settings">Settings</button>
     <button type="button" role="tab" data-tab="history" data-i18n="tab.history">History</button>
   </nav>
@@ -145,6 +149,24 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
   </form>
   <input id="find" type="search" data-i18n-ph="admin.find" data-i18n-label="admin.find" hidden>
   <div id="list" class="box people"></div>
+  </div>
+
+  <div data-pane="fire" hidden>
+  <section class="box">
+    <h3 data-i18n="fa.title">Fire button</h3><p class="hint" data-i18n="fa.hint"></p>
+    <div class="count"><div><b id="sparkCount"></b><small id="sparkReset"></small></div><button type="button" class="danger" id="sparkZero" data-i18n="fa.reset">Start over</button></div>
+    <label class="chk"><span data-i18n="fa.on">Show the fire button</span><input data-k="sparkOn" type="checkbox"></label>
+    <div class="grid"><div><label for="sparkHours" data-i18n="fa.hours">One log per visitor (IP), hours</label><input id="sparkHours" data-k="sparkHours" type="number" min="1" max="720" inputmode="numeric"></div>
+    <div><label for="sparkDays" data-i18n="fa.days">Count starts over every, days</label><input id="sparkDays" data-k="sparkDays" type="number" min="1" max="365" inputmode="numeric"></div></div>
+  </section>
+  <section class="box">
+    <h3 data-i18n="fd.title">Fire dust</h3>
+    <label class="chk"><span data-i18n="fd.on">Sparks drift over the page</span><input data-k="dustOn" type="checkbox"></label>
+    <div class="grid"><div><label for="dustMin" data-i18n="fd.min">Sparks with no logs</label><input id="dustMin" data-k="dustMin" type="number" min="0" max="300" inputmode="numeric"></div>
+    <div><label for="dustMax" data-i18n="fd.max">Sparks at full fire</label><input id="dustMax" data-k="dustMax" type="number" min="0" max="300" inputmode="numeric"></div></div>
+    <label for="dustFull" data-i18n="fd.full">Logs for full fire</label><input id="dustFull" data-k="dustFull" type="number" min="1" max="100000" inputmode="numeric">
+    <p class="hint" data-i18n="fd.hint"></p>
+  </section>
   </div>
 
   <div data-pane="settings" hidden>
@@ -237,7 +259,9 @@ function tab(name){ // the panel shows one section at a time; the choice is reme
 function render(){
   if(!S)return;
   $('pageTitle').placeholder=t('page.defaultTitle');
-  $('panel').querySelectorAll('[data-k]').forEach(el=>el.type==='checkbox'?el.checked=S.page[el.dataset.k]:el.value=S.page[el.dataset.k]);
+  $('panel').querySelectorAll('[data-k]').forEach(el=>{const v=S.page[el.dataset.k]??S[el.dataset.k];el.type==='checkbox'?el.checked=v:el.value=v});
+  const sp=S.sparks||{count:0};$('sparkCount').textContent=t('fa.count',{n:sp.count.toLocaleString(I18N.lang)});
+  $('sparkReset').textContent=sp.resetAt?t('fa.resetAt',{date:new Date(sp.resetAt).toLocaleString(I18N.lang,{dateStyle:'medium',timeStyle:'short'})}):'';
   $('list').innerHTML=S.timers.map(tm=>`<div class="person" data-name="${esc(tm.name.toLowerCase())}" style="--c:${tm.accent}">
     <button type="button" class="open" data-open="${tm.id}"><span><b>${esc(tm.name)}</b><small>${summary(tm)}</small></span></button>${tm.pending?`<span class="pill">${t('pending.badge')}</span>${Date.now()>=+new Date(tm.start)?`<button type="button" class="ok" data-act="confirm" data-id="${tm.id}" data-name="${esc(tm.name)}">${t('btn.confirm')}</button>`:''}`:''}</div>`).join('')||`<p class="empty">${t('admin.emptyTimers')}</p>`;
   $('find').hidden=S.timers.length<6;find();
@@ -254,7 +278,8 @@ $('addForm').onsubmit=async e=>{e.preventDefault();const before=new Set(S.timers
 $('panel').onchange=e=>{ // every page setting saves as soon as it changes, like iOS settings
   const el=e.target,k=el.dataset.k;if(!k)return;
   const v=el.type==='checkbox'?el.checked:el.type==='number'?Math.round(+el.value):el.value;
-  if(el.type==='number'&&!(v>=0&&v<=1000)){el.value=S.page[k];return say(t('err.number'),1)}
+  const lo=+el.min||0,hi=+el.max||1000;
+  if(el.type==='number'&&!(v>=lo&&v<=hi)){el.value=S.page[k]??S[k];return say(t('err.number',{min:lo,max:hi}),1)}
   run('PUT','/api/admin/settings',{[k]:v},'msg.settings')};
 $('edit').onchange=e=>{ // live preview of the computed end date; the server recalculates on save
   const n=e.target.name;if(n!=='mode'&&n!=='start')return;
@@ -267,6 +292,7 @@ $('edit').onsubmit=async e=>{e.preventDefault();const f=e.target,b=Object.fromEn
   if(await run('PUT','/api/admin/timers/'+f.dataset.id,b,'msg.saved'))$('edit').close()};
 $('list').onclick=e=>{const o=e.target.closest('[data-open]');if(o)return edit(o.dataset.open);
   if(e.target.dataset.act==='confirm'){const {id,name}=e.target.dataset;if(confirm(t('confirm.confirm',{name})))run('POST',`/api/admin/timers/${id}/confirm`,{},'msg.confirmed')}};
+$('sparkZero').onclick=()=>{if(confirm(t('confirm.sparks')))run('POST','/api/admin/sparks/reset',{},'msg.sparksReset')};
 $('find').oninput=find;
 $('tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b)tab(b.dataset.tab)};
 $('edit').onclose=()=>{editing=null};

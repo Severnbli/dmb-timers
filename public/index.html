@@ -25,9 +25,9 @@
 <title>Demobilization timers</title>
 <style>
 :root{--bg:#ebe8dc;--surface:#f8f6ef;--ink:#22271c;--mute:#6a6e5b;--wait:#4f8a3a;--soon:#c86a14;--summons:#a5761a;--line:#d7d3c3;--track:#e3dfd0;--glass:color-mix(in srgb,var(--surface) 34%,transparent);--edge:rgb(255 255 255/.6);--hi:rgb(255 255 255/.75);--shadow:0 1px 2px rgb(40 45 30/.06),0 8px 24px -12px rgb(40 45 30/.25);
- --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--wait:#8fc27a;--soon:#f0a050;--summons:#dcae55;--line:#30352a;--track:#2a2f23;--glass:color-mix(in srgb,var(--surface) 30%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}}
-:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--wait:#8fc27a;--soon:#f0a050;--summons:#dcae55;--line:#30352a;--track:#2a2f23;--glass:color-mix(in srgb,var(--surface) 30%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}
+ --fire:#d0501a;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--wait:#8fc27a;--soon:#f0a050;--summons:#dcae55;--line:#30352a;--track:#2a2f23;--glass:color-mix(in srgb,var(--surface) 30%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--fire:#ff8a3d;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}}
+:root[data-theme=dark]{--bg:#14170f;--surface:#1d2117;--ink:#e9e6d7;--mute:#9b9e88;--wait:#8fc27a;--soon:#f0a050;--summons:#dcae55;--line:#30352a;--track:#2a2f23;--glass:color-mix(in srgb,var(--surface) 30%,transparent);--edge:rgb(255 255 255/.1);--hi:rgb(255 255 255/.08);--fire:#ff8a3d;--shadow:0 1px 2px rgb(0 0 0/.3),0 10px 30px -14px rgb(0 0 0/.6)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 /* iOS-like glass: translucent surfaces that blur the map behind them */
@@ -92,8 +92,38 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .one .clock{font-size:clamp(1rem,3.5vw,1.3rem)}
 .one .done{font-size:clamp(1.8rem,7vw,2.8rem)}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+/* The fire button: one log per visitor every few hours, so the guys see that someone is here and waiting */
+.fire-btn{position:fixed;z-index:6;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:8px;height:54px;padding:0 18px 0 13px;border-radius:999px;
+ color:var(--ink);font:700 1rem/1 var(--sans);font-variant-numeric:tabular-nums;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s cubic-bezier(.3,1.6,.5,1),opacity .3s,translate .45s cubic-bezier(.3,1.3,.5,1);
+ -webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);background:color-mix(in srgb,var(--surface) 62%,transparent)}
+.fire-btn:hover{border-color:var(--fire)}
+.fire-btn:active{transform:scale(.92)}
+.fire-btn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.fire-btn svg{flex:none;width:30px;height:30px;overflow:visible}
+.fire-btn .fl{fill:none;stroke:var(--fire);stroke-width:1.7;stroke-linejoin:round;transform-origin:50% 90%;transform-box:fill-box}
+.fire-btn .lg{stroke:var(--mute);stroke-width:2;stroke-linecap:round}
+.fire-btn .lbl{font-weight:600;font-size:.9rem}
+.fire-btn b{min-width:1ch;transition:transform .25s}
+.fire-btn b.bump{transform:scale(1.35)}
+.fire-btn:not(.lit){animation:fire-call 2.6s ease-in-out infinite} /* a quiet invitation while this visitor can add a log */
+.fire-btn.lit{border-color:color-mix(in srgb,var(--fire) 55%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--fire) 25%,transparent),0 8px 30px -8px color-mix(in srgb,var(--fire) 65%,transparent),inset 0 1px 0 var(--hi)}
+.fire-btn.lit .fl{fill:url(#flame);stroke:none;animation:flame 1.3s ease-in-out infinite alternate}
+.fire-btn.lit .fl+.fl{fill:#fff3c4;animation-duration:.9s}
+.fire-btn.away{translate:0 calc(100% + 40px);opacity:0;pointer-events:none}
+@keyframes fire-call{0%,100%{box-shadow:inset 0 1px 0 var(--hi),var(--shadow),0 0 0 0 color-mix(in srgb,var(--fire) 40%,transparent)}50%{box-shadow:inset 0 1px 0 var(--hi),var(--shadow),0 0 0 8px transparent}}
+@keyframes flame{0%{transform:scale(1,1) skewX(0)}50%{transform:scale(.94,1.06) skewX(-3deg)}100%{transform:scale(1.04,.95) skewX(3deg)}}
+.plus{position:fixed;z-index:6;pointer-events:none;font:800 1.1rem/1 var(--sans);color:var(--fire);text-shadow:0 1px 8px rgb(255 140 40/.5)}
+.fire-tip{position:fixed;z-index:6;right:max(16px,env(safe-area-inset-right));bottom:calc(max(16px,env(safe-area-inset-bottom)) + 66px);width:min(330px,calc(100% - 32px));
+ padding:14px 16px;border-radius:18px;background:var(--ink);color:var(--surface);font-size:.9rem;line-height:1.4;box-shadow:0 14px 40px -12px rgb(0 0 0/.5);
+ transform-origin:calc(100% - 40px) 100%;animation:tip-in .35s cubic-bezier(.3,1.4,.5,1)}
+.fire-tip::after{content:"";position:absolute;right:30px;bottom:-7px;width:14px;height:14px;background:inherit;transform:rotate(45deg);border-radius:0 0 3px 0}
+.fire-tip p{margin:0}.fire-tip b{display:block;margin-bottom:3px;font-size:.98rem}
+.fire-tip button{display:block;margin:10px 0 0 auto;font:600 .85rem var(--sans);border:0;border-radius:10px;padding:8px 14px;background:var(--surface);color:var(--ink);cursor:pointer}
+.fire-tip.short{width:auto;max-width:min(300px,calc(100% - 32px));padding:10px 14px}
+@keyframes tip-in{from{opacity:0;transform:translateY(8px) scale(.9)}}
+@media(prefers-reduced-motion:reduce){.fire-btn,.fire-btn .fl,.fire-tip{animation:none!important}}
 .empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:12vh 0}
-footer{max-width:1140px;width:100%;margin:0 auto;padding:12px max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+footer{max-width:1140px;width:100%;margin:0 auto;padding:12px max(16px,env(safe-area-inset-right)) calc(max(16px,env(safe-area-inset-bottom)) + 70px) max(16px,env(safe-area-inset-left));
  display:flex;gap:6px 18px;flex-wrap:wrap;justify-content:center;color:var(--mute);font-size:.85rem}
 footer a{text-decoration:none;border-bottom:1px solid var(--line)}
 footer a:hover{color:var(--ink)}
@@ -132,10 +162,14 @@ footer a:hover{color:var(--ink)}
 </style></head><body>
 <header class="top"><h1><span id="ptitle"></span></h1><div class="tools"><div data-lang-switch></div><div data-theme-switch></div><a class="theme" href="/admin" data-i18n-label="nav.admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a></div></header>
 <main id="app" aria-live="off"></main>
+<button type="button" class="fire-btn glass away" id="fireBtn" hidden><svg viewBox="0 0 30 30" aria-hidden="true"><defs><linearGradient id="flame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff4d12"/><stop offset=".55" stop-color="#ff9a2e"/><stop offset="1" stop-color="#ffd56a"/></linearGradient></defs>
+ <path class="lg" d="M5 26.5l20-4.5M5 22l20 4.5"/><path class="fl" d="M15 2.5c.8 3.6 4.4 5.4 5.9 8.9 1.6 3.6.4 8-3.2 9.6a6.6 6.6 0 0 1-9.4-5.8c0-2.8 1.5-4.7 2.9-6 .2 1.7.9 2.9 2.1 3.6-.5-3.6.3-7 1.7-10.3z"/><path class="fl" d="M15.4 13.3c1.7 1.4 2.9 3.2 2.3 5.1a2.9 2.9 0 0 1-5.5-.6c0-1.2.6-2.1 1.3-2.7.2.8.5 1.2 1 1.5-.2-1.2-.1-2.3.9-3.3z"/></svg>
+ <span class="lbl">Add a log</span><b id="fireCount">0</b></button>
 <footer><a href="/privacy" data-i18n="footer.privacy">Privacy</a><a href="https://github.com/Severnbli/dmb-timers" rel="noopener" data-i18n="footer.source">Source code</a></footer>
 <script src="/i18n.js"></script>
 <script src="/statuses.js"></script>
 <script src="/backdrop.js"></script>
+<script src="/fire.js"></script>
 <script>
 const {t,tp}=I18N, COL={'en-US':2,'ru-RU':3,'be-BY':4}; // STATUSES text column per language
 let cfg=null, offset=0, clock=null;
@@ -144,7 +178,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const fmt=d=>new Date(d).toLocaleDateString(I18N.lang,{day:'numeric',month:'numeric',year:'2-digit'});
 const DAY=864e5;
 async function load(){
-  try{cfg=await (await fetch('/api/config')).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?BACKDROP.stop():BACKDROP.start();
+  try{cfg=await (await fetch('/api/config',{cache:'no-store'})).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?BACKDROP.stop():BACKDROP.start();fire();
   // hours and seasons follow the server (unit) time zone, not the visitor's
   try{clock=new Intl.DateTimeFormat('en-US',{timeZone:cfg.tz,month:'numeric',day:'numeric',hour:'numeric',hourCycle:'h23'})}catch{clock=null}
   title();}catch{}
@@ -270,7 +304,63 @@ addEventListener('resize',()=>{render();clearTimeout(resizing);resizing=setTimeo
     ctx.globalAlpha=1;raf=c||ps.length?requestAnimationFrame(tick):0;
   }
 })();
-document.addEventListener('langchange',()=>{title();render()});
+// The fire: everyone's logs in one count. A visitor adds one every few hours (the server checks by IP); the more logs,
+// the more fire dust over the page. Someone else's new logs arrive with the next config refresh as sparks from below
+const fb=document.getElementById('fireBtn'), fc=document.getElementById('fireCount');
+const store={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
+let logs=null, nextLog=0, tipEl=null, tipT=0;
+const hm=ms=>{const n=Math.max(1,Math.ceil(ms/6e4)),h=Math.floor(n/60),m=n%60;return h&&m?t('fire.hm',{h,m}):h?t('fire.h',{h}):t('fire.m',{m})};
+function drawFire(){
+  const lit=nextLog>Date.now()+offset;
+  fb.classList.toggle('lit',lit);fb.querySelector('.lbl').textContent=t(lit?'fire.lit':'fire.btn');fc.textContent=(logs||0).toLocaleString(I18N.lang);
+  const l=t('fire.label',{n:(logs||0).toLocaleString(I18N.lang)})+(lit?' '+t('fire.wait',{time:hm(nextLog-Date.now()-offset)}):'');
+  fb.setAttribute('aria-label',l);fb.title=l;
+}
+function fire(){
+  const p=cfg.page,sp=cfg.sparks||{count:0,next:0};
+  FIRE.set({on:p.dustOn!==false,logs:sp.count,full:p.dustFull,lo:p.dustMin,hi:p.dustMax});
+  if(logs!==null&&sp.count>logs&&!fb.hidden){ // someone else added logs since the last look
+    const n=Math.min(6,sp.count-logs);for(let i=0;i<n;i++)setTimeout(()=>FIRE.burst(Math.random()*innerWidth,innerHeight+8,26,1.3),i*700);bump();
+  }
+  logs=sp.count;nextLog=sp.next;fb.hidden=p.sparkOn===false;
+  if(fb.hidden)return tip(null);
+  drawFire();
+  const n=document.querySelector('.notice'); // wait until the privacy banner is closed
+  if(!n)arrive();else if(!n.dataset.fire){n.dataset.fire=1;n.querySelector('button').addEventListener('click',()=>setTimeout(arrive,350))}
+}
+function arrive(){ // the button slides in once the privacy banner is out of the way; the first visit gets a hint
+  if(fb.hidden||!fb.classList.contains('away'))return;
+  fb.classList.remove('away');
+  if(!store.get('fireHint'))setTimeout(()=>{if(!store.get('fireHint')&&!fb.hidden)tip(`<b>${esc(t('fire.hintTitle'))}</b><p>${esc(t('fire.hint',{h:cfg.page.sparkHours}))}</p><button type="button">${esc(t('notice.ok'))}</button>`,0)},900);
+}
+function tip(html,ms=3800){ // a bubble over the button: the first-visit hint (stays until closed) or a short message
+  clearTimeout(tipT);tipEl?.remove();tipEl=null;if(!html)return;
+  tipEl=document.createElement('div');tipEl.className='fire-tip'+(ms?' short':'');tipEl.setAttribute('role',ms?'status':'dialog');tipEl.innerHTML=html;
+  tipEl.querySelector('button')?.addEventListener('click',()=>{store.set('fireHint','1');tip(null)});
+  document.body.append(tipEl);if(ms)tipT=setTimeout(()=>tip(null),ms);
+}
+function bump(){fc.classList.add('bump');setTimeout(()=>fc.classList.remove('bump'),250)}
+function plus(x,y){
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const e=document.createElement('div');e.className='plus';e.textContent='+1';e.style.left=x+'px';e.style.top=y+'px';document.body.append(e);
+  e.animate([{transform:'translate(-50%,0) scale(.6)',opacity:0},{transform:'translate(-50%,-28px) scale(1.15)',opacity:1,offset:.25},{transform:'translate(-50%,-70px) scale(1)',opacity:0}],{duration:1300,easing:'ease-out'}).onfinish=()=>e.remove();
+}
+fb.onclick=async()=>{
+  store.set('fireHint','1');
+  const r=fb.querySelector('svg').getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height*.4;
+  if(nextLog>Date.now()+offset){FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(nextLog-Date.now()-offset)})))}
+  logs++;nextLog=Date.now()+offset+cfg.page.sparkHours*36e5;drawFire();bump();plus(x,r.top);FIRE.burst(x,y,60,1.15); // at once, the server confirms after
+  try{
+    const res=await fetch('/api/spark',{method:'POST'}),d=await res.json().catch(()=>({}));
+    if(typeof d.count==='number'){logs=d.count;cfg.sparks={count:d.count,next:d.next||0}}
+    nextLog=d.next||0;
+    if(res.ok)tip(esc(t('fire.thanks')));
+    else tip(esc(d.code==='spark_wait'?t('fire.wait',{time:hm(nextLog-Date.now()-offset)}):t(d.code?'err.'+d.code:'err.request')));
+  }catch{logs--;nextLog=0;tip(esc(t('err.request')))}
+  drawFire();FIRE.set({on:cfg.page.dustOn!==false,logs,full:cfg.page.dustFull,lo:cfg.page.dustMin,hi:cfg.page.dustMax});
+};
+setInterval(()=>{if(cfg&&!fb.hidden)drawFire()},3e4);
+document.addEventListener('langchange',()=>{title();render();if(cfg&&!fb.hidden)drawFire()});
 I18N.init();
 load().then(render);setInterval(render,1000);setInterval(load,60000);
 </script></body></html>
