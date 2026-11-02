@@ -35,7 +35,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Looks.** A topographic map background with glowing trig points and routes, glass cards, and light and dark themes (they follow the system, or switch with the sun/moon button). The interface is in English, Russian and Belarusian.
 
-**Phones.** Each card is a wide row with big digits (or two small squares per row, if you choose). The header fits on one line, and the language switch becomes one button that steps through the languages.
+**Phones.** Each card is a wide row with big digits. A button in the header switches to two small squares per row and back, and the page remembers the choice. The header fits on one line, and the language switch becomes one button that steps through the languages.
 
 ## Quick start
 
@@ -112,7 +112,7 @@ The tab also shows the current count and when it starts over, with a **Start ove
 ### Settings
 
 - **Look**: page title and the map background.
-- **Cards**: hours, minutes and seconds next to the days, seconds, progress bars, statuses, and cards per row on phones (one wide card or two small squares).
+- **Cards**: hours, minutes and seconds next to the days, seconds, progress bars, statuses, and the default cards per row on phones (one wide card or two small squares); visitors can switch it with the button in the header.
 - **Shared counter**: show or hide it, and whether it counts the time served or the time left. Unconfirmed call-ups are not counted.
 
 ### History
