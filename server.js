@@ -24,7 +24,6 @@ const DATA_DIR = process.env.DATA_DIR || '/data';
 const CFG_FILE = path.join(DATA_DIR, 'config.json');
 const SESSION_HOURS = +process.env.SESSION_HOURS || 12;
 const MAX_TIMERS = 100;
-const MAX_WORDS = 200, WORD_LEN = 160, AUTHOR_LEN = 40; // words of support kept on disk, the length of one and of its signature
 const MONTHS = { year: 12, half: 6 }, DAY = 864e5; // duration modes; anything else is 'custom'
 if (!PASS) { console.error('ADMIN_PASSWORD is not set (see .env)'); process.exit(1); }
 // Behind a reverse proxy every visitor has the proxy's address; TRUST_PROXY=1 takes the client's from X-Forwarded-For
@@ -46,7 +45,7 @@ const newTimer = (o = {}) => {
     end: addMonths(s, 12).toISOString(), doneMessage: '', accent: '#b23a1e', pending: false, ...o };
 };
 const defaults = () => ({ pageTitle: '', showBackground: true, showClock: false, showSeconds: true, showProgress: true, showStatuses: true,
-  wordsAccept: true, wordsShow: true, wordsPerIp: 3, wordsPerHour: 21, wordsDays: 7, wordsGap: 6, wordsCycle: 2, timers: [], history: [], words: [] });
+  timers: [], history: [] });
 const OLD_DEFAULTS = { label: 'Until demobilization', doneMessage: 'Demobilized. Welcome home!', pageTitle: 'Demobilization timers' };
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -58,6 +57,8 @@ try {
     for (const k of ['name', 'title', 'start', 'end', 'doneMessage', 'accent']) delete raw[k];
   }
   cfg = { ...cfg, ...raw };
+  for (const k of Object.keys(cfg)) if (k.startsWith('words')) delete cfg[k]; // words of support are gone
+  cfg.history = cfg.history.filter(h => h.act !== 'wordsCleared');
   cfg.timers = cfg.timers.map(t => ({ id: rid(), mode: 'custom', ...t })); // old timers keep their exact end date
   // English defaults from older versions become empty, so every visitor sees them in their own language
   if (cfg.pageTitle === OLD_DEFAULTS.pageTitle) cfg.pageTitle = '';
@@ -65,19 +66,10 @@ try {
 } catch {}
 const save = () => { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(CFG_FILE, JSON.stringify(cfg, null, 2)); };
 
-const PAGE_KEYS = ['pageTitle', 'showBackground', 'showClock', 'showSeconds', 'showProgress', 'showStatuses', 'wordsAccept', 'wordsShow', 'wordsPerIp', 'wordsPerHour', 'wordsDays', 'wordsGap', 'wordsCycle'];
-// Words older than wordsDays are deleted (0 keeps them forever); checked on every change and once an hour
-const expire = () => {
-  if (!cfg.wordsDays) return false;
-  const from = Date.now() - cfg.wordsDays * DAY, n = cfg.words.length;
-  cfg.words = cfg.words.filter(w => +new Date(w.at) > from);
-  return cfg.words.length !== n;
-};
-expire(); save();
-setInterval(() => expire() && save(), 36e5).unref();
-const pub = () => ({ page: Object.fromEntries(PAGE_KEYS.map(k => [k, cfg[k]])), timers: cfg.timers,
-  words: cfg.wordsShow ? cfg.words.map(w => ({ id: w.id, text: w.text, author: w.author || '' })) : [], serverTime: now().toISOString(), tz: TZ });
-const full = () => ({ ...pub(), words: cfg.words, history: cfg.history });
+const PAGE_KEYS = ['pageTitle', 'showBackground', 'showClock', 'showSeconds', 'showProgress', 'showStatuses'];
+save();
+const pub = () => ({ page: Object.fromEntries(PAGE_KEYS.map(k => [k, cfg[k]])), timers: cfg.timers, serverTime: now().toISOString(), tz: TZ });
+const full = () => ({ ...pub(), history: cfg.history });
 // History keeps an action code + name, so the admin page can show it in any language
 const log = (act, name) => { cfg.history = [{ at: now().toISOString(), act, ...(name !== undefined && { name }) }, ...cfg.history].slice(0, 30); };
 
@@ -96,23 +88,18 @@ const authed = req => validToken(cookie(req).session);
 const fails = new Map(); // 5 wrong passwords => 1 minute lock per IP; kept in memory only
 const locked = ip => (fails.get(ip)?.until || 0) > Date.now();
 const fail = ip => { const f = fails.get(ip) || { n: 0 }; f.n++; f.at = Date.now(); if (f.n >= 5) { f.until = f.at + 6e4; f.n = 0; } fails.set(ip, f); };
-const sent = new Map(); // IP => times of words of support sent within the last hour; kept in memory only
-const recent = list => list.filter(at => at > Date.now() - 36e5);
-setInterval(() => { // forget IPs a minute after their last failure or lock, and an hour after their last word (see the privacy notice)
+setInterval(() => { // forget IPs a minute after their last failure or lock (see the privacy notice)
   const old = Date.now() - 6e4;
   for (const [ip, f] of fails) if (Math.max(f.at, f.until || 0) < old) fails.delete(ip);
-  for (const [ip, list] of sent) { const r = recent(list); r.length ? sent.set(ip, r) : sent.delete(ip); }
 }, 6e4).unref();
 
 const ERRORS = { too_many: 'Too many attempts. Try again in a minute.', wrong_password: 'Wrong password', not_logged_in: 'Not logged in',
   limit: 'Timer limit reached', name_required: 'Name is required', bad_start: 'Invalid start date', bad_end: 'Invalid end date',
-  end_before_start: 'End date must be after start date', not_found: 'Not found', timer_not_found: 'Timer not found', server: 'Server error',
-  words_off: 'Words of support are closed', words_empty: 'Write something first', words_ip: 'You have sent enough for this hour',
-  words_busy: 'Too many words this hour. Try later.' };
+  end_before_start: 'End date must be after start date', not_found: 'Not found', timer_not_found: 'Timer not found', server: 'Server error' };
 const json = (res, code, obj, headers = {}) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers }); res.end(JSON.stringify(obj)); };
 const body = req => new Promise(r => { let d = ''; req.on('data', c => { d += c; if (d.length > 1e5) req.destroy(); }); req.on('end', () => { try { r(JSON.parse(d || '{}')); } catch { r({}); } }); });
 const err = (res, status, code) => json(res, status, { code, error: ERRORS[code] });
-const FILES = { '/': 'index.html', '/admin': 'admin.html', '/privacy': 'privacy.html', '/i18n.js': 'i18n.js', '/statuses.js': 'statuses.js', '/backdrop.js': 'backdrop.js', '/words.js': 'words.js' };
+const FILES = { '/': 'index.html', '/admin': 'admin.html', '/privacy': 'privacy.html', '/i18n.js': 'i18n.js', '/statuses.js': 'statuses.js', '/backdrop.js': 'backdrop.js' };
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
 const read = f => fs.readFileSync(path.join(__dirname, 'public', f), 'utf8');
 // Scripts are linked as /i18n.js?v=<hash of their contents>, so a browser holding an old copy fetches the new one after an update
@@ -148,19 +135,6 @@ http.createServer(async (req, res) => {
     if (M === 'GET' && url === '/api/config') return json(res, 200, pub());
     if (M === 'GET' && url === '/healthz') return json(res, 200, { ok: true });
 
-    if (M === 'POST' && url === '/api/words') { // a visitor's word of support; limited per IP and for the whole site per hour
-      if (!cfg.wordsAccept) return err(res, 403, 'words_off');
-      const b = await body(req), text = String(b.text ?? '').replace(/\s+/g, ' ').trim().slice(0, WORD_LEN);
-      if (!text) return err(res, 400, 'words_empty');
-      const author = String(b.author ?? '').replace(/\s+/g, ' ').trim().slice(0, AUTHOR_LEN);
-      const mine = recent(sent.get(ip) || []);
-      if (mine.length >= cfg.wordsPerIp) return err(res, 429, 'words_ip');
-      if (recent(cfg.words.map(w => +new Date(w.at))).length >= cfg.wordsPerHour) return err(res, 429, 'words_busy');
-      sent.set(ip, [...mine, Date.now()]);
-      const w = { id: rid(), text, author, at: now().toISOString() };
-      cfg.words = [w, ...cfg.words].slice(0, MAX_WORDS); expire(); save();
-      return json(res, 200, { id: w.id, text, author });
-    }
     if (M === 'POST' && url === '/api/login') {
       if (locked(ip)) return err(res, 429, 'too_many');
       const b = await body(req);
@@ -178,9 +152,7 @@ http.createServer(async (req, res) => {
       if (M === 'PUT' && url === '/api/admin/settings') {
         const b = await body(req);
         if (typeof b.pageTitle === 'string') cfg.pageTitle = b.pageTitle.trim().slice(0, 200);
-        for (const k of ['showBackground', 'showClock', 'showSeconds', 'showProgress', 'showStatuses', 'wordsAccept', 'wordsShow']) if (typeof b[k] === 'boolean') cfg[k] = b[k];
-        for (const k of ['wordsPerIp', 'wordsPerHour', 'wordsDays', 'wordsGap', 'wordsCycle']) if (Number.isInteger(b[k]) && b[k] >= 0 && b[k] <= 1000) cfg[k] = b[k];
-        expire();
+        for (const k of ['showBackground', 'showClock', 'showSeconds', 'showProgress', 'showStatuses']) if (typeof b[k] === 'boolean') cfg[k] = b[k];
         log('settings'); save(); return json(res, 200, full());
       }
       if (M === 'POST' && url === '/api/admin/timers') {
@@ -189,9 +161,6 @@ http.createServer(async (req, res) => {
         if (typeof r === 'string') return err(res, 400, r);
         cfg.timers.push(r); log('added', r.name); save(); return json(res, 200, full());
       }
-      if (M === 'DELETE' && url === '/api/admin/words') { cfg.words = []; log('wordsCleared'); save(); return json(res, 200, full()); }
-      const w = url.match(/^\/api\/admin\/words\/(\w+)$/);
-      if (M === 'DELETE' && w) { cfg.words = cfg.words.filter(x => x.id !== w[1]); save(); return json(res, 200, full()); }
       const m = url.match(/^\/api\/admin\/timers\/(\w+)(\/reset|\/confirm)?$/);
       if (m) {
         const i = cfg.timers.findIndex(t => t.id === m[1]);
