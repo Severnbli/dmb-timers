@@ -4,13 +4,6 @@ A small self-hosted website with demob (demobilization) timers: countdowns to th
 
 ![Timers page in a browser and on a phone, dark theme](docs/screenshots/dark.png)
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/light.png" alt="Timers page in a browser and on a phone with two cards per row, light theme" width="100%"></td>
-    <td width="50%"><img src="docs/screenshots/admin.png" alt="Admin panel, Fire tab" width="100%"></td>
-  </tr>
-</table>
-
 No database, no dependencies, no tracking: one Node.js file and one JSON config file.
 
 ## What is on the page
