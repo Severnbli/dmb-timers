@@ -76,7 +76,7 @@ const DICT = {
   'fd.title': 'Fire dust', 'fd.on': 'Sparks drift over the page', 'fd.min': 'Sparks with no logs', 'fd.max': 'Sparks at full fire', 'fd.full': 'Logs for full fire',
   'fd.hint': 'For a 1440×900 screen; smaller screens get fewer. The first logs make the biggest difference, and the fuller the fire, the bigger and hotter the sparks and the brighter the glow from below.',
   'together.served': 'Served together', 'together.left': 'Left for everyone', 'together.rate': '{sign}{n} s/s', 'together.rateTitle': 'Every second adds a second for each of the {n} serving now',
-  's.counter': 'Shared counter', 's.counterOn': 'Show the shared counter above the cards', 's.counterMode': 'It counts', 'cm.served': 'Time served by everyone together', 'cm.left': 'Time left for everyone together', 's.counterHint': 'It runs one second faster for every person serving now. Unconfirmed call-ups are not counted.',
+  's.phoneCols': 'Cards per row on phones', 'pc.1': 'One wide card', 'pc.2': 'Two small squares', 's.counter': 'Shared counter', 's.counterOn': 'Show the shared counter above the cards', 's.counterMode': 'It counts', 'cm.served': 'Time served by everyone together', 'cm.left': 'Time left for everyone together', 's.counterHint': 'It runs one second faster for every person serving now. Unconfirmed call-ups are not counted.',
   'privacy.title': 'Privacy notice', 'privacy.back': 'Back to timers',
 },
 'ru-RU': {
@@ -136,7 +136,7 @@ const DICT = {
   'fd.title': 'Огненная пыль', 'fd.on': 'Искры летят над страницей', 'fd.min': 'Искр без поленьев', 'fd.max': 'Искр при полном огне', 'fd.full': 'Поленьев до полного огня',
   'fd.hint': 'Для экрана 1440×900, на меньших экранах искр меньше. Сильнее всего огонь растёт с первых поленьев, а чем полнее огонь, тем крупнее и жарче искры и ярче зарево снизу.',
   'together.served': 'Отслужено вместе', 'together.left': 'Осталось на всех', 'together.rate': '{sign}{n} с/с', 'together.rateTitle': 'Каждую секунду – по секунде за каждого из {n}, кто служит сейчас',
-  's.counter': 'Общий счётчик', 's.counterOn': 'Показывать общий счётчик над карточками', 's.counterMode': 'Что считает', 'cm.served': 'Сколько отслужили все вместе', 'cm.left': 'Сколько осталось всем вместе', 's.counterHint': 'Он идёт на секунду быстрее за каждого, кто служит сейчас. Неподтверждённые повестки не считаются.',
+  's.phoneCols': 'Карточек в ряд на телефонах', 'pc.1': 'Одна широкая', 'pc.2': 'Два маленьких квадрата', 's.counter': 'Общий счётчик', 's.counterOn': 'Показывать общий счётчик над карточками', 's.counterMode': 'Что считает', 'cm.served': 'Сколько отслужили все вместе', 'cm.left': 'Сколько осталось всем вместе', 's.counterHint': 'Он идёт на секунду быстрее за каждого, кто служит сейчас. Неподтверждённые повестки не считаются.',
   'privacy.title': 'Политика конфиденциальности', 'privacy.back': 'К таймерам',
 },
 'be-BY': {
@@ -196,7 +196,7 @@ const DICT = {
   'fd.title': 'Агністы пыл', 'fd.on': 'Іскры ляцяць над старонкай', 'fd.min': 'Іскраў без паленняў', 'fd.max': 'Іскраў пры поўным агні', 'fd.full': 'Паленняў да поўнага агню',
   'fd.hint': 'Для экрана 1440×900, на меншых экранах іскраў менш. Мацней за ўсё агонь расце з першых паленняў, а чым паўнейшы агонь, тым буйнейшыя і гарачэйшыя іскры і ярчэйшае зарыва знізу.',
   'together.served': 'Адслужана разам', 'together.left': 'Засталося на ўсіх', 'together.rate': '{sign}{n} с/с', 'together.rateTitle': 'Кожную секунду – па секундзе за кожнага з {n}, хто служыць зараз',
-  's.counter': 'Агульны лічыльнік', 's.counterOn': 'Паказваць агульны лічыльнік над карткамі', 's.counterMode': 'Што лічыць', 'cm.served': 'Колькі адслужылі ўсе разам', 'cm.left': 'Колькі засталося ўсім разам', 's.counterHint': 'Ён ідзе на секунду хутчэй за кожнага, хто служыць зараз. Непацверджаныя позвы не лічацца.',
+  's.phoneCols': 'Картак у радзе на тэлефонах', 'pc.1': 'Адна шырокая', 'pc.2': 'Два маленькія квадраты', 's.counter': 'Агульны лічыльнік', 's.counterOn': 'Паказваць агульны лічыльнік над карткамі', 's.counterMode': 'Што лічыць', 'cm.served': 'Колькі адслужылі ўсе разам', 'cm.left': 'Колькі засталося ўсім разам', 's.counterHint': 'Ён ідзе на секунду хутчэй за кожнага, хто служыць зараз. Непацверджаныя позвы не лічацца.',
   'privacy.title': 'Палітыка канфідэнцыйнасці', 'privacy.back': 'Да таймераў',
 }};
 
@@ -238,7 +238,12 @@ function switcher(el) { // segmented EN / RU / BY control
   el.classList.add('lang'); el.setAttribute('role', 'group'); el.dataset.i18nLabel = 'lang.label';
   el.innerHTML = Object.entries(LANGS).map(([l, s]) =>
     `<button type="button" data-lang="${l}" title="${NAMES[l]}" lang="${l.slice(0, 2)}">${s}</button>`).join('');
-  el.onclick = e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.lang); };
+  el.onclick = e => { // on phones only the current language is shown, and tapping it steps to the next one
+    const b = e.target.closest('button'); if (!b) return;
+    const all = [...el.querySelectorAll('button')];
+    if (b.dataset.lang === lang && all.some(x => !x.offsetWidth)) setLang(all[(all.indexOf(b) + 1) % all.length].dataset.lang);
+    else setLang(b.dataset.lang);
+  };
 }
 function notice() { // one-time privacy notice; dismissing it is remembered in this browser only
   if (store.get('privacyOk')) return;

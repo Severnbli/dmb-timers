@@ -47,7 +47,7 @@ const newTimer = (o = {}) => {
 // The fire button: a visitor adds one log per sparkHours (per IP); the count starts over every sparkDays.
 // The fire dust grows from dustMin to dustMax sparks (per 1440x900 screen) as the logs reach dustFull
 const defaults = () => ({ pageTitle: '', showBackground: true, showClock: false, showSeconds: true, showProgress: true, showStatuses: true,
-  counterOn: true, counterMode: 'served', sparkOn: true, sparkHours: 12, sparkDays: 45, dustOn: true, dustMin: 15, dustMax: 120, dustFull: 100,
+  phoneCols: 1, counterOn: true, counterMode: 'served', sparkOn: true, sparkHours: 12, sparkDays: 45, dustOn: true, dustMin: 15, dustMax: 120, dustFull: 100,
   sparks: 0, sparksSince: now().toISOString(), timers: [], history: [] });
 const NUMS = { sparkHours: [1, 720], sparkDays: [1, 365], dustMin: [0, 300], dustMax: [0, 300], dustFull: [1, 100000] }; // allowed ranges
 const OLD_DEFAULTS = { label: 'Until demobilization', doneMessage: 'Demobilized. Welcome home!', pageTitle: 'Demobilization timers' };
@@ -72,7 +72,7 @@ const save = () => { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSy
 
 const BOOLS = ['showBackground', 'showClock', 'showSeconds', 'showProgress', 'showStatuses', 'counterOn', 'sparkOn', 'dustOn'];
 const COUNTER_MODES = ['served', 'left']; // the shared counter: time served by everyone together, or time left for everyone
-const PAGE_KEYS = ['pageTitle', ...BOOLS, 'counterMode', 'sparkHours', 'dustMin', 'dustMax', 'dustFull'];
+const PAGE_KEYS = ['pageTitle', ...BOOLS, 'phoneCols', 'counterMode', 'sparkHours', 'dustMin', 'dustMax', 'dustFull'];
 // The logs burn out together: every sparkDays since sparksSince the count goes back to zero
 const rollover = () => {
   const since = +new Date(cfg.sparksSince), period = cfg.sparkDays * DAY;
@@ -187,6 +187,7 @@ http.createServer(async (req, res) => {
         if (typeof b.pageTitle === 'string') cfg.pageTitle = b.pageTitle.trim().slice(0, 200);
         for (const k of BOOLS) if (typeof b[k] === 'boolean') cfg[k] = b[k];
         if (COUNTER_MODES.includes(b.counterMode)) cfg.counterMode = b.counterMode;
+        if (b.phoneCols === 1 || b.phoneCols === 2) cfg.phoneCols = b.phoneCols; // cards per row on phones
         for (const [k, [lo, hi]] of Object.entries(NUMS)) if (Number.isInteger(b[k]) && b[k] >= lo && b[k] <= hi) cfg[k] = b[k];
         rollover();
         log('settings'); save(); return json(res, 200, full(ip));

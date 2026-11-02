@@ -116,7 +116,8 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
  .grid{grid-template-columns:1fr}
  .row button,.row .btn{flex:1 1 100%}
  .row button.danger{margin-left:0}
- .lang button{padding:7px 7px;min-width:30px}
+ .lang button{padding:7px 8px;min-width:30px}
+ .top .lang button:not([aria-pressed=true]){display:none}
  .theme{width:34px;height:34px}
  #hist li{flex-direction:column;gap:0}
  .person .pill{display:none} /* the row's state line already says it */
@@ -183,6 +184,8 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
     <label class="chk"><span data-i18n="s.seconds">Show seconds</span><input data-k="showSeconds" type="checkbox"></label>
     <label class="chk"><span data-i18n="s.progress">Show progress bars</span><input data-k="showProgress" type="checkbox"></label>
     <label class="chk"><span data-i18n="s.statuses">Show funny statuses</span><input data-k="showStatuses" type="checkbox"></label>
+    <label for="phoneCols" data-i18n="s.phoneCols">Cards per row on phones</label>
+    <select id="phoneCols" data-k="phoneCols"><option value="1" data-i18n="pc.1">One wide card</option><option value="2" data-i18n="pc.2">Two small squares</option></select>
   </section>
   <section class="box">
     <h3 data-i18n="s.counter">Shared counter</h3>
@@ -284,7 +287,7 @@ $('addForm').onsubmit=async e=>{e.preventDefault();const before=new Set(S.timers
   const added=S.timers.find(x=>!before.has(x.id));if(added)edit(added.id)}; // straight into the editor
 $('panel').onchange=e=>{ // every page setting saves as soon as it changes, like iOS settings
   const el=e.target,k=el.dataset.k;if(!k)return;
-  const v=el.type==='checkbox'?el.checked:el.type==='number'?Math.round(+el.value):el.value;
+  const v=el.type==='checkbox'?el.checked:el.type==='number'||/^\d+$/.test(el.value)?Math.round(+el.value):el.value;
   const lo=+el.min||0,hi=+el.max||1000;
   if(el.type==='number'&&!(v>=lo&&v<=hi)){el.value=S.page[k]??S[k];return say(t('err.number',{min:lo,max:hi}),1)}
   run('PUT','/api/admin/settings',{[k]:v},'msg.settings')};
