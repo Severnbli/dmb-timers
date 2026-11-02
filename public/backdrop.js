@@ -17,7 +17,7 @@
 // A topographic map behind the glass cards: contour lines of made-up hills, every fifth one heavier as on a real map,
 // a faint grid of map crosses and a warm glow in one corner, drawn once on a canvas. Over it an SVG layer marks
 // trig points on the hilltops with their heights, softly glowing, and planned routes between them: dashes that flow
-// along the way and a unit that creeps along it. Small sparks of fire dust drift over the page on the wind. The terrain is laid out once per page load on a field larger than
+// along the way and a unit that creeps along it. The terrain is laid out once per page load on a field larger than
 // most screens, so resizing only shows more or less of it. Colors follow the current theme; with reduced motion nothing moves.
 (() => {
 const PAL = {
@@ -31,8 +31,6 @@ const theme = () => document.documentElement.dataset.theme || (matchMedia('(pref
 let wrap, cv, ctx, svg, hills = [], spots = [], FW = 0, FH = 0, VW = 0, VH = 0;
 const still = matchMedia('(prefers-reduced-motion: reduce)');
 const CSS = `.backdrop>canvas,.backdrop>svg{position:absolute;left:0;top:0;width:100%;height:100%}
-.backdrop .ember{position:absolute;left:0;top:0;width:3px;height:3px;margin:-1.5px;border-radius:50%;will-change:transform,opacity;
- background:radial-gradient(circle,#fff4c8 0,#ffb547 38%,#ff5a1a 68%,transparent 72%);box-shadow:0 0 5px 1px rgb(255 128 40/.55)}
 .backdrop .halo{animation:bd-pulse 4.5s ease-in-out infinite}
 .backdrop .route{fill:none;stroke-width:1.6;stroke-linecap:round;stroke-dasharray:7 7;animation:bd-flow 1.8s linear infinite}
 @keyframes bd-pulse{0%,100%{opacity:.25}50%{opacity:1}}
@@ -134,25 +132,6 @@ function draw() {
   ctx.stroke();
   marks(ox, oy, P);
 }
-// Fire dust: small sparks live all over the page all the time. Each one lights up somewhere, rides the shared wind
-// (it gusts and eases) with a little sway and flicker, goes out after a few seconds, and a new one lights up elsewhere
-let gen = 0;
-const wind = () => { const t = performance.now() / 1000; return [30 + 26 * Math.sin(t / 9) + 14 * Math.sin(t / 3.1), -10 + 8 * Math.sin(t / 5.3)]; }; // px per second
-function spark(g, delay = 0) {
-  if (!wrap || g !== gen) return;
-  const rnd = (a, b) => a + Math.random() * (b - a), e = document.createElement('i'); e.className = 'ember'; wrap.append(e);
-  const life = rnd(3.5, 9), [wx, wy] = wind(), x = rnd(-30, VW), y = rnd(0, VH), s = rnd(.4, 1), sway = rnd(6, 22), up = rnd(5, 30), ph = rnd(0, 6.3);
-  const frames = Array.from({ length: 8 }, (_, i) => { const t = i / 7;
-    return { transform: `translate(${(x + wx * life * t + Math.sin(ph + t * 7) * sway).toFixed(1)}px,${(y + (wy - up) * life * t + Math.cos(ph + t * 5) * sway * .6).toFixed(1)}px) scale(${(s * (1 - .45 * t)).toFixed(2)})`,
-      opacity: i === 0 || i === 7 ? 0 : +rnd(.35, 1).toFixed(2) }; });
-  e.animate(frames, { duration: life * 1000, delay, fill: 'both' }).onfinish = () => { e.remove(); spark(g); };
-}
-function dust() { // (re)fills the page with sparks for its size; the old generation burns out without being replaced
-  gen++; wrap?.querySelectorAll('.ember').forEach(e => e.remove());
-  if (!wrap || still.matches) return;
-  const n = Math.max(12, Math.min(70, Math.round(VW * VH / 2e4)));
-  for (let i = 0; i < n; i++) spark(gen, Math.random() * 9e3);
-}
 function start() {
   if (wrap) return;
   if (!document.getElementById('bd-style')) document.head.insertAdjacentHTML('beforeend', `<style id="bd-style">${CSS}</style>`);
@@ -162,9 +141,9 @@ function start() {
   wrap.append(cv, svg); document.body.prepend(wrap);
   [VW, VH] = box();
   if (!hills.length) layout();
-  draw(); dust();
+  draw();
 }
-function stop() { gen++; wrap?.remove(); wrap = cv = svg = null; }
+function stop() { wrap?.remove(); wrap = cv = svg = null; }
 function recolor() { // a theme change: the old picture stays on top as a copy and fades out over the new one
   if (!cv) return;
   if (!cv.width || still.matches) return draw();
@@ -176,10 +155,10 @@ function recolor() { // a theme change: the old picture stays on top as a copy a
 let resizing;
 addEventListener('resize', () => { clearTimeout(resizing); resizing = setTimeout(() => { // only a real change of the canvas size redraws
   if (!wrap) return; const [w, h] = box(); if (w === VW && h === VH) return;
-  VW = w; VH = h; if (VW > FW || VH > FH) layout(); draw(); dust();
+  VW = w; VH = h; if (VW > FW || VH > FH) layout(); draw();
 }, 100); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
-still.addEventListener('change', () => { if (wrap) { draw(); dust(); } });
+still.addEventListener('change', () => { if (wrap) draw(); });
 new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 window.BACKDROP = { start, stop };

@@ -1,7 +1,8 @@
 services:
   timer:
     image: severnbli/dmb-timers:latest
-    env_file: docker.env
+    build: .
+    env_file: .env
     ports:
       - "777:3000"
     volumes:

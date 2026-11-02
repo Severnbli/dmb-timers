@@ -1,128 +1,165 @@
 # dmb-timers
 
-A small self-hosted website for posting demob (demobilization) timers: countdowns to the end of military service for one or many people on a single page.
+A small self-hosted website with demob (demobilization) timers: countdowns to the end of military service for one or many people on one page.
 
 <table>
   <tr>
-    <td width="50%">
-      <img src="docs/screenshots/timers-light.png" alt="Timers page in Russian, light theme" width="100%">
-    </td>
-    <td width="50%">
-      <img src="docs/screenshots/timers-dark.png" alt="Timers page in Russian, dark theme" width="100%">
-    </td>
+    <td width="50%"><img src="docs/screenshots/timers-light.png" alt="Timers page, light theme" width="100%"></td>
+    <td width="50%"><img src="docs/screenshots/timers-dark.png" alt="Timers page, dark theme" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/timers-phone.png" alt="Timers page on a phone, with the tip about the fire button" width="60%"></td>
+    <td width="50%"><img src="docs/screenshots/admin.png" alt="Admin panel, Fire tab" width="100%"></td>
   </tr>
 </table>
 
-- Days until the end of service, a progress bar, and the current day of service. In the last day the hours, minutes and seconds become the big number; next to the days they are optional
-- Card states in their own colors: civilian (green), starts soon (orange), serving, and home
-- A call-up notice date can be the start of service: from that date the card says "Not clear yet" instead of a countdown, until the admin confirms that the person has left
-- Words of support: visitors send a word or a few sentences, and they arrive over the cards the army way: an explosion, a burst of fire, a tank, a parachute, a helicopter, a signal flare or a radiogram, with the sender's name if they gave one
-- A topographic map background (contour lines and map crosses) with glowing trig points, planned routes where units creep along, and small sparks of fire dust drifting on the wind, behind translucent glass cards, in light and dark variants
-- Funny statuses that follow the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Each status has its own time window (days served or days left, season, time of day), so nobody is waiting at the train station two days early
-- Interface in English, Russian and Belarusian, with a language switch on every page
-- Square timer cards that fit any screen, two per row on phones
-- Light and dark themes: they follow the system setting, or can be switched with the sun/moon button
-- A password-protected admin panel to add people and set service dates
-- No database, no dependencies, no tracking. One Node.js file and a JSON config file
+No database, no dependencies, no tracking: one Node.js file and one JSON config file.
 
-## Quick start (Docker image)
+## What is on the page
 
-A ready image is published to Docker Hub as [`severnbli/dmb-timers`](https://hub.docker.com/r/severnbli/dmb-timers) on every push to `main`.
+**Timer cards.** One card per person, with the days left, a progress bar and the current day of service. On the last day, hours, minutes and seconds become the big number. Each state has its own color: civilian (green), starts soon (orange), serving, and home.
 
-```bash
-docker run -d --name dmb-timers -p 8080:3000 -e ADMIN_PASSWORD=change-me -e SESSION_SECRET=$(openssl rand -hex 32) -v dmb-timers-data:/data --restart unless-stopped severnbli/dmb-timers:latest
-```
+**Call-up notices.** The start date can be a call-up notice. From that date the card says "Not clear yet" instead of counting down, until the admin confirms that the person has left.
 
-Open `http://localhost:8080` for the timers and `http://localhost:8080/admin` for the admin panel.
+**Funny statuses.** Each card shows a short status that follows the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Every status has its own time window, so nobody is waiting at the station two days early.
 
-## Docker Compose
+**Shared counter.** Above the cards, everyone's time served is added up into one number (or the time left for everyone, if you choose). Every second it adds one second for each person serving now, so with five people serving, the seconds run five times faster.
 
-1. Copy the example settings and set a real password:
+**Fire button.** A button in the corner lets visitors show the guys that someone is visiting and waiting for them:
 
-   ```bash
-   cp .env.example .env
-   ```
+- Each tap adds a log to a shared fire. One visitor (IP address) can add one log every 12 hours.
+- The count starts over from zero every 45 days.
+- The more logs, the more sparks of fire dust drift over the cards, the bigger and hotter they are, and the brighter the glow from the bottom of the screen.
+- A tap throws a burst of sparks. Logs added by other visitors arrive as sparks from below.
+- On the first visit, a short tip explains the button.
 
-2. Start it:
+**Looks.** A topographic map background with glowing trig points and routes, glass cards, and light and dark themes (they follow the system, or switch with the sun/moon button). The interface is in English, Russian and Belarusian.
 
-   ```bash
-   docker compose up -d --build
-   ```
+**Phones.** Each card is a wide row with big digits (or two small squares per row, if you choose). The header fits on one line, and the language switch becomes one button that steps through the languages.
 
-The bundled `docker-compose.yml` builds the image from this repository and publishes it on port `777`. To use the prebuilt image instead, replace `build: .` with `image: severnbli/dmb-timers:latest`. Data is kept in the `timer-data` volume.
+## Quick start
 
-## Build the image yourself
+A ready image is published to Docker Hub as [`severnbli/dmb-timers`](https://hub.docker.com/r/severnbli/dmb-timers) on every push to `main`:
 
 ```bash
-docker build -t dmb-timers .
+docker run -d --name dmb-timers -p 8080:3000 \
+  -e ADMIN_PASSWORD=change-me -e SESSION_SECRET=$(openssl rand -hex 32) \
+  -v dmb-timers-data:/data --restart unless-stopped severnbli/dmb-timers:latest
 ```
 
-## Run without Docker
+Then open:
 
-Node.js 18 or newer is enough. There is nothing to install.
+- `http://localhost:8080` for the timers
+- `http://localhost:8080/admin` for the admin panel
+
+### With Docker Compose
+
+```bash
+cp .env.example .env      # then set a real password in .env
+docker compose up -d --build
+```
+
+The bundled `docker-compose.yml` builds the image from this repository and serves it on port `777`. To use the prebuilt image instead, remove the `build: .` line. Data is kept in the `timer-data` volume.
+
+### Without Docker
+
+Node.js 18 or newer is enough, there is nothing to install:
 
 ```bash
 ADMIN_PASSWORD=change-me DATA_DIR=./data TZ=Europe/Minsk node server.js
 ```
 
-## Configuration
+If the site is reachable from the internet, put it behind a reverse proxy with HTTPS.
 
-| Variable | Default | Description |
+## Environment variables
+
+| Variable | Default | What it does |
 | --- | --- | --- |
 | `ADMIN_PASSWORD` | (required) | Password for `/admin` |
 | `SESSION_SECRET` | random on every start | Signs admin sessions. Set a fixed value to stay logged in across restarts |
 | `SESSION_HOURS` | `12` | How long an admin session lasts |
 | `TZ` | `Europe/Minsk` | Time zone for month arithmetic (start + 6 or 12 months) and for status timing (seasons, wake-up, lights-out) |
 | `PORT` | `3000` | HTTP port inside the container |
-| `TRUST_PROXY` | (off) | Set to `1` behind a reverse proxy, so login and word limits use the visitor's address from `X-Forwarded-For` |
+| `TRUST_PROXY` | (off) | Set to `1` behind a reverse proxy, so the login and fire button limits see the visitor's address from `X-Forwarded-For` |
 | `DATA_DIR` | `/data` | Where `config.json` is stored |
 
-Put the site behind a reverse proxy with HTTPS if it is reachable from the internet.
+## Admin panel
 
-## Using the admin panel
+The panel has four tabs and remembers the last one you opened. Everything except the person editor saves as soon as you change it.
 
-- The panel has four tabs: **People**, **Words**, **Settings** and **History**. It remembers the last one you opened.
-- **People** is a short list, one row per person, with a search box once there are six or more. Tap a row to edit that person in a window; **Save** closes it.
-- **Add a person**, and their editor opens right away: set the service start and the duration: 1 year, half a year, or a custom end date.
-- **Label** and **Message when finished** can be left empty. Each visitor then sees the default text in their own language.
-- **Start from now** restarts the timer from the current moment.
+### People
+
+- **Add a person**: their editor opens right away. Set the service start and the duration: 1 year, half a year, or a custom end date.
+- Tap a row to edit that person. A search box appears once there are six or more people.
+- **Label** and **Message when finished** can stay empty: each visitor then sees the default text in their own language.
+- **Start from now** restarts the timer from this moment.
 - **Start is the call-up notice date** marks a start that is not confirmed yet. When the date comes, the person gets a **Confirm departure** button in the list.
-- **Settings** (Look and Cards) and the **Words** tab save as soon as you change them: the background, the clock next to the days, seconds, progress bars, statuses, and whether visitors can send words.
-- **Words of support** are limited to 3 per visitor and 21 for the whole site per hour by default, and kept for 7 days (0 keeps them). Set the pause between words (6 seconds by default) and the shortest cycle (2 minutes): in one cycle every word shows once in random order, so a single word appears once every 2 minutes. Each device runs its own show, with its own order, pauses and entrances. Delete one with its × button, or all at once.
+
+### Fire
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| Show the fire button | on | Shows or hides the button |
+| One log per visitor (IP), hours | `12` | How long one visitor waits between logs |
+| Count starts over every, days | `45` | The log count goes back to zero after this many days |
+| Sparks drift over the page | on | Shows or hides the fire dust |
+| Sparks with no logs | `15` | Sparks on a 1440×900 screen when the fire is empty (smaller screens get fewer) |
+| Sparks at full fire | `120` | Sparks on a 1440×900 screen when the fire is full |
+| Logs for full fire | `100` | How many logs make a full fire. The first logs make the biggest difference |
+
+The tab also shows the current count and when it starts over, with a **Start over** button to reset it now.
+
+### Settings
+
+- **Look**: page title and the map background.
+- **Cards**: hours, minutes and seconds next to the days, seconds, progress bars, statuses, and cards per row on phones (one wide card or two small squares).
+- **Shared counter**: show or hide it, and whether it counts the time served or the time left. Unconfirmed call-ups are not counted.
+
+### History
+
+The last 30 changes made in the panel.
 
 ## Localization
 
-All interface text lives in [`public/i18n.js`](public/i18n.js), with one dictionary per language (`en-US`, `ru-RU`, `be-BY`). The language is picked from the browser settings the first time and can be switched with the EN / RU / BY buttons. The choice is saved in the browser's local storage.
+All interface text is in [`public/i18n.js`](public/i18n.js), one dictionary per language (`en-US`, `ru-RU`, `be-BY`). The first time, the language comes from the browser settings. After that the EN / RU / BY switch decides, and the choice is saved in the browser.
 
-To add a language, add a dictionary to `DICT` and an entry to `LANGS`, then add a text column to every status in `public/statuses.js` and to the `COL` map in `public/index.html`, and add a section to `public/privacy.html`.
+To add a language:
+
+1. Add a dictionary to `DICT` and an entry to `LANGS` in `public/i18n.js`.
+2. Add a text column to every status in `public/statuses.js` and to the `COL` map in `public/index.html`.
+3. Add a section to `public/privacy.html`.
 
 ## Statuses
 
-Statuses are in [`public/statuses.js`](public/statuses.js). Each entry has phases (`soon`, `summons`, `serve`, `done`), a rule, and the text in each language:
+Statuses are in [`public/statuses.js`](public/statuses.js). Each entry has the phases it shows in (`soon`, `summons`, `serve`, `done`), a rule, and the text in each language:
 
 ```js
 ['serve', {l: [0, 2], w: 3}, 'Running around with the clearance sheet', 'Бегает с обходным листом', 'Бегае з абходным лістом'],
 ```
 
-Rule keys are day ranges `[min, max)`, where `max` can be left out:
+Rule keys are day ranges `[min, max)`, and `max` can be left out:
 
-- `u`: days until the call-up
-- `d`: days served
-- `l`: days left
-- `a`: days since demobilization
-- `p`: percent served
+| Key | Meaning |
+| --- | --- |
+| `u` | days until the call-up |
+| `d` | days served |
+| `l` | days left |
+| `a` | days since demobilization |
+| `p` | percent served |
+| `m` | months (server time zone) |
+| `md` | a date range as `MMDD` (server time zone) |
+| `h` | an hour range (server time zone) |
+| `w` | weight: higher shows up more often |
 
-Calendar and clock keys use the server time zone:
-
-- `m`: months
-- `md`: a date range as `MMDD`
-- `h`: an hour range
-
-`w` is a weight that makes short milestones show up more often. The page picks a status at random, weighted by `w`, from those whose window fits. The status changes every 3 hours and is the same for every visitor.
+The page picks a status at random, weighted by `w`, from those whose window fits. It changes every 3 hours and is the same for every visitor.
 
 ## Privacy
 
-The site sets no cookies for visitors and loads nothing from third parties. Words of support are stored with only the name the sender chose to type; the IP address used for their limit stays in memory for an hour. The full notice is at `/privacy` and is linked from every page. Names and dates entered in the admin panel are public, so get people's consent before you add them.
+- No cookies for visitors, nothing loaded from third parties.
+- The fire button keeps only a shared count. To allow one log per visitor, a salted hash of the IP address stays in memory until the wait is over. It is never written to disk.
+- Names and dates entered in the admin panel are public, so get people's consent before you add them.
+
+The full notice is at `/privacy` and is linked from every page.
 
 ## License
 

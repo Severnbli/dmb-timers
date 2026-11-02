@@ -95,15 +95,9 @@ dialog#edit::backdrop{background:rgb(20 23 15/.45)}
 .chk input{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .15s;margin:0}
 .chk input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.3);transition:transform .15s}
 .chk input:checked{background:var(--ok)}.chk input:checked::after{transform:translateX(18px)}
-.whead{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.whead button.danger{flex:none!important;margin:0;min-height:34px;padding:5px 12px;font-size:.84rem}
-#words{list-style:none;padding:0;margin:8px 0 0;max-height:420px;overflow:auto}
-#words li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:.92rem}
-#words li span{flex:1;min-width:0;overflow-wrap:anywhere}
-#words li .by{display:block;color:var(--mute);font-size:.82rem;font-style:italic}
-#words li time{flex:none;color:var(--mute);font-size:.78rem;font-variant-numeric:tabular-nums;padding-top:2px}
-#words li button{flex:none;min-height:0;width:30px;height:30px;padding:0;border-radius:50%;border-color:var(--line);background:transparent;color:var(--accent);font-size:1.1rem;line-height:1}
-#words li button:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.count b{display:block;font-size:1.05rem}.count small{display:block;color:var(--mute);font-size:.82rem}
+.count button.danger{flex:none;margin:0;min-height:36px;padding:6px 14px;font-size:.86rem}
 .pill{flex:none;font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:999px;color:var(--summons);background:color-mix(in srgb,var(--summons) 16%,transparent)}
 button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background:var(--ok);border-color:var(--ok);color:#fff}
 #hist{list-style:none;padding:0;margin:0;font-size:.88rem}
@@ -122,7 +116,8 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
  .grid{grid-template-columns:1fr}
  .row button,.row .btn{flex:1 1 100%}
  .row button.danger{margin-left:0}
- .lang button{padding:7px 7px;min-width:30px}
+ .lang button{padding:7px 8px;min-width:30px}
+ .top .lang button:not([aria-pressed=true]){display:none}
  .theme{width:34px;height:34px}
  #hist li{flex-direction:column;gap:0}
  .person .pill{display:none} /* the row's state line already says it */
@@ -143,7 +138,7 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
 <div id="panel" hidden>
   <nav class="tabs lang" id="tabs" role="tablist">
     <button type="button" role="tab" data-tab="people" data-i18n="tab.people">People</button>
-    <button type="button" role="tab" data-tab="words" data-i18n="tab.words">Words</button>
+    <button type="button" role="tab" data-tab="fire" data-i18n="tab.fire">Fire</button>
     <button type="button" role="tab" data-tab="settings" data-i18n="tab.settings">Settings</button>
     <button type="button" role="tab" data-tab="history" data-i18n="tab.history">History</button>
   </nav>
@@ -157,21 +152,22 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
   <div id="list" class="box people"></div>
   </div>
 
-  <div data-pane="words" hidden>
+  <div data-pane="fire" hidden>
   <section class="box">
-    <h3 data-i18n="w.title">Words of support</h3>
-    <label class="chk"><span data-i18n="w.accept">Visitors can send words</span><input data-k="wordsAccept" type="checkbox"></label>
-    <label class="chk"><span data-i18n="w.show">Words fall on the timers page</span><input data-k="wordsShow" type="checkbox"></label>
-    <div class="grid"><div><label for="wordsPerIp" data-i18n="w.perIp">Per visitor (IP) per hour</label><input id="wordsPerIp" data-k="wordsPerIp" type="number" min="0" max="1000" inputmode="numeric"></div>
-    <div><label for="wordsPerHour" data-i18n="w.perHour">For the whole site per hour</label><input id="wordsPerHour" data-k="wordsPerHour" type="number" min="0" max="1000" inputmode="numeric"></div></div>
-    <div class="grid"><div><label for="wordsGap" data-i18n="w.gap">Pause between words, seconds</label><input id="wordsGap" data-k="wordsGap" type="number" min="1" max="1000" inputmode="numeric"></div>
-    <div><label for="wordsCycle" data-i18n="w.cycle">Shortest cycle, minutes</label><input id="wordsCycle" data-k="wordsCycle" type="number" min="0" max="1000" inputmode="numeric"></div></div>
-    <p class="hint" data-i18n="w.cycleHint"></p>
-    <label for="wordsDays" data-i18n="w.days">Keep words, days</label><input id="wordsDays" data-k="wordsDays" type="number" min="0" max="1000" inputmode="numeric">
-    <p class="hint" data-i18n="w.daysHint"></p>
+    <h3 data-i18n="fa.title">Fire button</h3><p class="hint" data-i18n="fa.hint"></p>
+    <div class="count"><div><b id="sparkCount"></b><small id="sparkReset"></small></div><button type="button" class="danger" id="sparkZero" data-i18n="fa.reset">Start over</button></div>
+    <label class="chk"><span data-i18n="fa.on">Show the fire button</span><input data-k="sparkOn" type="checkbox"></label>
+    <div class="grid"><div><label for="sparkHours" data-i18n="fa.hours">One log per visitor (IP), hours</label><input id="sparkHours" data-k="sparkHours" type="number" min="1" max="720" inputmode="numeric"></div>
+    <div><label for="sparkDays" data-i18n="fa.days">Count starts over every, days</label><input id="sparkDays" data-k="sparkDays" type="number" min="1" max="365" inputmode="numeric"></div></div>
   </section>
-  <section class="box"><div class="whead"><h3 id="wordsCount" style="margin:0"></h3><button type="button" class="danger" id="wordsClear" data-i18n="w.clear">Delete all</button></div><ul id="words"></ul></section>
-
+  <section class="box">
+    <h3 data-i18n="fd.title">Fire dust</h3>
+    <label class="chk"><span data-i18n="fd.on">Sparks drift over the page</span><input data-k="dustOn" type="checkbox"></label>
+    <div class="grid"><div><label for="dustMin" data-i18n="fd.min">Sparks with no logs</label><input id="dustMin" data-k="dustMin" type="number" min="0" max="300" inputmode="numeric"></div>
+    <div><label for="dustMax" data-i18n="fd.max">Sparks at full fire</label><input id="dustMax" data-k="dustMax" type="number" min="0" max="300" inputmode="numeric"></div></div>
+    <label for="dustFull" data-i18n="fd.full">Logs for full fire</label><input id="dustFull" data-k="dustFull" type="number" min="1" max="100000" inputmode="numeric">
+    <p class="hint" data-i18n="fd.hint"></p>
+  </section>
   </div>
 
   <div data-pane="settings" hidden>
@@ -188,6 +184,15 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
     <label class="chk"><span data-i18n="s.seconds">Show seconds</span><input data-k="showSeconds" type="checkbox"></label>
     <label class="chk"><span data-i18n="s.progress">Show progress bars</span><input data-k="showProgress" type="checkbox"></label>
     <label class="chk"><span data-i18n="s.statuses">Show funny statuses</span><input data-k="showStatuses" type="checkbox"></label>
+    <label for="phoneCols" data-i18n="s.phoneCols">Cards per row on phones</label>
+    <select id="phoneCols" data-k="phoneCols"><option value="1" data-i18n="pc.1">One wide card</option><option value="2" data-i18n="pc.2">Two small squares</option></select>
+  </section>
+  <section class="box">
+    <h3 data-i18n="s.counter">Shared counter</h3>
+    <label class="chk"><span data-i18n="s.counterOn">Show the shared counter above the cards</span><input data-k="counterOn" type="checkbox"></label>
+    <label for="counterMode" data-i18n="s.counterMode">It counts</label>
+    <select id="counterMode" data-k="counterMode"><option value="served" data-i18n="cm.served">Time served by everyone together</option><option value="left" data-i18n="cm.left">Time left for everyone together</option></select>
+    <p class="hint" data-i18n="s.counterHint"></p>
   </section>
   </div>
 
@@ -264,13 +269,13 @@ function tab(name){ // the panel shows one section at a time; the choice is reme
 function render(){
   if(!S)return;
   $('pageTitle').placeholder=t('page.defaultTitle');
-  $('panel').querySelectorAll('[data-k]').forEach(el=>el.type==='checkbox'?el.checked=S.page[el.dataset.k]:el.value=S.page[el.dataset.k]);
+  $('panel').querySelectorAll('[data-k]').forEach(el=>{const v=S.page[el.dataset.k]??S[el.dataset.k];el.type==='checkbox'?el.checked=v:el.value=v});
+  const sp=S.sparks||{count:0};$('sparkCount').textContent=t('fa.count',{n:sp.count.toLocaleString(I18N.lang)});
+  $('sparkReset').textContent=sp.resetAt?t('fa.resetAt',{date:new Date(sp.resetAt).toLocaleString(I18N.lang,{dateStyle:'medium',timeStyle:'short'})}):'';
   $('list').innerHTML=S.timers.map(tm=>`<div class="person" data-name="${esc(tm.name.toLowerCase())}" style="--c:${tm.accent}">
     <button type="button" class="open" data-open="${tm.id}"><span><b>${esc(tm.name)}</b><small>${summary(tm)}</small></span></button>${tm.pending?`<span class="pill">${t('pending.badge')}</span>${Date.now()>=+new Date(tm.start)?`<button type="button" class="ok" data-act="confirm" data-id="${tm.id}" data-name="${esc(tm.name)}">${t('btn.confirm')}</button>`:''}`:''}</div>`).join('')||`<p class="empty">${t('admin.emptyTimers')}</p>`;
   $('find').hidden=S.timers.length<6;find();
   renderEdit();
-  $('wordsCount').textContent=t('w.count',{n:S.words.length});$('wordsClear').hidden=!S.words.length;
-  $('words').innerHTML=S.words.map(w=>`<li><span>${esc(w.text)}${w.author?`<small class="by">– ${esc(w.author)}</small>`:''}</span><time>${new Date(w.at).toLocaleString(I18N.lang,{dateStyle:'short',timeStyle:'short'})}</time><button type="button" data-word="${w.id}" aria-label="${esc(t('btn.del'))}" title="${esc(t('btn.del'))}">×</button></li>`).join('');
   $('hist').innerHTML=S.history.map(h=>`<li><time>${new Date(h.at).toLocaleString(I18N.lang,{dateStyle:'short',timeStyle:'short'})}</time><span>${esc(h.act?t('hist.'+h.act,{name:h.name}):h.msg)}</span></li>`).join('')||`<li class="empty">${t('hist.empty')}</li>`;
 }
 const run=async(m,u,b,ok)=>{try{S=await api(m,u,b);render();say(t(ok));return true}catch(x){say(x.message,1)}};
@@ -282,11 +287,10 @@ $('addForm').onsubmit=async e=>{e.preventDefault();const before=new Set(S.timers
   const added=S.timers.find(x=>!before.has(x.id));if(added)edit(added.id)}; // straight into the editor
 $('panel').onchange=e=>{ // every page setting saves as soon as it changes, like iOS settings
   const el=e.target,k=el.dataset.k;if(!k)return;
-  const v=el.type==='checkbox'?el.checked:el.type==='number'?Math.round(+el.value):el.value;
-  if(el.type==='number'&&!(v>=0&&v<=1000)){el.value=S.page[k];return say(t('err.number'),1)}
+  const v=el.type==='checkbox'?el.checked:el.type==='number'||/^\d+$/.test(el.value)?Math.round(+el.value):el.value;
+  const lo=+el.min||0,hi=+el.max||1000;
+  if(el.type==='number'&&!(v>=lo&&v<=hi)){el.value=S.page[k]??S[k];return say(t('err.number',{min:lo,max:hi}),1)}
   run('PUT','/api/admin/settings',{[k]:v},'msg.settings')};
-$('words').onclick=e=>{const id=e.target.dataset.word;if(id)run('DELETE','/api/admin/words/'+id,null,'msg.deleted')}; // one click, no confirmation: quick cleanup
-$('wordsClear').onclick=()=>{if(confirm(t('confirm.words',{n:S.words.length})))run('DELETE','/api/admin/words',null,'msg.deleted')};
 $('edit').onchange=e=>{ // live preview of the computed end date; the server recalculates on save
   const n=e.target.name;if(n!=='mode'&&n!=='start')return;
   const f=e.target.form,m=f.elements.mode.value,end=f.elements.end,st=f.elements.start.value;
@@ -298,6 +302,7 @@ $('edit').onsubmit=async e=>{e.preventDefault();const f=e.target,b=Object.fromEn
   if(await run('PUT','/api/admin/timers/'+f.dataset.id,b,'msg.saved'))$('edit').close()};
 $('list').onclick=e=>{const o=e.target.closest('[data-open]');if(o)return edit(o.dataset.open);
   if(e.target.dataset.act==='confirm'){const {id,name}=e.target.dataset;if(confirm(t('confirm.confirm',{name})))run('POST',`/api/admin/timers/${id}/confirm`,{},'msg.confirmed')}};
+$('sparkZero').onclick=()=>{if(confirm(t('confirm.sparks')))run('POST','/api/admin/sparks/reset',{},'msg.sparksReset')};
 $('find').oninput=find;
 $('tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b)tab(b.dataset.tab)};
 $('edit').onclose=()=>{editing=null};
