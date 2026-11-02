@@ -2,7 +2,7 @@
 
 A small self-hosted website with demob (demobilization) timers: countdowns to the end of military service for one or many people on one page.
 
-![Timers page in a browser and on a phone, dark theme](docs/screenshots/dark.png)
+![Timers page in a browser and on a phone, dark theme](docs/screenshots/dark-wave.png)
 
 No database, no dependencies, no tracking: one Node.js file and one JSON config file.
 
@@ -24,7 +24,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 - A tap throws a burst of sparks. Logs added by other visitors arrive as sparks from below.
 - On the first visit, a short tip explains the button.
 
-**Looks.** A topographic map background with glowing trig points and routes, glass cards, and light and dark themes (they follow the system, or switch with the sun/moon button). The interface is in English, Russian and Belarusian.
+**Looks.** A topographic map background with a slow wave of light running over it, glass cards, and light and dark themes (they follow the system, or switch with the sun/moon button). The interface is in English, Russian and Belarusian.
 
 **Phones.** Each card is a wide row with big digits. A button in the header switches to two small squares per row and back, and the page remembers the choice. The header fits on one line, and the language switch becomes one button that steps through the languages.
 
