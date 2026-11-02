@@ -58,7 +58,6 @@ main.one{max-width:420px;grid-template-columns:1fr;padding-top:3vh}
  aspect-ratio:1;display:flex;flex-direction:column;container:card/inline-size} /* square at every width; top block and status/dates are pushed apart */
 .card>*{flex:none}
 .fill{flex:1 0 6px}
-.card::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--accent)}
 .head{display:flow-root} /* the chip floats, so a long name can run under it on its second line */
 h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wrap:anywhere;max-height:2.5em;overflow:clip} /* two lines at most; clip, not hidden, so the text still flows around the chip */
 .label{margin:1px 0 0;color:var(--mute);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
