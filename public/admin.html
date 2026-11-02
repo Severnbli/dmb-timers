@@ -184,6 +184,13 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
     <label class="chk"><span data-i18n="s.progress">Show progress bars</span><input data-k="showProgress" type="checkbox"></label>
     <label class="chk"><span data-i18n="s.statuses">Show funny statuses</span><input data-k="showStatuses" type="checkbox"></label>
   </section>
+  <section class="box">
+    <h3 data-i18n="s.counter">Shared counter</h3>
+    <label class="chk"><span data-i18n="s.counterOn">Show the shared counter above the cards</span><input data-k="counterOn" type="checkbox"></label>
+    <label for="counterMode" data-i18n="s.counterMode">It counts</label>
+    <select id="counterMode" data-k="counterMode"><option value="served" data-i18n="cm.served">Time served by everyone together</option><option value="left" data-i18n="cm.left">Time left for everyone together</option></select>
+    <p class="hint" data-i18n="s.counterHint"></p>
+  </section>
   </div>
 
   <div data-pane="history" hidden>

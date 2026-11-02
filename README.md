@@ -18,6 +18,7 @@ A small self-hosted website for posting demob (demobilization) timers: countdown
 - A call-up notice date can be the start of service: from that date the card says "Not clear yet" instead of a countdown, until the admin confirms that the person has left
 - A topographic map background (contour lines and map crosses) with glowing trig points and planned routes where units creep along, behind translucent glass cards, in light and dark variants
 - A fire button, so the guys can see that people visit and wait for them: every visitor can add a log to the fire once every 12 hours (counted by IP), and the count starts over every 45 days. The more logs, the more sparks of fire dust drift over the cards, the bigger and hotter they burn, and the brighter the glow rising from the bottom of the screen. A tap throws a burst of sparks, logs added by others arrive as sparks from below, and the first visit shows a short tip about the button
+- A shared counter above the cards: everyone's time served added up (or, if you choose, the time left for everyone). Every second it adds a second for each person serving now, so with five people serving the seconds run five times faster
 - Funny statuses that follow the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Each status has its own time window (days served or days left, season, time of day), so nobody is waiting at the train station two days early
 - Interface in English, Russian and Belarusian, with a language switch on every page
 - Square timer cards that fit any screen, two per row on phones
@@ -87,6 +88,7 @@ Put the site behind a reverse proxy with HTTPS if it is reachable from the inter
 - **Label** and **Message when finished** can be left empty. Each visitor then sees the default text in their own language.
 - **Start from now** restarts the timer from the current moment.
 - **Start is the call-up notice date** marks a start that is not confirmed yet. When the date comes, the person gets a **Confirm departure** button in the list.
+- **Settings** has the shared counter: whether it is shown and whether it counts the time served or the time left. Unconfirmed call-ups are not counted.
 - **Fire** sets the button and the fire dust: whether the button is shown, how many hours one visitor waits between logs (12), after how many days the count starts over (45), and the sparks per 1440×900 screen with no logs (15) and at full fire (120), reached at 100 logs. It shows the current count and when it starts over, with a button to start over now.
 - **Fire**, **Settings** (Look and Cards) save as soon as you change them: the background, the clock next to the days, seconds, progress bars and statuses.
 

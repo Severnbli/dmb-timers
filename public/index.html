@@ -92,6 +92,13 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .one .clock{font-size:clamp(1rem,3.5vw,1.3rem)}
 .one .done{font-size:clamp(1.8rem,7vw,2.8rem)}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+/* Everyone's service in one number; it runs one second faster for every person serving now */
+.together{display:flex;align-items:center;justify-content:center;gap:4px 14px;flex-wrap:wrap;width:min(1108px,calc(100% - max(16px,env(safe-area-inset-left)) - max(16px,env(safe-area-inset-right))));margin:4px auto 6px;padding:10px 18px;border-radius:18px;text-align:center}
+.together .tl{color:var(--mute);font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.together .tv{font:700 clamp(1.25rem,3.4vw,1.6rem)/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
+.together .tv small{font:600 .62em var(--sans);color:var(--mute);letter-spacing:0;margin:0 .35em 0 .2em}
+.together .tv i{font-style:normal;color:var(--fire)}
+.together .tr{font:600 .75rem/1 var(--sans);padding:5px 9px;border-radius:999px;color:var(--fire);background:color-mix(in srgb,var(--fire) 14%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}
 /* The fire button: one log per visitor every few hours, so the guys see that someone is here and waiting */
 .fire-btn{position:fixed;z-index:6;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:8px;height:54px;padding:0 18px 0 13px;border-radius:999px;
  color:var(--ink);font:700 1rem/1 var(--sans);font-variant-numeric:tabular-nums;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s cubic-bezier(.3,1.6,.5,1),opacity .3s,translate .45s cubic-bezier(.3,1.3,.5,1);
@@ -161,6 +168,7 @@ footer a:hover{color:var(--ink)}
 }
 </style></head><body>
 <header class="top"><h1><span id="ptitle"></span></h1><div class="tools"><div data-lang-switch></div><div data-theme-switch></div><a class="theme" href="/admin" data-i18n-label="nav.admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a></div></header>
+<section class="together glass" id="together" hidden><span class="tl" id="tLabel"></span><span class="tv" id="tValue"></span><span class="tr" id="tRate"></span></section>
 <main id="app" aria-live="off"></main>
 <button type="button" class="fire-btn glass away" id="fireBtn" hidden><svg viewBox="0 0 30 30" aria-hidden="true"><defs><linearGradient id="flame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff4d12"/><stop offset=".55" stop-color="#ff9a2e"/><stop offset="1" stop-color="#ffd56a"/></linearGradient></defs>
  <path class="lg" d="M5 26.5l20-4.5M5 22l20 4.5"/><path class="fl" d="M15 2.5c.8 3.6 4.4 5.4 5.9 8.9 1.6 3.6.4 8-3.2 9.6a6.6 6.6 0 0 1-9.4-5.8c0-2.8 1.5-4.7 2.9-6 .2 1.7.9 2.9 2.1 3.6-.5-3.6.3-7 1.7-10.3z"/><path class="fl" d="M15.4 13.3c1.7 1.4 2.9 3.2 2.3 5.1a2.9 2.9 0 0 1-5.5-.6c0-1.2.6-2.1 1.3-2.7.2.8.5 1.2 1 1.5-.2-1.2-.1-2.3.9-3.3z"/></svg>
@@ -360,7 +368,36 @@ fb.onclick=async()=>{
   drawFire();FIRE.set({on:cfg.page.dustOn!==false,logs,full:cfg.page.dustFull,lo:cfg.page.dustMin,hi:cfg.page.dustMax});
 };
 setInterval(()=>{if(cfg&&!fb.hidden)drawFire()},3e4);
-document.addEventListener('langchange',()=>{title();render();if(cfg&&!fb.hidden)drawFire()});
+// The shared counter: everyone's time served (or left) added up. Each person serving now adds (or takes) a second
+// every second, so the seconds run as many times faster as there are people serving
+const tBox=document.getElementById('together'), tVal=document.getElementById('tValue');
+let tShown='', tRaf=0;
+function together(now){
+  const left=cfg.page.counterMode==='left';let sum=0,n=0;
+  for(const tm of cfg.timers){const s=+new Date(tm.start),e=+new Date(tm.end);
+    if(tm.pending&&now>=s)continue; // nobody knows yet when he is back
+    if(now>=s&&now<e){n++;sum+=left?e-now:now-s}else if(left?now<s:now>=e)sum+=e-s}
+  return {sum,n,left};
+}
+function drawTogether(){
+  tRaf=0;
+  if(!cfg||!cfg.page.counterOn||!cfg.timers.length){tBox.hidden=true;return}
+  const {sum,n,left}=together(Date.now()+offset), sec=Math.floor(sum/1e3), d=Math.floor(sec/86400);
+  const txt=`${d.toLocaleString(I18N.lang)}<small>${tp('days',d)}</small>${pad(Math.floor(sec/3600)%24)}:${pad(Math.floor(sec/60)%60)}:<i>${pad(sec%60)}</i>`;
+  if(txt!==tShown){tShown=txt;tVal.innerHTML=txt}
+  tBox.hidden=!sum&&!n;
+  if(n&&!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches)tRaf=requestAnimationFrame(drawTogether); // per frame: with many people it ticks many times a second
+}
+function together0(){ // labels; the number itself is redrawn by drawTogether
+  if(!cfg)return;
+  const {n,left}=together(Date.now()+offset);
+  document.getElementById('tLabel').textContent=t(left?'together.left':'together.served');
+  const r=document.getElementById('tRate');r.hidden=!n;r.textContent=t('together.rate',{sign:left?'−':'+',n});r.title=t('together.rateTitle',{n});
+  tShown='';cancelAnimationFrame(tRaf);drawTogether();
+}
+setInterval(()=>{if(cfg&&!tRaf)drawTogether()},1000); // with reduced motion, in a hidden tab or with nobody serving, once a second
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cfg&&!tRaf)drawTogether()});
+document.addEventListener('langchange',()=>{title();render();together0();if(cfg&&!fb.hidden)drawFire()});
 I18N.init();
-load().then(render);setInterval(render,1000);setInterval(load,60000);
+load().then(()=>{render();together0()});setInterval(render,1000);setInterval(()=>load().then(together0),60000);
 </script></body></html>
