@@ -143,6 +143,11 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .fire-tip::after{content:"";position:absolute;right:30px;bottom:-7px;width:14px;height:14px;background:inherit;transform:rotate(45deg);border-radius:0 0 3px 0}
 .fire-tip p{margin:0}.fire-tip b{display:block;margin-bottom:3px;font-size:.98rem}
 .fire-tip button{display:block;margin:10px 0 0 auto;font:600 .85rem var(--sans);border:0;border-radius:10px;padding:8px 14px;background:var(--surface);color:var(--ink);cursor:pointer}
+.fire-btn.wobble{animation:btn-shake .55s ease-in-out 2}
+.fire-btn.wobble .lg{animation:logs-wobble .18s ease-in-out 7 alternate;transform-box:fill-box;transform-origin:50% 50%}
+.fire-btn.wobble .fl{animation:flame .12s ease-in-out 10 alternate}
+@keyframes btn-shake{0%,100%{transform:none}20%{transform:translateX(-4px) rotate(-4deg)}40%{transform:translateX(4px) rotate(3deg)}60%{transform:translateX(-3px) rotate(-2deg)}80%{transform:translateX(2px) rotate(1deg)}}
+@keyframes logs-wobble{from{transform:rotate(-9deg) translateY(-1px)}to{transform:rotate(9deg) translateY(1px)}}
 .log{position:fixed;z-index:7;width:54px;height:21px;pointer-events:none;--bark:#7a4a26;--grain:#563216;--core:#e6b67c;--ring:#b47a42;filter:drop-shadow(0 3px 4px rgb(0 0 0/.3))}
 .log.birch{--bark:#eee8db;--grain:#2b2b2b;--core:#f2deb6;--ring:#c8a26a}
 .log.pine{--bark:#94401f;--grain:#5c210d;--core:#f0c27a;--ring:#c4823a}
@@ -404,7 +409,7 @@ const fb=document.getElementById('fireBtn'), fc=document.getElementById('fireCou
 const store={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 const record=()=>Math.max(cfg?.sparks?.record||0,logs||0);
 const recLine=()=>record()?`<small class="rec">${esc(t('fire.record',{n:record().toLocaleString(I18N.lang)}))}</small>`:'';
-let logs=null, tipEl=null, tipT=0, sending=false;
+let pokes=[], logs=null, tipEl=null, tipT=0, sending=false;
 const waitLeft=()=>(+store.get('fireAt')||0)+cfg.page.sparkHours*36e5-Date.now()-offset; // > 0 while this visitor's log still burns
 const hm=ms=>{const n=Math.max(1,Math.ceil(ms/6e4)),h=Math.floor(n/60),m=n%60;return h&&m?t('fire.hm',{h,m}):h?t('fire.h',{h}):t('fire.m',{m})};
 function drawFire(){
@@ -466,7 +471,12 @@ function plus(x,y){
 fb.onclick=async()=>{
   store.set('fireHint','1');
   const r=fb.querySelector('svg').getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height*.4;
-  const w=waitLeft();if(w>0){FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(w)}))+recLine())}
+  const w=waitLeft();
+  if(w>0){ // still burning; five quick taps knock the logs about (an easter egg)
+    const n=performance.now();pokes=pokes.filter(p=>n-p<2500);pokes.push(n);
+    if(pokes.length>=5){pokes=[];fb.classList.remove('wobble');void fb.offsetWidth;fb.classList.add('wobble');setTimeout(()=>fb.classList.remove('wobble'),1300);
+      FIRE.burst(x,y,36,.9);setTimeout(()=>FIRE.burst(x,y,20,.7),300);return tip(esc(t('fire.egg')),4500)}
+    FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(w)}))+recLine())}
   const prev=store.get('fireAt')||'';store.set('fireAt',String(Date.now()+offset));
   const kind=wood();
   logs++;drawFire();const landed=new Promise(ok=>dropLog(x,y,()=>{bump();plus(x,r.top);flare(kind,x,y);ok()},kind)); // at once, the server confirms after
