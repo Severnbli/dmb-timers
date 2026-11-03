@@ -339,25 +339,27 @@ addEventListener('resize',()=>{render();clearTimeout(resizing);resizing=setTimeo
     ctx.globalAlpha=1;raf=c||ps.length?requestAnimationFrame(tick):0;
   }
 })();
-// The fire: everyone's logs in one count. A visitor adds one every few hours (the server checks by IP); the more logs,
+// The fire: everyone's logs in one count. A visitor adds one every few hours (the browser keeps the time of its last log,
+// on the server's clock, in localStorage as fireAt); the more logs,
 // the more fire dust over the page. Someone else's new logs arrive with the next config refresh as sparks from below
 const fb=document.getElementById('fireBtn'), fc=document.getElementById('fireCount');
 const store={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
-let logs=null, nextLog=0, tipEl=null, tipT=0, sending=false;
+let logs=null, tipEl=null, tipT=0, sending=false;
+const waitLeft=()=>(+store.get('fireAt')||0)+cfg.page.sparkHours*36e5-Date.now()-offset; // > 0 while this visitor's log still burns
 const hm=ms=>{const n=Math.max(1,Math.ceil(ms/6e4)),h=Math.floor(n/60),m=n%60;return h&&m?t('fire.hm',{h,m}):h?t('fire.h',{h}):t('fire.m',{m})};
 function drawFire(){
-  const lit=nextLog>Date.now()+offset;
+  const w=waitLeft(),lit=w>0;
   fb.classList.toggle('lit',lit);fb.querySelector('.lbl').textContent=t(lit?'fire.lit':'fire.btn');fc.textContent=(logs||0).toLocaleString(I18N.lang);
-  const l=t('fire.label',{n:(logs||0).toLocaleString(I18N.lang)})+(lit?' '+t('fire.wait',{time:hm(nextLog-Date.now()-offset)}):'');
+  const l=t('fire.label',{n:(logs||0).toLocaleString(I18N.lang)})+(lit?' '+t('fire.wait',{time:hm(w)}):'');
   fb.setAttribute('aria-label',l);fb.title=l;
 }
 function fire(){
-  const p=cfg.page,sp=cfg.sparks||{count:0,next:0};
+  const p=cfg.page,sp=cfg.sparks||{count:0};
   FIRE.set({on:p.dustOn!==false,logs:sp.count,full:p.dustFull,lo:p.dustMin,hi:p.dustMax});
   if(logs!==null&&sp.count>logs&&!fb.hidden){ // someone else added logs since the last look
     const n=Math.min(6,sp.count-logs);for(let i=0;i<n;i++)setTimeout(()=>FIRE.burst(Math.random()*innerWidth,innerHeight+8,26,1.3),i*700);bump();
   }
-  if(!sending){logs=sp.count;nextLog=sp.next}fb.hidden=p.sparkOn===false;
+  if(!sending)logs=sp.count;fb.hidden=p.sparkOn===false;
   if(fb.hidden)return tip(null);
   drawFire();
   const n=document.querySelector('.notice'); // wait until the privacy banner is closed
@@ -383,16 +385,16 @@ function plus(x,y){
 fb.onclick=async()=>{
   store.set('fireHint','1');
   const r=fb.querySelector('svg').getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height*.4;
-  if(nextLog>Date.now()+offset){FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(nextLog-Date.now()-offset)})))}
-  logs++;nextLog=Date.now()+offset+cfg.page.sparkHours*36e5;drawFire();bump();plus(x,r.top);FIRE.burst(x,y,60,1.15); // at once, the server confirms after
+  const w=waitLeft();if(w>0){FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(w)})))}
+  const prev=store.get('fireAt')||'';store.set('fireAt',String(Date.now()+offset));
+  logs++;drawFire();bump();plus(x,r.top);FIRE.burst(x,y,60,1.15); // at once, the server confirms after
   sending=true;
   try{
     const res=await fetch('/api/spark',{method:'POST'}),d=await res.json().catch(()=>({}));
-    if(typeof d.count==='number'){logs=d.count;cfg.sparks={count:d.count,next:d.next||0}}
-    nextLog=d.next||0;
+    if(typeof d.count==='number'){logs=d.count;cfg.sparks={count:d.count}}
     if(res.ok)tip(esc(t('fire.thanks')));
-    else tip(esc(d.code==='spark_wait'?t('fire.wait',{time:hm(nextLog-Date.now()-offset)}):t(d.code?'err.'+d.code:'err.request')));
-  }catch{logs--;nextLog=0;tip(esc(t('err.request')))}
+    else{store.set('fireAt',prev);tip(esc(t(d.code?'err.'+d.code:'err.request')))}
+  }catch{logs--;store.set('fireAt',prev);tip(esc(t('err.request')))}
   sending=false;drawFire();FIRE.set({on:cfg.page.dustOn!==false,logs,full:cfg.page.dustFull,lo:cfg.page.dustMin,hi:cfg.page.dustMax});
 };
 setInterval(()=>{if(cfg&&!fb.hidden)drawFire()},3e4);

@@ -18,9 +18,9 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Fire button.** A button in the corner lets visitors show the guys that someone is visiting and waiting for them:
 
-- Each tap adds a log to a shared fire. One visitor (IP address) can add one log every 12 hours.
+- Each tap adds a log to a shared fire. A visitor can add one log every 12 hours (the browser remembers when, in local storage).
 - The count starts over from zero every 45 days.
-- The more logs, the more sparks of fire dust drift over the cards, the bigger and hotter they are, and the brighter the glow from the bottom of the screen.
+- The more logs, the more sparks of fire dust drift over the cards and the bigger and hotter they are. The sparks cover the whole page and scroll with it.
 - A tap throws a burst of sparks. Logs added by other visitors arrive as sparks from below.
 - On the first visit, a short tip explains the button.
 
@@ -89,7 +89,7 @@ You can also use your own reverse proxy (set `TRUST_PROXY=1` and pass `X-Forward
 | `SESSION_HOURS` | `12` | How long an admin session lasts |
 | `TZ` | `Europe/Minsk` | Time zone for month arithmetic (start + 6 or 12 months) and for status timing (seasons, wake-up, lights-out) |
 | `PORT` | `3000` | HTTP port inside the container |
-| `TRUST_PROXY` | (off) | Set to `1` behind a reverse proxy, so the login and fire button limits see the visitor's address from `X-Forwarded-For`, and HTTPS is detected from `X-Forwarded-Proto` |
+| `TRUST_PROXY` | (off) | Set to `1` behind a reverse proxy, so the login limit sees the visitor's address from `X-Forwarded-For`, and HTTPS is detected from `X-Forwarded-Proto` |
 | `DOMAIN` | (none) | Domain for the bundled Caddy HTTPS setup (`--profile https`) |
 | `HTTP_BIND` | `0.0.0.0` | Address port 777 is published on in `docker-compose.yml`; `127.0.0.1` with Caddy |
 | `TLS_CERT`, `TLS_KEY` | (none) | PEM certificate and key paths: the app then serves HTTPS itself |
@@ -113,7 +113,7 @@ The panel has four tabs and remembers the last one you opened. Everything except
 | Setting | Default | What it does |
 | --- | --- | --- |
 | Show the fire button | on | Shows or hides the button |
-| One log per visitor (IP), hours | `12` | How long one visitor waits between logs |
+| One log per visitor, hours | `12` | How long one visitor waits between logs |
 | Count starts over every, days | `45` | The log count goes back to zero after this many days |
 | Sparks drift over the page | on | Shows or hides the fire dust |
 | Sparks with no logs | `15` | Sparks on a 1440×900 screen when the fire is empty (smaller screens get fewer) |
@@ -169,7 +169,7 @@ The page picks a status at random, weighted by `w`, from those whose window fits
 ## Privacy
 
 - No cookies for visitors, nothing loaded from third parties.
-- The fire button keeps only a shared count. To allow one log per visitor, a salted hash of the IP address stays in memory until the wait is over. It is never written to disk.
+- The fire button keeps only a shared count. The wait between one visitor's logs is kept in their browser's local storage, not on the server.
 - Failed admin logins are also tracked by a salted hash of the IP address only, in memory, for a few minutes.
 - Names and dates entered in the admin panel are public, so get people's consent before you add them.
 

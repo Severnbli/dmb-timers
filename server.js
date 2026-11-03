@@ -49,7 +49,7 @@ const newTimer = (o = {}) => {
   return { id: rid(), name: '', label: '', mode: 'year', start: s.toISOString(),
     end: addMonths(s, 12).toISOString(), doneMessage: '', accent: '#b23a1e', pending: false, ...o };
 };
-// The fire button: a visitor adds one log per sparkHours (per IP); the count starts over every sparkDays.
+// The fire button: a visitor adds one log per sparkHours (the browser keeps the wait); the count starts over every sparkDays.
 // The fire dust grows from dustMin to dustMax sparks (per 1440x900 screen) as the logs reach dustFull
 const defaults = () => ({ pageTitle: '', showBackground: true, showClock: false, showSeconds: true, showProgress: true, showStatuses: true,
   phoneCols: 1, counterOn: true, counterMode: 'served', sparkOn: true, sparkHours: 12, sparkDays: 45, dustOn: true, dustMin: 15, dustMax: 120, dustFull: 100,
@@ -91,15 +91,12 @@ const rollover = () => {
 };
 rollover(); save();
 setInterval(() => rollover() && save(), 36e5).unref();
-// One log per IP per sparkHours. Only a salted hash of the address is kept, in memory, until the wait is over
+// Failed logins are keyed by a salted hash of the IP address, so the address itself is never kept
 const SALT = crypto.randomBytes(16);
-const lit = new Map(); // hashed IP => time of the last log
 const ipKey = ip => crypto.createHmac('sha256', SALT).update(String(ip)).digest('base64');
-const wait = () => cfg.sparkHours * 36e5;
-const nextLog = ip => { const at = lit.get(ipKey(ip)); return at && at + wait() > Date.now() ? at + wait() : 0; };
-const pub = ip => ({ page: Object.fromEntries(PAGE_KEYS.map(k => [k, cfg[k]])), timers: cfg.timers,
-  sparks: { count: cfg.sparks, next: nextLog(ip) }, serverTime: now().toISOString(), tz: TZ });
-const full = ip => ({ ...pub(ip), page: { ...pub(ip).page, sparkDays: cfg.sparkDays }, sparks: { count: cfg.sparks, next: nextLog(ip), since: cfg.sparksSince,
+const pub = () => ({ page: Object.fromEntries(PAGE_KEYS.map(k => [k, cfg[k]])), timers: cfg.timers,
+  sparks: { count: cfg.sparks }, serverTime: now().toISOString(), tz: TZ });
+const full = () => ({ ...pub(), page: { ...pub().page, sparkDays: cfg.sparkDays }, sparks: { count: cfg.sparks, since: cfg.sparksSince,
   resetAt: new Date(+new Date(cfg.sparksSince) + cfg.sparkDays * DAY).toISOString() }, history: cfg.history });
 // History keeps an action code + name, so the admin page can show it in any language
 const log = (act, name) => { cfg.history = [{ at: now().toISOString(), act, ...(name !== undefined && { name }) }, ...cfg.history].slice(0, 30); };
@@ -122,17 +119,16 @@ const authed = req => validToken(cookie(req).session);
 const fails = new Map(); // 5 wrong passwords => 1 minute lock per IP; keyed by the salted IP hash, kept in memory only
 const locked = ip => (fails.get(ipKey(ip))?.until || 0) > Date.now();
 const fail = ip => { const k = ipKey(ip), f = fails.get(k) || { n: 0 }; f.n++; f.at = Date.now(); if (f.n >= 5) { f.until = f.at + 6e4; f.n = 0; } fails.set(k, f); };
-setInterval(() => { // forget IPs a minute after their last failure or lock, and fire logs once their wait is over (see the privacy notice)
+setInterval(() => { // forget IPs a minute after their last failure or lock (see the privacy notice)
   const old = Date.now() - 6e4;
   for (const [ip, f] of fails) if (Math.max(f.at, f.until || 0) < old) fails.delete(ip);
-  for (const [k, at] of lit) if (at + wait() < Date.now()) lit.delete(k);
   for (const [id, exp] of revoked) if (exp < Date.now()) revoked.delete(id);
 }, 6e4).unref();
 
 const ERRORS = { too_many: 'Too many attempts. Try again in a minute.', wrong_password: 'Wrong password', not_logged_in: 'Not logged in',
   limit: 'Timer limit reached', name_required: 'Name is required', bad_start: 'Invalid start date', bad_end: 'Invalid end date',
   end_before_start: 'End date must be after start date', not_found: 'Not found', timer_not_found: 'Timer not found', server: 'Server error',
-  spark_off: 'The fire is out for now', spark_wait: 'Your log is still burning', forbidden: 'Request refused', bad_type: 'Expected JSON' };
+  spark_off: 'The fire is out for now', forbidden: 'Request refused', bad_type: 'Expected JSON' };
 const json = (res, code, obj, headers = {}) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers }); res.end(JSON.stringify(obj)); };
 const body = req => new Promise(r => { let d = ''; req.on('data', c => { d += c; if (d.length > 1e5) req.destroy(); }); req.on('end', () => { try { r(JSON.parse(d || '{}')); } catch { r({}); } }); });
 const err = (res, status, code) => json(res, status, { code, error: ERRORS[code] });
@@ -191,15 +187,13 @@ async function handle(req, res) {
       if ((url === '/api/login' || url === '/api/logout' || url.startsWith('/api/admin/')) && !/^application\/json\b/i.test(req.headers['content-type'] || ''))
         return err(res, 415, 'bad_type');
     }
-    if (M === 'GET' && url === '/api/config') { if (rollover()) save(); return json(res, 200, pub(ip)); }
-    if (M === 'GET' && url === '/api/sparks') { if (rollover()) save(); return json(res, 200, pub(ip).sparks); } // polled often, so other visitors' logs show up quickly
+    if (M === 'GET' && url === '/api/config') { if (rollover()) save(); return json(res, 200, pub()); }
+    if (M === 'GET' && url === '/api/sparks') { if (rollover()) save(); return json(res, 200, pub().sparks); } // polled often, so other visitors' logs show up quickly
     if (M === 'POST' && url === '/api/spark') { // a visitor adds a log to the fire
       if (!cfg.sparkOn) return err(res, 403, 'spark_off');
       if (rollover()) save();
-      const next = nextLog(ip);
-      if (next) return json(res, 429, { code: 'spark_wait', error: ERRORS.spark_wait, count: cfg.sparks, next });
-      lit.set(ipKey(ip), Date.now()); cfg.sparks++; save();
-      return json(res, 200, { count: cfg.sparks, next: Date.now() + wait() });
+      cfg.sparks++; save();
+      return json(res, 200, { count: cfg.sparks });
     }
     if (M === 'GET' && url === '/healthz') return json(res, 200, { ok: true });
 
@@ -217,7 +211,7 @@ async function handle(req, res) {
 
     if (url.startsWith('/api/admin/')) {
       if (!authed(req)) return err(res, 401, 'not_logged_in');
-      if (M === 'GET' && url === '/api/admin/config') { if (rollover()) save(); return json(res, 200, full(ip)); }
+      if (M === 'GET' && url === '/api/admin/config') { if (rollover()) save(); return json(res, 200, full()); }
 
       if (M === 'PUT' && url === '/api/admin/settings') {
         const b = await body(req);
@@ -227,14 +221,14 @@ async function handle(req, res) {
         if (b.phoneCols === 1 || b.phoneCols === 2) cfg.phoneCols = b.phoneCols; // cards per row on phones
         for (const [k, [lo, hi]] of Object.entries(NUMS)) if (Number.isInteger(b[k]) && b[k] >= lo && b[k] <= hi) cfg[k] = b[k];
         rollover();
-        log('settings'); save(); return json(res, 200, full(ip));
+        log('settings'); save(); return json(res, 200, full());
       }
-      if (M === 'POST' && url === '/api/admin/sparks/reset') { cfg.sparks = 0; cfg.sparksSince = now().toISOString(); log('sparksReset'); save(); return json(res, 200, full(ip)); }
+      if (M === 'POST' && url === '/api/admin/sparks/reset') { cfg.sparks = 0; cfg.sparksSince = now().toISOString(); log('sparksReset'); save(); return json(res, 200, full()); }
       if (M === 'POST' && url === '/api/admin/timers') {
         if (cfg.timers.length >= MAX_TIMERS) return err(res, 400, 'limit');
         const t = newTimer(), r = parseTimer({ ...t, ...(await body(req)) }, t);
         if (typeof r === 'string') return err(res, 400, r);
-        cfg.timers.push(r); log('added', r.name); save(); return json(res, 200, full(ip));
+        cfg.timers.push(r); log('added', r.name); save(); return json(res, 200, full());
       }
       const m = url.match(/^\/api\/admin\/timers\/(\w+)(\/reset|\/confirm)?$/);
       if (m) {
@@ -244,16 +238,16 @@ async function handle(req, res) {
         if (M === 'PUT' && !m[2]) {
           const r = parseTimer(await body(req), t);
           if (typeof r === 'string') return err(res, 400, r);
-          cfg.timers[i] = r; log('saved', r.name); save(); return json(res, 200, full(ip));
+          cfg.timers[i] = r; log('saved', r.name); save(); return json(res, 200, full());
         }
-        if (M === 'DELETE' && !m[2]) { cfg.timers.splice(i, 1); log('deleted', t.name); save(); return json(res, 200, full(ip)); }
-        if (M === 'POST' && m[2] === '/confirm') { t.pending = false; log('confirmed', t.name); save(); return json(res, 200, full(ip)); }
+        if (M === 'DELETE' && !m[2]) { cfg.timers.splice(i, 1); log('deleted', t.name); save(); return json(res, 200, full()); }
+        if (M === 'POST' && m[2] === '/confirm') { t.pending = false; log('confirmed', t.name); save(); return json(res, 200, full()); }
         if (M === 'POST' && m[2]) {
           const b = await body(req), dur = new Date(t.end) - new Date(t.start), s = now();
           t.start = s.toISOString();
           if (t.mode !== 'custom') t.end = addMonths(s, MONTHS[t.mode]).toISOString();
           else if (b.keepDuration || new Date(t.end) <= s) t.end = new Date(+s + dur).toISOString();
-          log('restarted', t.name); save(); return json(res, 200, full(ip));
+          log('restarted', t.name); save(); return json(res, 200, full());
         }
       }
     }

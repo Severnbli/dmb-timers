@@ -16,21 +16,18 @@
 
 // Fire dust in front of the cards. Small sparks live all over the page all the time: each one lights up somewhere,
 // rides the shared wind (it gusts and eases) with a little sway and flicker, goes out after a few seconds, and a new
-// one lights up elsewhere. The fire level (0..1, from the logs visitors add) sets how many there are, how big and hot
-// they burn, how strong the wind is, and how bright the glow rising from the bottom of the screen is.
+// one lights up elsewhere. The sparks belong to the page, not the screen: they cover the whole page and scroll with it.
+// The fire level (0..1, from the logs visitors add) sets how many there are, how big and hot they burn and how strong the wind is.
 // A burst throws a handful of sparks out of one point, as when a log lands in the fire. With reduced motion nothing moves.
 (() => {
 const still = matchMedia('(prefers-reduced-motion: reduce)');
-const CSS = `.fire{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;pointer-events:none;z-index:3;overflow:hidden;contain:strict}
+const CSS = `.fire{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:3;overflow:hidden;contain:strict}
 .fire i{position:absolute;left:0;top:0;width:3px;height:3px;margin:-1.5px;border-radius:50%;will-change:transform,opacity;
  background:radial-gradient(circle,#fff4c8 0,#ffb547 38%,#ff5a1a 68%,transparent 72%);box-shadow:0 0 5px 1px rgb(255 128 40/.55)}
 .fire i.hot{width:5px;height:5px;margin:-2.5px;background:radial-gradient(circle,#fff 0,#ffe08a 30%,#ff8a2a 62%,transparent 72%);box-shadow:0 0 10px 2px rgb(255 140 50/.6)}
-.fire-glow{position:fixed;left:-10%;width:120%;bottom:0;height:60vh;height:60lvh;z-index:-1;pointer-events:none;opacity:0;transition:opacity 2.5s ease;transform-origin:50% 100%;
- background:radial-gradient(60% 100% at 50% 100%,rgb(255 118 38/.5),rgb(255 84 24/.16) 48%,transparent 76%);animation:fire-flicker 2.8s ease-in-out infinite alternate}
-@keyframes fire-flicker{0%{transform:scaleY(1)}30%{transform:scaleY(1.07)}62%{transform:scaleY(.95)}100%{transform:scaleY(1.04)}}
-@media (prefers-reduced-motion:reduce){.fire-glow{animation:none}}`;
+`;
 const BASE = 1440 * 900; // the admin's spark counts are for a screen this size
-let layer, glow, on = false, level = 0, min = 15, max = 120, target = 0, alive = 0, VW = innerWidth, VH = innerHeight;
+let layer, on = false, level = 0, min = 15, max = 120, target = 0, alive = 0, VW = innerWidth, VH = innerHeight, PH = innerHeight; // PH: page height
 const rnd = (a, b) => a + Math.random() * (b - a);
 const wind = () => { const t = performance.now() / 1000, k = 1 + level * .6; // px per second
   return [(30 + 26 * Math.sin(t / 9) + 14 * Math.sin(t / 3.1)) * k, -10 + 8 * Math.sin(t / 5.3) - level * 14]; };
@@ -39,8 +36,10 @@ function mount() {
   if (layer) return;
   if (!document.getElementById('fire-style')) document.head.insertAdjacentHTML('beforeend', `<style id="fire-style">${CSS}</style>`);
   layer = document.createElement('div'); layer.className = 'fire'; layer.setAttribute('aria-hidden', 'true');
-  glow = document.createElement('div'); glow.className = 'fire-glow'; glow.setAttribute('aria-hidden', 'true');
-  document.body.append(glow, layer);
+  document.body.append(layer);
+  // the layer is as tall as the page (absolutely placed, so it does not stretch the page itself)
+  new ResizeObserver(() => { const h = Math.max(innerHeight, document.body.offsetHeight); if (h !== PH) { PH = h; retarget(); fill(); } layer.style.height = PH + 'px'; }).observe(document.body);
+  PH = Math.max(innerHeight, document.body.offsetHeight); layer.style.height = PH + 'px';
 }
 function ember(frames, life, delay, hot, done) {
   const e = document.createElement('i'); if (hot) e.className = 'hot'; layer.append(e);
@@ -48,7 +47,7 @@ function ember(frames, life, delay, hot, done) {
 }
 function drift(delay) { // one spark of the everyday dust
   alive++;
-  const life = rnd(3.5, 9), [wx, wy] = wind(), x = rnd(-30, VW), y = rnd(0, VH), sway = rnd(6, 22), up = rnd(5, 30) * (1 + level), ph = rnd(0, 6.3);
+  const life = rnd(3.5, 9), [wx, wy] = wind(), x = rnd(-30, VW), y = rnd(0, PH), sway = rnd(6, 22), up = rnd(5, 30) * (1 + level), ph = rnd(0, 6.3);
   const hot = Math.random() < level * .3, s = rnd(.4, 1) * (1 + level * .7);
   const frames = Array.from({ length: 8 }, (_, i) => { const t = i / 7;
     return { transform: `translate(${(x + wx * life * t + Math.sin(ph + t * 7) * sway).toFixed(1)}px,${(y + (wy - up) * life * t + Math.cos(ph + t * 5) * sway * .6).toFixed(1)}px) scale(${(s * (1 - .45 * t)).toFixed(2)})`,
@@ -60,14 +59,13 @@ function fill(spread = 3e3) { // tops the dust up to the target; extra sparks si
   while (alive < target) drift(Math.random() * spread);
 }
 function retarget() {
-  const area = Math.max(.35, Math.min(1.6, VW * VH / BASE));
-  target = on && !still.matches ? Math.min(400, Math.round((min + (max - min) * level) * area)) : 0;
-  if (glow) glow.style.opacity = on ? (level * .9).toFixed(2) : 0;
+  const area = Math.max(.35, Math.min(1.6, VW * VH / BASE)), screens = Math.max(1, PH / VH); // a long page gets as many per screen
+  target = on && !still.matches ? Math.min(800, Math.round((min + (max - min) * level) * area * screens)) : 0;
 }
 // Throws n sparks out of (x, y) in screen pixels, mostly upward, then lets the wind take them
 function burst(x, y, n = 40, power = 1) {
   if (still.matches) return;
-  mount();
+  mount(); y += scrollY; // into page pixels
   const aim = -Math.PI / 2 + Math.max(-.7, Math.min(.7, (VW / 2 - x) / VW * 1.6)); // up, leaning toward the middle of the screen
   for (let i = 0; i < n; i++) {
     const a = aim + rnd(-1, 1), v = rnd(140, 520) * power, life = rnd(1.2, 2.8), [wx] = wind();
