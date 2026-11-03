@@ -21,9 +21,9 @@
 const { t } = I18N;
 const PAL = { // the site's own colors, per theme; state accents follow the theme too
   light: { bg: ['#ece8da', '#dcd7c2'], line: 'rgba(74,84,52,.16)', surface: 'rgba(250,248,240,.74)', edge: 'rgba(255,255,255,.75)', ink: '#23261c', mute: '#6a6e5b',
-    track: '#dcd7c4', dash: '#cbc6b2', glow: 'rgba(222,170,92,.30)', paper: 'rgba(250,248,240,.6)', wait: '#4f8a3a', soon: '#c86a14', summons: '#a5761a' },
+    track: '#dcd7c4', dash: '#cbc6b2', glow: 'rgba(222,170,92,.30)', paper: 'rgba(250,248,240,.6)', solid: '#f8f6ef', hi: 'rgba(255,255,255,.75)', wait: '#4f8a3a', soon: '#c86a14', summons: '#a5761a' },
   dark: { bg: ['#171a12', '#1f2418'], line: 'rgba(196,206,160,.08)', surface: 'rgba(36,40,30,.74)', edge: 'rgba(255,255,255,.09)', ink: '#e9e6d7', mute: '#9b9e88',
-    track: '#2a2f23', dash: '#30352a', glow: 'rgba(224,140,64,.12)', paper: 'rgba(36,40,30,.6)', wait: '#8fc27a', soon: '#f0a050', summons: '#dcae55' },
+    track: '#2a2f23', dash: '#30352a', glow: 'rgba(224,140,64,.12)', paper: 'rgba(36,40,30,.6)', solid: '#1d2117', hi: 'rgba(255,255,255,.08)', wait: '#8fc27a', soon: '#f0a050', summons: '#dcae55' },
 };
 const SANS = 'system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif';
 const STATE = { 'is-wait': 'wait', 'is-soon': 'soon', 'is-summons': 'summons', 'is-notice': 'summons' };
@@ -38,7 +38,7 @@ function read(c) {
     accent: getComputedStyle(c).getPropertyValue('--accent').trim() || '#b23a1e',
     big: txt('.count .days'), units, done: txt('.done'), sub: txt('.sub'),
     bar: bar && { pct: +bar.getAttribute('aria-valuenow'), l: txt('.meta span:first-child'), r: txt('.meta span:last-child') },
-    status: c.dataset.status || '', stamp: txt('.stamp'), bigStamp: !!q('.stamp.big'),
+    dashed: c.matches('.is-summons,.is-notice'), status: c.dataset.status || '', stamp: txt('.stamp'), bigStamp: !!q('.stamp.big'),
     dates: dates && (dates.querySelector('span')?.textContent || dates.textContent).trim() };
 }
 
@@ -64,17 +64,25 @@ function draw(cv, d, o) {
   const M = 60, T0 = o.fmt === 'story' ? 365 : 80;
   x.fillStyle = P.ink; x.save(); x.translate(M + 12, T0 + 2); x.rotate(Math.PI / 4); x.fillRect(-11, -11, 22, 22); x.restore();
   x.textBaseline = 'middle'; font(700, 40); x.fillText(fit(o.title, W - 2 * M - 42), M + 42, T0 + 2);
-  // the card
-  const cx = M, cy = T0 + 60, cw = W - 2 * M, ch = 1100, ix = cx + 56, iw = cw - 112;
+  // the card, laid out like the one on the page: the state chip sits in the middle of its top edge, half above it
+  const cx = M, cy = T0 + 100, cw = W - 2 * M, ch = 1060, ix = cx + 56, iw = cw - 112;
   x.save(); x.shadowColor = 'rgba(0,0,0,.22)'; x.shadowBlur = 60; x.shadowOffsetY = 24; rr(cx, cy, cw, ch, 56); x.fillStyle = P.surface; x.fill(); x.restore();
-  rr(cx, cy, cw, ch, 56); x.strokeStyle = d.bigStamp ? '#e2a93b' : P.edge; x.lineWidth = d.bigStamp ? 6 : 3; x.stroke();
-  let y = cy + 74;
-  // chip, name, label
-  font(700, 30); const chipW = x.measureText(d.chip.toUpperCase()).width + 60;
-  rr(cx + cw - 56 - chipW, y - 28, chipW, 56, 28); x.fillStyle = alpha(A, .16); x.fill();
-  x.fillStyle = A; x.fillText(d.chip.toUpperCase(), cx + cw - 56 - chipW + 30, y + 2);
-  let ns = 64; font(700, ns); while (ns > 44 && x.measureText(d.name).width > iw - chipW - 24) font(700, --ns);
-  x.fillStyle = P.ink; x.fillText(fit(d.name, iw - chipW - 24), ix, y); y += 62;
+  x.save(); rr(cx, cy, cw, ch, 56); x.clip(); // a soft glow of the state color behind the number, and a sheen along the top
+  g = x.createRadialGradient(cx + cw * .3, cy + 380, 0, cx + cw * .3, cy + 380, cw * .75); g.addColorStop(0, A); g.addColorStop(1, 'rgba(0,0,0,0)');
+  x.globalAlpha = o.theme === 'dark' ? .1 : .08; x.fillStyle = g; x.fillRect(cx, cy, cw, ch); x.globalAlpha = 1;
+  g = x.createLinearGradient(0, cy, 0, cy + 160); g.addColorStop(0, P.hi); g.addColorStop(1, 'rgba(255,255,255,0)'); x.strokeStyle = g; x.lineWidth = 3; rr(cx + 1.5, cy + 1.5, cw - 3, ch - 3, 55); x.stroke(); x.restore();
+  rr(cx, cy, cw, ch, 56);
+  if (d.bigStamp) { x.strokeStyle = '#e2a93b'; x.lineWidth = 6; } else if (d.dashed) { x.strokeStyle = A; x.lineWidth = 4; x.setLineDash([18, 12]); } else { x.strokeStyle = P.edge; x.lineWidth = 3; }
+  x.stroke(); x.setLineDash([]);
+  x.textBaseline = 'middle'; font(700, 32); x.letterSpacing = '2px';
+  const chip = d.chip.toUpperCase(), chipW = Math.min(cw - 120, x.measureText(chip).width + 72), chipX = W / 2 - chipW / 2;
+  x.save(); x.shadowColor = 'rgba(0,0,0,.25)'; x.shadowBlur = 20; x.shadowOffsetY = 6; rr(chipX, cy - 34, chipW, 68, 34); x.fillStyle = P.solid; x.fill(); x.restore();
+  x.fillStyle = A; x.globalAlpha = .14; x.fill(); x.globalAlpha = .3; x.strokeStyle = A; x.lineWidth = 3; x.stroke(); x.globalAlpha = 1;
+  x.textAlign = 'center'; x.fillText(fit(chip, chipW - 72), W / 2, cy + 2); x.textAlign = 'left'; x.letterSpacing = '0px';
+  // name and label, as on the card: the name on one line, the label under it
+  let y = cy + 104;
+  let ns = 72; font(700, ns); while (ns > 48 && x.measureText(d.name).width > iw) font(700, --ns);
+  x.fillStyle = P.ink; x.fillText(fit(d.name, iw), ix, y); y += 64;
   if (d.label) { x.fillStyle = P.mute; font(500, 36); x.fillText(fit(d.label, iw), ix, y); }
   y += 50; x.textBaseline = 'alphabetic';
   if (d.big) { // the number and its unit share the width: the unit is sized to fit, the number shrinks only if the unit would get too small

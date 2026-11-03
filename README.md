@@ -8,7 +8,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 ## What is on the page
 
-**Timer cards.** One card per person: the name on one line with the label under it, the days left, a progress bar and the current day of service. On the last day, hours, minutes and seconds become the big number. The state (civilian, starts soon, serving, home and so on) sits in the middle of the card's top edge, each in its own color.
+**Timer cards.** One card per person: the name on one line with the label under it, the days left, a progress bar and the current day of service. On the last day, hours, minutes and seconds become the big number. The state (civilian, starts soon, serving, home and so on) sits in the middle of the card's top edge, each in its own color. "Starts soon" and "Notice · waiting" blink gently, so they catch the eye.
 
 **Call-up notices.** The start date can be a call-up notice. Until then the card has a "Call-up notice" chip and counts the days until the notice, and its dates end in "?". From that date the card says "Not clear yet" instead of counting down, until the admin confirms that the person has left.
 
@@ -30,7 +30,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 - Tap the burning fire five times quickly and see what happens.
 - On the first visit, a short tip explains the button.
 
-**Share as a picture.** Each card has a share button at the end of its dates row. It turns the card into a picture: the page title, the name, the big number, the progress, today's status, the milestone stamp, the dates and the date of the snapshot. Choose light or dark, a post (4:5) or story (9:16) size, and whether to hide the dates, then share it through the phone's share menu or save the PNG. The picture is drawn in the browser, and nothing is sent to the server.
+**Share as a picture.** Each card has a share button at the end of its dates row. It turns the card into a picture laid out like the card itself, with the state on its top edge: the page title, the name, the big number, the progress, today's status, the milestone stamp, the dates and the date of the snapshot. Choose light or dark, a post (4:5) or story (9:16) size, and whether to hide the dates, then share it through the phone's share menu or save the PNG. The picture is drawn in the browser, and nothing is sent to the server.
 
 <p align="center"><img src="docs/screenshots/share.png" alt="A card shared as a picture" width="360"></p>
 
