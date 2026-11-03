@@ -25,6 +25,9 @@ const CSS = `.fire{position:absolute;left:0;top:0;width:100%;pointer-events:none
 .fire i{position:absolute;left:0;top:0;width:3px;height:3px;margin:-1.5px;border-radius:50%;will-change:transform,opacity;
  background:radial-gradient(circle,#fff4c8 0,#ffb547 38%,#ff5a1a 68%,transparent 72%);box-shadow:0 0 5px 1px rgb(255 128 40/.55)}
 .fire i.hot{width:5px;height:5px;margin:-2.5px;background:radial-gradient(circle,#fff 0,#ffe08a 30%,#ff8a2a 62%,transparent 72%);box-shadow:0 0 10px 2px rgb(255 140 50/.6)}
+.fire i.birch{background:radial-gradient(circle,#fff 0,#eaf2ff 34%,#9cc2ff 64%,transparent 72%);box-shadow:0 0 6px 1px rgb(190 215 255/.65)}
+.fire i.pine{background:radial-gradient(circle,#ffe2b8 0,#ff7a26 40%,#d4320c 68%,transparent 72%);box-shadow:0 0 7px 1px rgb(255 90 30/.6)}
+.fire i.gold{background:radial-gradient(circle,#fff 0,#fff1a6 32%,#ffc21a 62%,transparent 72%);box-shadow:0 0 10px 2px rgb(255 200 40/.75)}
 `;
 const BASE = 1440 * 900; // the admin's spark counts are for a screen this size
 let layer, on = false, level = 0, min = 15, max = 120, target = 0, alive = 0, VW = innerWidth, VH = innerHeight, PH = innerHeight; // PH: page height
@@ -41,8 +44,8 @@ function mount() {
   new ResizeObserver(() => { const h = Math.max(innerHeight, document.body.offsetHeight); if (h !== PH) { PH = h; retarget(); fill(); } layer.style.height = PH + 'px'; }).observe(document.body);
   PH = Math.max(innerHeight, document.body.offsetHeight); layer.style.height = PH + 'px';
 }
-function ember(frames, life, delay, hot, done) {
-  const e = document.createElement('i'); if (hot) e.className = 'hot'; layer.append(e);
+function ember(frames, life, delay, hot, done, kind = '') {
+  const e = document.createElement('i'); e.className = (hot ? 'hot ' : '') + kind; layer.append(e);
   e.animate(frames, { duration: life, delay, fill: 'both' }).onfinish = () => { e.remove(); done?.(); };
 }
 function drift(delay) { // one spark of the everyday dust
@@ -62,8 +65,8 @@ function retarget() {
   const area = Math.max(.35, Math.min(1.6, VW * VH / BASE)), screens = Math.max(1, PH / VH); // a long page gets as many per screen
   target = on && !still.matches ? Math.min(800, Math.round((min + (max - min) * level) * area * screens)) : 0;
 }
-// Throws n sparks out of (x, y) in screen pixels, mostly upward, then lets the wind take them
-function burst(x, y, n = 40, power = 1) {
+// Throws n sparks out of (x, y) in screen pixels, mostly upward, then lets the wind take them; kind colors them (birch, pine, gold)
+function burst(x, y, n = 40, power = 1, kind = '') {
   if (still.matches) return;
   mount(); y += scrollY; // into page pixels
   const aim = -Math.PI / 2 + Math.max(-.7, Math.min(.7, (VW / 2 - x) / VW * 1.6)); // up, leaning toward the middle of the screen
@@ -73,7 +76,7 @@ function burst(x, y, n = 40, power = 1) {
     const frames = Array.from({ length: 10 }, (_, k) => { const t = k / 9 * life, slow = (1 - Math.exp(-2.4 * t)) / 2.4; // drag slows them down
       return { transform: `translate(${(x + vx * slow + wx * .4 * t * t).toFixed(1)}px,${(y + vy * slow - 18 * t * t).toFixed(1)}px) scale(${(s * (1 - .6 * k / 9)).toFixed(2)})`,
         opacity: k === 9 ? 0 : k === 0 ? 1 : +rnd(.5, 1).toFixed(2) }; });
-    ember(frames, life * 1000, rnd(0, 120), Math.random() < .5);
+    ember(frames, life * 1000, rnd(0, 120), Math.random() < .5, null, kind);
   }
 }
 // on: dust shown at all; logs / full: the fire level; lo / hi: sparks per 1440x900 screen with no logs and at full fire
