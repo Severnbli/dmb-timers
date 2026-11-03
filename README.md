@@ -8,7 +8,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 ## What is on the page
 
-**Timer cards.** One card per person, with the days left, a progress bar and the current day of service. On the last day, hours, minutes and seconds become the big number. Each state has its own color: civilian (green), starts soon (orange), serving, and home.
+**Timer cards.** One card per person: the name on one line with the label under it, the days left, a progress bar and the current day of service. On the last day, hours, minutes and seconds become the big number. The state (civilian, starts soon, serving, home and so on) sits on the card's top edge, each in its own color.
 
 **Call-up notices.** The start date can be a call-up notice. Until then the card has a "Call-up notice" chip and counts the days until the notice, and its dates end in "?". From that date the card says "Not clear yet" instead of counting down, until the admin confirms that the person has left.
 

@@ -54,15 +54,16 @@ h1 span{overflow-wrap:anywhere}
 main{flex:1;width:100%;max-width:1140px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right)) 24px max(16px,env(safe-area-inset-left));
  display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));align-content:start}
 main.one{max-width:420px;grid-template-columns:1fr;padding-top:3vh}
-.card{position:relative;border-radius:20px;padding:12px 14px 10px;box-shadow:var(--shadow);overflow:hidden;min-width:0;
- aspect-ratio:1;display:flex;flex-direction:column;container:card/inline-size} /* square at every width; top block and status/dates are pushed apart */
+.card{position:relative;border-radius:20px;padding:16px 14px 10px;box-shadow:var(--shadow);min-width:0;
+ aspect-ratio:1;min-height:0;display:flex;flex-direction:column;container:card/inline-size} /* square at every width (min-height:0 keeps it square, as content may overflow while it is fitted); top block and status/dates are pushed apart */
 .card>*{flex:none}
 .fill{flex:1 0 6px}
-.head{display:flow-root} /* the chip floats, so a long name can run under it on its second line */
-h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wrap:anywhere;max-height:2.5em;overflow:clip} /* two lines at most; clip, not hidden, so the text still flows around the chip */
+.head{min-width:0}
+h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* the name on one line, the label under it */
 .label{margin:1px 0 0;color:var(--mute);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chip{float:right;margin-left:8px;display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;font:600 .62rem/1.4 var(--sans);letter-spacing:.05em;text-transform:uppercase;
- color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);white-space:nowrap}
+/* The service state sits on the card's top edge: half above it, half inside */
+.chip{position:absolute;z-index:2;top:0;right:14px;transform:translateY(-50%);display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font:600 .62rem/1.4 var(--sans);letter-spacing:.05em;text-transform:uppercase;
+ color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);box-shadow:0 2px 8px -3px rgb(0 0 0/.25);white-space:nowrap}
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .chip.is-soon::before,.chip.is-summons::before{animation:pulse 1.6s ease-in-out infinite}
 .card.is-summons,.card.is-notice{border:1.5px dashed var(--accent)}
@@ -206,14 +207,14 @@ footer a:hover{color:var(--ink)}
  .together{margin:2px auto 8px;padding:8px 12px;gap:2px 10px;border-radius:16px}
  .together .tl{flex-basis:100%;font-size:.68rem}
  .together .tv{font-size:1.3rem}
- main{gap:12px}
+ main{gap:16px 12px}
  main:not(.one):not(.two){grid-template-columns:1fr}
- main:not(.one):not(.two) .card{aspect-ratio:1;max-height:86vh;padding:12px 16px 10px} /* tall, so the number can be big */
+ main:not(.one):not(.two) .card{aspect-ratio:1;max-height:86vh;padding:16px 16px 10px} /* tall, so the number can be big */
  main:not(.one):not(.two) .count.bare{flex-direction:column;gap:4px} /* the unit goes under the number, which gets the full width */
  main:not(.one):not(.two) .count.bare .unit{flex-direction:row;justify-content:flex-start;gap:.3em;padding:0}
  main:not(.one):not(.two) .status{font-size:.88rem;padding:6px 10px 6px 26px}
  main.two{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
- main.two .card{padding:9px 9px 7px;border-radius:16px}
+ main.two .card{padding:13px 9px 7px;border-radius:16px}
  .fire-btn{height:50px;padding:0 16px 0 12px;gap:6px}
  .fire-btn .lbl{display:none} /* the tip and the label for screen readers say what it is */
  .fire-tip{bottom:calc(max(16px,env(safe-area-inset-bottom)) + 62px)}
@@ -225,7 +226,7 @@ footer a:hover{color:var(--ink)}
 @container card (max-width:200px){ /* content width; cards up to about 218px */
  h2{font-size:.78rem}
  .label{display:none}
- .chip{font-size:.5rem;padding:1px 6px;gap:4px;margin-left:4px}
+ .chip{font-size:.5rem;padding:1px 6px;gap:4px;right:8px}
  .chip::before{width:5px;height:5px}
  .count{margin-top:6px;gap:5px}
  .days{font-size:1.9rem}
