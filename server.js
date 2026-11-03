@@ -158,6 +158,7 @@ http.createServer(async (req, res) => {
   try {
     if (M === 'GET' && FILES[url]) return page(res, FILES[url]);
     if (M === 'GET' && url === '/api/config') { if (rollover()) save(); return json(res, 200, pub(ip)); }
+    if (M === 'GET' && url === '/api/sparks') { if (rollover()) save(); return json(res, 200, pub(ip).sparks); } // polled often, so other visitors' logs show up quickly
     if (M === 'POST' && url === '/api/spark') { // a visitor adds a log to the fire
       if (!cfg.sparkOn) return err(res, 403, 'spark_off');
       if (rollover()) save();

@@ -343,7 +343,7 @@ addEventListener('resize',()=>{render();clearTimeout(resizing);resizing=setTimeo
 // the more fire dust over the page. Someone else's new logs arrive with the next config refresh as sparks from below
 const fb=document.getElementById('fireBtn'), fc=document.getElementById('fireCount');
 const store={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
-let logs=null, nextLog=0, tipEl=null, tipT=0;
+let logs=null, nextLog=0, tipEl=null, tipT=0, sending=false;
 const hm=ms=>{const n=Math.max(1,Math.ceil(ms/6e4)),h=Math.floor(n/60),m=n%60;return h&&m?t('fire.hm',{h,m}):h?t('fire.h',{h}):t('fire.m',{m})};
 function drawFire(){
   const lit=nextLog>Date.now()+offset;
@@ -357,7 +357,7 @@ function fire(){
   if(logs!==null&&sp.count>logs&&!fb.hidden){ // someone else added logs since the last look
     const n=Math.min(6,sp.count-logs);for(let i=0;i<n;i++)setTimeout(()=>FIRE.burst(Math.random()*innerWidth,innerHeight+8,26,1.3),i*700);bump();
   }
-  logs=sp.count;nextLog=sp.next;fb.hidden=p.sparkOn===false;
+  if(!sending){logs=sp.count;nextLog=sp.next}fb.hidden=p.sparkOn===false;
   if(fb.hidden)return tip(null);
   drawFire();
   const n=document.querySelector('.notice'); // wait until the privacy banner is closed
@@ -385,6 +385,7 @@ fb.onclick=async()=>{
   const r=fb.querySelector('svg').getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height*.4;
   if(nextLog>Date.now()+offset){FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(nextLog-Date.now()-offset)})))}
   logs++;nextLog=Date.now()+offset+cfg.page.sparkHours*36e5;drawFire();bump();plus(x,r.top);FIRE.burst(x,y,60,1.15); // at once, the server confirms after
+  sending=true;
   try{
     const res=await fetch('/api/spark',{method:'POST'}),d=await res.json().catch(()=>({}));
     if(typeof d.count==='number'){logs=d.count;cfg.sparks={count:d.count,next:d.next||0}}
@@ -392,9 +393,16 @@ fb.onclick=async()=>{
     if(res.ok)tip(esc(t('fire.thanks')));
     else tip(esc(d.code==='spark_wait'?t('fire.wait',{time:hm(nextLog-Date.now()-offset)}):t(d.code?'err.'+d.code:'err.request')));
   }catch{logs--;nextLog=0;tip(esc(t('err.request')))}
-  drawFire();FIRE.set({on:cfg.page.dustOn!==false,logs,full:cfg.page.dustFull,lo:cfg.page.dustMin,hi:cfg.page.dustMax});
+  sending=false;drawFire();FIRE.set({on:cfg.page.dustOn!==false,logs,full:cfg.page.dustFull,lo:cfg.page.dustMin,hi:cfg.page.dustMax});
 };
 setInterval(()=>{if(cfg&&!fb.hidden)drawFire()},3e4);
+// Other visitors' logs: the count is checked every few seconds while the page is in view, and at once when it comes back
+async function syncSparks(){
+  if(!cfg||document.hidden||sending)return;
+  try{const sp=await (await fetch('/api/sparks',{cache:'no-store'})).json();if(typeof sp.count==='number'&&!sending){cfg.sparks=sp;fire()}}catch{}
+}
+setInterval(syncSparks,5e3);
+document.addEventListener('visibilitychange',syncSparks);addEventListener('focus',syncSparks);
 // The shared counter: everyone's time served (or left) added up. Each person serving now adds (or takes) a second
 // every second, so the seconds run as many times faster as there are people serving
 const tBox=document.getElementById('together'), tVal=document.getElementById('tValue');
@@ -419,7 +427,7 @@ function together0(){ // labels; the number itself is redrawn by drawTogether
   if(!cfg)return;
   const {n,left}=together(Date.now()+offset);
   document.getElementById('tLabel').textContent=t(left?'together.left':'together.served');
-  const r=document.getElementById('tRate');r.hidden=!n;r.textContent=t('together.rate',{sign:left?'−':'+',n});r.title=t('together.rateTitle',{n});
+  const r=document.getElementById('tRate');r.hidden=!n;r.textContent=t('together.rate',{n});r.title=t('together.rateTitle',{n});
   tShown='';cancelAnimationFrame(tRaf);drawTogether();
 }
 setInterval(()=>{if(cfg&&!tRaf)drawTogether()},1000); // with reduced motion, in a hidden tab or with nobody serving, once a second
