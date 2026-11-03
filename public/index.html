@@ -93,12 +93,18 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .one .clock{font-size:clamp(1rem,3.5vw,1.3rem)}
 .one .done{font-size:clamp(1.8rem,7vw,2.8rem)}
 /* Milestones: an ink stamp on the card for the whole day; it lands once per page view, with a burst of sparks */
+/* Demob day: a gold edge that breathes, a big stamp and a salute of sparks */
+.card.is-demob{border:1.5px solid #e2a93b;animation:demob 2.4s ease-in-out infinite alternate}
+@keyframes demob{from{box-shadow:var(--shadow),0 0 0 0 rgb(240 170 60/.0),0 0 18px -6px rgb(255 170 60/.5)}to{box-shadow:var(--shadow),0 0 0 3px rgb(240 170 60/.25),0 0 42px -4px rgb(255 160 50/.75)}}
+.stamp.big{font-size:1.15rem;padding:4px 14px;border-width:3px;bottom:auto;top:44%;right:14px;transform:rotate(-12deg);--r:-12deg}
+@container card (max-width:200px){.stamp.big{font-size:.8rem;padding:2px 8px}}
+@media(prefers-reduced-motion:reduce){.card.is-demob{animation:none;box-shadow:var(--shadow),0 0 0 3px rgb(240 170 60/.25)}}
 .fxl{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;border-radius:inherit} /* card effects; clipped, so they never count as overflow when the digits are fitted */
 .stamp{position:absolute;right:12px;bottom:34px;padding:3px 9px;border:2.5px solid var(--accent);border-radius:8px;color:var(--accent);
  background:color-mix(in srgb,var(--surface) 55%,transparent);font:800 .8rem/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;
  transform:rotate(-9deg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 30%,transparent);opacity:.92}
 .stamp.in{animation:stamp-in .7s cubic-bezier(.3,1.4,.5,1) both}
-@keyframes stamp-in{0%{transform:rotate(-9deg) scale(2.6);opacity:0}55%{transform:rotate(-9deg) scale(.9);opacity:1}100%{transform:rotate(-9deg) scale(1);opacity:.92}}
+@keyframes stamp-in{0%{transform:rotate(var(--r,-9deg)) scale(2.6);opacity:0}55%{transform:rotate(var(--r,-9deg)) scale(.9);opacity:1}100%{transform:rotate(var(--r,-9deg)) scale(1);opacity:.92}}
 @container card (max-width:200px){.stamp{font-size:.56rem;padding:2px 5px;border-width:2px;right:6px;bottom:24px}}
 @media(prefers-reduced-motion:reduce){.stamp.in{animation:none}}
 .tick{position:fixed;z-index:6;pointer-events:none;font:800 1rem/1 var(--sans);white-space:nowrap;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 80%,transparent)}
@@ -252,6 +258,7 @@ function count(d,unit,short,ms,p){
 const SOON_DAYS=60;
 // Milestones of a service: the day a quarter, half or three quarters is served, and 100 / 30 / 7 / last day left
 function milestone(phase,s,e,now,d){
+  if(phase==='done')return now-e<DAY?'demob':null; // demob day: the first 24 hours at home
   if(phase!=='serve')return null;
   for(const [k,p] of [['q1',25],['half',50],['q3',75]]){const at=now-(s+(e-s)*p/100);if(at>=0&&at<DAY)return k}
   return {100:'d100',30:'d30',7:'d7',0:'d0'}[d]||null;
@@ -285,8 +292,8 @@ function card(tm,p,now){
   }
   const st=p.showStatuses===false?'':statusFor(phase,tm,now,ctx);
   const ms=milestone(phase,s,e,now,Math.floor((e-now)/DAY));
-  let stamp='';if(ms){const a=once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${a>=0?' in':''}"${a>=0?` style="animation-delay:-${Math.round(a)}ms" data-new="${a<50?1:''}"`:''}>${t('ms.'+ms)}</div></div>`}
-  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''} style="--accent:${accent}">${head}${main}<div class="fill"></div>${stamp}${st?`<p class="status">${esc(st)}</p>`:''}
+  let stamp='';if(ms){const a=once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${ms==='demob'?' big':''}${a>=0?' in':''}"${a>=0?` style="animation-delay:-${Math.round(a)}ms" data-new="${a<50?1:''}"`:''}>${t('ms.'+ms)}</div></div>`}
+  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''} style="--accent:${accent}${ms==='demob'?`;animation-delay:-${Math.round(performance.now()%2400)}ms`:''}">${head}${main}<div class="fill"></div>${stamp}${st?`<p class="status">${esc(st)}</p>`:''}
     <div class="dates" title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${tm.pending?`<b class="nt">${t('dates.notice')}</b> ${fmt(s)} → ?`:`${fmt(s)} → ${fmt(e)}`}</div></article>`;
 }
 // On phones the visitor can switch between one wide card and two squares per row; the admin's choice is the default
@@ -303,9 +310,17 @@ function render(){
   $.innerHTML=ts.length?ts.map(x=>card(x,cfg.page,now)).join(''):`<p class="empty">${t('empty')}</p>`;
   fitCards();
   for(const c of $.querySelectorAll('.card[data-day]')){const d=+c.dataset.day,was=lastDay.get(c.dataset.id);lastDay.set(c.dataset.id,d);if(was!==undefined&&d!==was)dayTick(c,d-was)}
-  if(!matchMedia('(prefers-reduced-motion:reduce)').matches)for(const el of $.querySelectorAll('.stamp[data-new="1"]'))setTimeout(()=>{ // sparks as the stamp hits
-    const r=$.querySelector(`.card[data-id="${el.closest('.card').dataset.id}"] .stamp`)?.getBoundingClientRect();if(r)FIRE.burst(r.left+r.width/2,r.top+r.height/2,34,.8)},380);
+  if(!matchMedia('(prefers-reduced-motion:reduce)').matches)for(const el of $.querySelectorAll('.stamp[data-new="1"]')){ // sparks as the stamp hits
+    const id=el.closest('.card').dataset.id, big=el.classList.contains('big');
+    setTimeout(()=>{const r=$.querySelector(`.card[data-id="${id}"] .stamp`)?.getBoundingClientRect();if(r)FIRE.burst(r.left+r.width/2,r.top+r.height/2,34,.8)},380);
+    if(big)salute(id,4);
+  }
 }
+function salute(id,n){ // demob day: volleys of sparks from random points of the card
+  for(let i=0;i<n;i++)setTimeout(()=>{const r=$.querySelector(`.card[data-id="${id}"]`)?.getBoundingClientRect();
+    if(r&&r.bottom>0&&r.top<innerHeight)FIRE.burst(r.left+r.width*(.2+Math.random()*.6),r.top+r.height*(.25+Math.random()*.5),46,1.25)},700+i*650);
+}
+setInterval(()=>{if(!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches)$.querySelectorAll('.card.is-demob').forEach(c=>salute(c.dataset.id,1))},2e4);
 const lastDay=new Map(); // card id => its day count at the last render
 function dayTick(c,n){ // "-1 day" rises from the big number and fades out
   if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
