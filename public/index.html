@@ -110,12 +110,11 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .tick{position:fixed;z-index:6;pointer-events:none;font:800 1rem/1 var(--sans);white-space:nowrap;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 80%,transparent)}
 .dates span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .shr{flex:none;display:grid;place-items:center;width:1.9em;height:1.5em;margin:-.3em -.3em -.3em 0;padding:0;border:0;border-radius:6px;background:none;color:var(--mute);cursor:pointer;
- transition:opacity .35s ease,color .25s ease,background-color .25s ease,transform .25s cubic-bezier(.3,1.4,.5,1)}
+ transition:color .25s ease,background-color .25s ease,transform .25s cubic-bezier(.3,1.4,.5,1)}
 .shr:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);transform:scale(1.08)}
 .shr:active{transform:scale(.92)}
 .shr svg{width:1.25em;height:1.25em}
 .shr:hover{color:var(--accent)}.shr:focus-visible{outline:2px solid var(--ink);opacity:1}
-@media(hover:hover){.card:not(:hover):not(:focus-within) .shr{opacity:0;transform:translateY(2px)}}
 .share-dlg[open]{animation:dlg-in .28s cubic-bezier(.2,.8,.3,1)}
 .share-dlg[open]::backdrop{animation:dlg-fade .28s ease-out}
 @keyframes dlg-in{from{opacity:0;transform:translateY(14px) scale(.97)}}
