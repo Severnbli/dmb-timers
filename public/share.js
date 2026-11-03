@@ -34,13 +34,12 @@ function read(c) {
   const chip = q('.chip'), unit = q('.unit'), bar = q('.bar'), dates = q('.dates');
   let units = [];
   if (unit) units = q('.count.bare') ? [...unit.children].map(e => e.textContent) : [unit.firstChild?.textContent || '', txt('.unit .clock')].filter(Boolean);
-  const nt = txt('.dates .nt');
   return { name: txt('h2'), label: txt('.label'), chip: chip.textContent.trim(), state: STATE[[...chip.classList].find(k => STATE[k])] || null,
     accent: getComputedStyle(c).getPropertyValue('--accent').trim() || '#b23a1e',
     big: txt('.count .days'), units, done: txt('.done'), sub: txt('.sub'),
     bar: bar && { pct: +bar.getAttribute('aria-valuenow'), l: txt('.meta span:first-child'), r: txt('.meta span:last-child') },
     status: txt('.status'), stamp: txt('.stamp'), bigStamp: !!q('.stamp.big'),
-    dates: dates && { nt, text: (dates.querySelector('span')?.textContent || dates.textContent).replace(nt, '').trim() } };
+    dates: dates && (dates.querySelector('span')?.textContent || dates.textContent).trim() };
 }
 
 function draw(cv, d, o) {
@@ -109,8 +108,7 @@ function draw(cv, d, o) {
   }
   if (d.dates && !o.hideDates) {
     x.strokeStyle = P.dash; x.lineWidth = 3; x.setLineDash([10, 8]); x.beginPath(); x.moveTo(ix, dy - 40); x.lineTo(ix + iw, dy - 40); x.stroke(); x.setLineDash([]);
-    let dx = ix; if (d.dates.nt) { x.fillStyle = A; font(800, 34); const s = d.dates.nt.toUpperCase() + ' '; x.fillText(s, dx, dy + 8); dx += x.measureText(s).width; }
-    x.fillStyle = P.mute; font(500, 36); x.fillText(d.dates.text, dx, dy + 8);
+    x.fillStyle = P.mute; font(500, 36); x.fillText(d.dates, ix, dy + 8);
   }
   if (d.stamp) { // the milestone stamp, bottom right above the dates
     let fs = d.bigStamp ? 96 : 64; const st = d.stamp.toUpperCase(); x.letterSpacing = '4px';
