@@ -23,7 +23,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 **Fire button.** A button in the corner lets visitors show the guys that someone is visiting and waiting for them:
 
 - Each tap adds a log to a shared fire. A visitor can add one log every 12 hours (the browser remembers when, in local storage).
-- The count starts over from zero every 45 days.
+- The count starts over from zero every 45 days. Tapping the fire again while your log is still burning tells you when the next log can go in and when the fire starts over.
 - The more logs, the more sparks of fire dust drift over the cards and the bigger and hotter they are. The sparks cover the whole page and scroll with it.
 - A tap drops a log into the fire with a burst of sparks. Most logs are oak; some are birch (crackling white sparks) or pine (resin pops), and one in forty is golden. Logs added by other visitors arrive as sparks from below.
 - The fire remembers its record, the most logs it ever had, and a tap that beats it is celebrated.

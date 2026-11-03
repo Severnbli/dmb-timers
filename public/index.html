@@ -461,6 +461,7 @@ addEventListener('resize',()=>{render();clearTimeout(resizing);resizing=setTimeo
 const fb=document.getElementById('fireBtn'), fc=document.getElementById('fireCount');
 const store={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 const record=()=>Math.max(cfg?.sparks?.record||0,logs||0);
+const resetLine=()=>{const at=cfg?.sparks?.resetAt;return at?`<small class="rec">${esc(t('fire.resetAt',{date:new Date(at).toLocaleString(I18N.lang,{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})}))}</small>`:''};
 const recLine=()=>record()?`<small class="rec">${esc(t('fire.record',{n:record().toLocaleString(I18N.lang)}))}</small>`:'';
 let pokes=[], logs=null, tipEl=null, tipT=0, sending=false;
 const waitLeft=()=>(+store.get('fireAt')||0)+cfg.page.sparkHours*36e5-Date.now()-offset; // > 0 while this visitor's log still burns
@@ -532,14 +533,14 @@ fb.onclick=async()=>{
     const n=performance.now();pokes=pokes.filter(p=>n-p<2500);pokes.push(n);
     if(pokes.length>=5){pokes=[];fb.classList.remove('wobble');void fb.offsetWidth;fb.classList.add('wobble');setTimeout(()=>fb.classList.remove('wobble'),1300);
       FIRE.burst(x,y,36,.9);setTimeout(()=>FIRE.burst(x,y,20,.7),300);return tip(esc(t('fire.egg')),4500)}
-    FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(w)}))+recLine())}
+    FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(w)}))+resetLine()+recLine(),5e3)}
   const prev=store.get('fireAt')||'';store.set('fireAt',String(Date.now()+offset));
   const kind=wood();
   logs++;drawFire();const landed=new Promise(ok=>dropLog(x,y,()=>{bump();plus(x,r.top);flare(kind,x,y);ok()},kind)); // at once, the server confirms after
   sending=true;
   try{
     const res=await fetch('/api/spark',{method:'POST'}),d=await res.json().catch(()=>({}));await landed; // the tip waits until the log is in the fire
-    if(typeof d.count==='number'){logs=d.count;cfg.sparks={count:d.count,record:d.record}}
+    if(typeof d.count==='number'){logs=d.count;cfg.sparks={...cfg.sparks,count:d.count,record:d.record}}
     if(res.ok&&d.newRecord){tip(`<b>${esc(t('fire.newRecord',{n:d.count.toLocaleString(I18N.lang)}))}</b>`,5e3);for(let i=1;i<4;i++)setTimeout(()=>FIRE.burst(x,y,50,1.3),i*450)}
     else if(res.ok)tip(esc(t(kind==='oak'?'fire.thanks':'wood.'+kind))+recLine());
     else{store.set('fireAt',prev);tip(esc(t(d.code?'err.'+d.code:'err.request')))}
