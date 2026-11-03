@@ -101,6 +101,7 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 @keyframes stamp-in{0%{transform:rotate(-9deg) scale(2.6);opacity:0}55%{transform:rotate(-9deg) scale(.9);opacity:1}100%{transform:rotate(-9deg) scale(1);opacity:.92}}
 @container card (max-width:200px){.stamp{font-size:.56rem;padding:2px 5px;border-width:2px;right:6px;bottom:24px}}
 @media(prefers-reduced-motion:reduce){.stamp.in{animation:none}}
+.tick{position:fixed;z-index:6;pointer-events:none;font:800 1rem/1 var(--sans);white-space:nowrap;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 80%,transparent)}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 /* Everyone's service in one number; it runs one second faster for every person serving now */
 .together{display:flex;align-items:center;justify-content:center;gap:4px 14px;flex-wrap:wrap;width:min(1108px,calc(100% - max(16px,env(safe-area-inset-left)) - max(16px,env(safe-area-inset-right))));margin:4px auto 6px;padding:10px 18px;border-radius:18px;text-align:center}
@@ -267,24 +268,25 @@ function card(tm,p,now){
   const accent={wait:'var(--wait)',soon:'var(--soon)',summons:'var(--summons)',notice:'var(--summons)'}[chip]||tm.accent; // the call-up is "soon" only within the last couple of months
   const head=`<div class="head"><span class="chip is-${chip}">${t('state.'+chip)}</span><h2>${esc(tm.name)}</h2>${tm.label?`<p class="label">${esc(tm.label)}</p>`:''}</div>`;
   const bar=(pct,l,r)=>p.showProgress?`<div class="bar" role="progressbar" aria-valuenow="${pct.toFixed(1)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i><em title="${t('half')}"></em></div><div class="meta"><span>${l}</span><span>${r}</span></div>`:'';
-  let main;
-  if(phase==='soon'){ // counting to the call-up; the service length itself is shown separately
+  let main, day=null; // the day count on the card: a change while the page is open floats off as -1 / +1
+  if(phase==='soon'){day=Math.floor((s-now)/DAY); // counting to the call-up; the service length itself is shown separately
     const left=s-now, d=Math.floor(left/DAY);
     main=tm.pending?`${count(d,tp('unit.toNotice',d),t('unit.toNoticeShort'),left,p)}<p class="sub">${t('noticeSub')}</p>`
       :`${count(d,tp('unit.toStart',d),t('unit.toStartShort'),left,p)}<p class="sub">${t('then',{n:total,days:tp('days',total)})}</p>`;
   }else if(phase==='summons'){ // after a call-up notice nobody knows yet when he is back, until the admin confirms he has left
     main=`<p class="done">${t('summons.big')}</p><p class="sub">${t('summons.sub',{date:fmt(s)})}</p>`;
   }else if(phase==='serve'){
+    day=Math.floor((e-now)/DAY);
     const left=e-now, d=Math.floor(left/DAY), dayNo=Math.min(total,Math.floor(ctx.d)+1);
     main=`${count(d,tp('unit.left',d),t('unit.leftShort'),left,p)}${bar(ctx.p,t('served',{p:ctx.p.toFixed(2)}),t('dayOf',{n:dayNo,t:total}))}`;
   }else{
-    const d=Math.floor(ctx.a);
+    const d=day=Math.floor(ctx.a);
     main=`<p class="done">${esc(tm.doneMessage||t('timer.defaultDone'))}</p><p class="sub">${d} ${tp('unit.home',d)}</p>`;
   }
   const st=p.showStatuses===false?'':statusFor(phase,tm,now,ctx);
   const ms=milestone(phase,s,e,now,Math.floor((e-now)/DAY));
   let stamp='';if(ms){const a=once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${a>=0?' in':''}"${a>=0?` style="animation-delay:-${Math.round(a)}ms" data-new="${a<50?1:''}"`:''}>${t('ms.'+ms)}</div></div>`}
-  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}" data-id="${tm.id}" style="--accent:${accent}">${head}${main}<div class="fill"></div>${stamp}${st?`<p class="status">${esc(st)}</p>`:''}
+  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''} style="--accent:${accent}">${head}${main}<div class="fill"></div>${stamp}${st?`<p class="status">${esc(st)}</p>`:''}
     <div class="dates" title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${tm.pending?`<b class="nt">${t('dates.notice')}</b> ${fmt(s)} → ?`:`${fmt(s)} → ${fmt(e)}`}</div></article>`;
 }
 // On phones the visitor can switch between one wide card and two squares per row; the admin's choice is the default
@@ -300,8 +302,18 @@ function render(){
   $.className=ts.length===1?'one':cols()===2?'two':'';colsBtn.hidden=ts.length<2;drawCols();
   $.innerHTML=ts.length?ts.map(x=>card(x,cfg.page,now)).join(''):`<p class="empty">${t('empty')}</p>`;
   fitCards();
+  for(const c of $.querySelectorAll('.card[data-day]')){const d=+c.dataset.day,was=lastDay.get(c.dataset.id);lastDay.set(c.dataset.id,d);if(was!==undefined&&d!==was)dayTick(c,d-was)}
   if(!matchMedia('(prefers-reduced-motion:reduce)').matches)for(const el of $.querySelectorAll('.stamp[data-new="1"]'))setTimeout(()=>{ // sparks as the stamp hits
     const r=$.querySelector(`.card[data-id="${el.closest('.card').dataset.id}"] .stamp`)?.getBoundingClientRect();if(r)FIRE.burst(r.left+r.width/2,r.top+r.height/2,34,.8)},380);
+}
+const lastDay=new Map(); // card id => its day count at the last render
+function dayTick(c,n){ // "-1 day" rises from the big number and fades out
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const r=(c.querySelector('.days')||c.querySelector('.done')||c).getBoundingClientRect(), el=document.createElement('div');
+  el.className='tick';el.style.color=getComputedStyle(c).getPropertyValue('--accent');el.textContent=`${n<0?'−':'+'}${Math.abs(n)} ${tp('days',Math.abs(n))}`;
+  el.style.left=r.right+'px';el.style.top=r.top+'px';document.body.append(el);
+  el.animate([{transform:'translate(-30%,0) scale(.7)',opacity:0},{transform:'translate(-30%,-14px) scale(1.1)',opacity:1,offset:.2},{transform:'translate(-30%,-60px) scale(1)',opacity:0}],{duration:2400,easing:'ease-out'}).onfinish=()=>el.remove();
+  FIRE.burst(r.left+r.width/2,r.top+r.height/2,14,.5);
 }
 const fitted=new Map(); // fitted sizes per set of cards + width + texts, so the 1 s re-render does not measure again
 function fitCards(){ // one digit size for every countdown, the largest with which every card still fits; names get one height so the digits line up
