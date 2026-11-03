@@ -32,6 +32,8 @@
 [hidden]{display:none!important}
 /* iOS-like glass: translucent surfaces that blur the map behind them */
 .glass,.card,.lang,.theme{background:var(--glass);-webkit-backdrop-filter:blur(2px) saturate(130%);backdrop-filter:blur(2px) saturate(130%);border:1px solid var(--edge);box-shadow:inset 0 1px 0 var(--hi),var(--shadow)}
+/* on touch screens the blur is redone for every card on every frame of a scroll, which makes the cards lag behind the finger */
+@media(pointer:coarse){.glass,.card,.lang,.theme{-webkit-backdrop-filter:none;backdrop-filter:none}.card{background:color-mix(in srgb,var(--surface) 46%,transparent)}}
 .backdrop{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;z-index:-1;pointer-events:none}
 .theme{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:0;padding:0;border-radius:999px;color:var(--ink);cursor:pointer}
 .theme:hover{border-color:var(--mute)}
@@ -419,8 +421,9 @@ function fitCards(){ // one digit size for every countdown, the largest with whi
   }
   cards.forEach(x=>{x.head.style.minHeight=f.hh+'px';x.setG(x.hms?f.gh:x.cnt?f.g:f.gd)});
 }
-let resizing=0; // phones fire resize mid-rotation, so fit again once the layout has settled
-addEventListener('resize',()=>{render();clearTimeout(resizing);resizing=setTimeout(()=>{fitted.clear();render()},250)});
+let resizing=0,lastW=innerWidth; // phones fire resize mid-rotation, so fit again once the layout has settled
+// the cards depend only on the width: the address bar sliding away while scrolling changes just the height and must not re-fit them mid-scroll
+addEventListener('resize',()=>{if(innerWidth===lastW)return;lastW=innerWidth;render();clearTimeout(resizing);resizing=setTimeout(()=>{fitted.clear();render()},250)});
 (()=>{ // while a card is hovered, accent-colored particles drift outward from its edges
   if(!matchMedia('(hover:hover) and (pointer:fine)').matches||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   const cv=document.createElement('canvas'),ctx=cv.getContext('2d');cv.className='fx';document.body.append(cv);
