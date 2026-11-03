@@ -70,9 +70,9 @@ function draw(cv, d, o) {
   rr(cx, cy, cw, ch, 56); x.strokeStyle = d.bigStamp ? '#e2a93b' : P.edge; x.lineWidth = d.bigStamp ? 6 : 3; x.stroke();
   let y = cy + 74;
   // chip, name, label
-  font(700, 30); const chipW = x.measureText(d.chip.toUpperCase()).width + 70;
+  font(700, 30); const chipW = x.measureText(d.chip.toUpperCase()).width + 60;
   rr(cx + cw - 56 - chipW, y - 28, chipW, 56, 28); x.fillStyle = alpha(A, .16); x.fill();
-  x.fillStyle = A; x.beginPath(); x.arc(cx + cw - 56 - chipW + 30, y, 8, 0, 7); x.fill(); x.fillText(d.chip.toUpperCase(), cx + cw - 56 - chipW + 48, y + 2);
+  x.fillStyle = A; x.fillText(d.chip.toUpperCase(), cx + cw - 56 - chipW + 30, y + 2);
   let ns = 64; font(700, ns); while (ns > 44 && x.measureText(d.name).width > iw - chipW - 24) font(700, --ns);
   x.fillStyle = P.ink; x.fillText(fit(d.name, iw - chipW - 24), ix, y); y += 62;
   if (d.label) { x.fillStyle = P.mute; font(500, 36); x.fillText(fit(d.label, iw), ix, y); }
