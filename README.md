@@ -30,6 +30,10 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 - Tap the burning fire five times quickly and see what happens.
 - On the first visit, a short tip explains the button.
 
+**Share as a picture.** Each card has a share button in its dates row (it shows on hover with a mouse, and is always there on touch screens). It turns the card into a picture: the page title, the name, the big number, the progress, today's status, the milestone stamp, the dates and the date of the snapshot. Choose light or dark, a post (4:5) or story (9:16) size, and whether to hide the dates, then share it through the phone's share menu or save the PNG. The picture is drawn in the browser, and nothing is sent to the server.
+
+<p align="center"><img src="docs/screenshots/share.png" alt="A card shared as a picture" width="360"></p>
+
 **Looks.** A topographic map background with a slow wave of light running over it, glass cards, and light and dark themes (they follow the system, or switch with the sun/moon button). The interface is in English, Russian and Belarusian.
 
 **Phones.** Each card is a wide row with big digits. A button in the header switches to two small squares per row and back, and the page remembers the choice. The header fits on one line, and the language switch becomes one button that steps through the languages.
@@ -176,7 +180,8 @@ The page picks a status at random, weighted by `w`, from those whose window fits
 
 - No cookies for visitors, nothing loaded from third parties.
 - The fire button keeps only a shared count. The wait between one visitor's logs is kept in their browser's local storage, not on the server.
-- Failed admin logins are also tracked by a salted hash of the IP address only, in memory, for a few minutes.
+- Pictures of cards are drawn in the visitor's browser; nothing about them reaches the server.
+- Failed admin logins are tracked by a salted hash of the IP address only, in memory, for a few minutes.
 - Names and dates entered in the admin panel are public, so get people's consent before you add them.
 
 The full notice is at `/privacy` and is linked from every page.
