@@ -66,7 +66,6 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .chip.is-soon::before,.chip.is-summons::before{animation:pulse 1.6s ease-in-out infinite}
 .card.is-summons,.card.is-notice{border:1.5px dashed var(--accent)}
-.dates .nt{font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;font-size:.92em}
 @keyframes pulse{50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.chip.is-soon::before,.chip.is-summons::before{animation:none}}
 .count{display:flex;align-items:flex-start;gap:.25em 8px;margin:8px 0 0}
@@ -209,7 +208,9 @@ footer a:hover{color:var(--ink)}
  .together .tv{font-size:1.3rem}
  main{gap:12px}
  main:not(.one):not(.two){grid-template-columns:1fr}
- main:not(.one):not(.two) .card{aspect-ratio:4/3;max-height:72vh;padding:12px 16px 10px}
+ main:not(.one):not(.two) .card{aspect-ratio:1;max-height:86vh;padding:12px 16px 10px} /* tall, so the number can be big */
+ main:not(.one):not(.two) .count.bare{flex-direction:column;gap:4px} /* the unit goes under the number, which gets the full width */
+ main:not(.one):not(.two) .count.bare .unit{flex-direction:row;justify-content:flex-start;gap:.3em;padding:0}
  main:not(.one):not(.two) .status{font-size:.88rem;padding:6px 10px 6px 26px}
  main.two{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
  main.two .card{padding:9px 9px 7px;border-radius:16px}
@@ -322,7 +323,7 @@ function card(tm,p,now){
   let main, day=null; // the day count on the card: a change while the page is open floats off as -1 / +1
   if(phase==='soon'){day=Math.floor((s-now)/DAY); // counting to the call-up; the service length itself is shown separately
     const left=s-now, d=Math.floor(left/DAY);
-    main=tm.pending?`${count(d,tp('unit.toNotice',d),t('unit.toNoticeShort'),left,p)}<p class="sub">${t('noticeSub')}</p>`
+    main=tm.pending?`${count(d,tp('unit.toNotice',d),t('unit.toNoticeShort'),left,p)}`
       :`${count(d,tp('unit.toStart',d),t('unit.toStartShort'),left,p)}<p class="sub">${t('then',{n:total,days:tp('days',total)})}</p>`;
   }else if(phase==='summons'){ // after a call-up notice nobody knows yet when he is back, until the admin confirms he has left
     main=`<p class="done">${t('summons.big')}</p><p class="sub">${t('summons.sub',{date:fmt(s)})}</p>`;
@@ -338,7 +339,7 @@ function card(tm,p,now){
   const ms=milestone(phase,s,e,now,Math.floor((e-now)/DAY));
   let stamp='';if(ms){const a=once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${ms==='demob'?' big':''}${a>=0?' in':''}"${a>=0&&a<50?' data-new="1"':''}>${t('ms.'+ms)}</div></div>`}
   return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''} style="--accent:${accent}">${head}${main}<div class="fill"></div>${stamp}${st?`<p class="status">${esc(st)}</p>`:''}
-    <div class="dates"><span title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${tm.pending?`<b class="nt">${t('dates.notice')}</b> ${fmt(s)} → ?`:`${fmt(s)} → ${fmt(e)}`}</span><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></article>`;
+    <div class="dates"><span title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${fmt(s)} → ${tm.pending?'?':fmt(e)}</span><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></article>`;
 }
 // On phones the visitor can switch between one wide card and two squares per row; the admin's choice is the default
 const colsBtn=document.getElementById('colsBtn');
@@ -399,7 +400,7 @@ function fitCards(){ // one digit size for every countdown, the largest with whi
     return {head:c.querySelector('.head'),cnt,
       key:[c.dataset.id,c.getBoundingClientRect().width.toFixed(1),I18N.lang,c.querySelector('.status')?.textContent,...grow.map(e=>e.textContent.length)].join('|'),
       setG:g=>grow.forEach((e,i)=>e.style.fontSize=gBase[i]*Math.min(g,caps[i])+'px'),
-      ok:()=>fill.getBoundingClientRect().height>=6&&c.scrollHeight<=c.clientHeight+.5&&(!cnt||cnt.scrollWidth<=cnt.clientWidth)};
+      ok:()=>fill.getBoundingClientRect().height>=6&&c.scrollHeight<=c.clientHeight+.5&&(cnt?cnt.scrollWidth<=cnt.clientWidth:!done||done.scrollWidth<=done.clientWidth+.5)};
   });
   const key=cards.map(x=>x.key).join('#');
   let f=fitted.get(key);
@@ -414,7 +415,10 @@ function fitCards(){ // one digit size for every countdown, the largest with whi
       return lo*.98; // small margin against sub-pixel rounding
     };
     // the "welcome home" text has its own size, so a long message does not shrink everyone's digits
+    // while fitting, words may not break, so a long word that does not fit makes the size too big
+    $.querySelectorAll('.done').forEach(e=>e.style.overflowWrap='normal');
     f={hh,g:fit(cards.filter(x=>x.cnt)),gd:fit(cards.filter(x=>!x.cnt))};
+    $.querySelectorAll('.done').forEach(e=>e.style.overflowWrap='');
     fitted.set(key,f);
   }
   cards.forEach(x=>{x.head.style.minHeight=f.hh+'px';x.setG(x.cnt?f.g:f.gd)});

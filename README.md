@@ -10,7 +10,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Timer cards.** One card per person, with the days left, a progress bar and the current day of service. On the last day, hours, minutes and seconds become the big number. Each state has its own color: civilian (green), starts soon (orange), serving, and home.
 
-**Call-up notices.** The start date can be a call-up notice. Until then the card counts the days until the notice and says plainly that this is the notice date, not the start of service. From that date the card says "Not clear yet" instead of counting down, until the admin confirms that the person has left.
+**Call-up notices.** The start date can be a call-up notice. Until then the card has a "Call-up notice" chip and counts the days until the notice, and its dates end in "?". From that date the card says "Not clear yet" instead of counting down, until the admin confirms that the person has left.
 
 **Milestones.** On the day a quarter, half or three quarters is served, and with 100, 30 and 7 days left and on the last day, the card carries an ink stamp that lands with a burst of sparks. When the day count changes while the page is open, "-1 day" floats off the number.
 
