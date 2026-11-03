@@ -2,13 +2,13 @@
 
 A small self-hosted website with demob (demobilization) timers: countdowns to the end of military service for one or many people on one page.
 
-![Timers page in a browser and on a phone, dark theme](docs/screenshots/hero-dark-v2.png)
+![Timers page in a browser and on a phone, dark theme](docs/screenshots/hero-dark-v3.png)
 
 No database, no dependencies, no tracking: one Node.js file and one JSON config file.
 
 ## What is on the page
 
-**Timer cards.** One card per person, with the days left, a progress bar and the current day of service. On the last day, hours, minutes and seconds become the big number. Each state has its own color: civilian (green), starts soon (orange), serving, and home.
+**Timer cards.** One card per person: the name on one line with the label under it, the days left, a progress bar and the current day of service. On the last day, hours, minutes and seconds become the big number. The state (civilian, starts soon, serving, home and so on) sits on the card's top edge, each in its own color.
 
 **Call-up notices.** The start date can be a call-up notice. Until then the card has a "Call-up notice" chip and counts the days until the notice, and its dates end in "?". From that date the card says "Not clear yet" instead of counting down, until the admin confirms that the person has left.
 
@@ -23,7 +23,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 **Fire button.** A button in the corner lets visitors show the guys that someone is visiting and waiting for them:
 
 - Each tap adds a log to a shared fire. A visitor can add one log every 12 hours (the browser remembers when, in local storage).
-- The count starts over from zero every 45 days.
+- The count starts over from zero every 45 days. Tapping the fire again while your log is still burning tells you when the next log can go in and when the fire starts over.
 - The more logs, the more sparks of fire dust drift over the cards and the bigger and hotter they are. The sparks cover the whole page and scroll with it.
 - A tap drops a log into the fire with a burst of sparks. Most logs are oak; some are birch (crackling white sparks) or pine (resin pops), and one in forty is golden. Logs added by other visitors arrive as sparks from below.
 - The fire remembers its record, the most logs it ever had, and a tap that beats it is celebrated.
@@ -36,7 +36,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Looks.** A topographic map background with a slow wave of light running over it, glass cards, and light and dark themes (they follow the system, or switch with the sun/moon button). The interface is in English, Russian and Belarusian.
 
-**Phones.** Each card is a wide row with big digits. A button in the header switches to two small squares per row and back, and the page remembers the choice. The header fits on one line, and the language switch becomes one button that steps through the languages.
+**Phones.** Each card is a wide row with big digits. A button in the header switches to two small squares per row and back, and the page remembers the choice. In both layouts the unit goes under the number, so the number gets the full width; the small squares leave out the funny status to make room for it. The header fits on one line, and the language switch becomes one button that steps through the languages.
 
 ## Quick start
 

@@ -95,10 +95,11 @@ setInterval(() => rollover() && save(), 36e5).unref();
 // Failed logins are keyed by a salted hash of the IP address, so the address itself is never kept
 const SALT = crypto.randomBytes(16);
 const ipKey = ip => crypto.createHmac('sha256', SALT).update(String(ip)).digest('base64');
+const resetAt = () => new Date(+new Date(cfg.sparksSince) + cfg.sparkDays * DAY).toISOString(); // when the fire burns out and the count starts over
 const pub = () => ({ page: Object.fromEntries(PAGE_KEYS.map(k => [k, cfg[k]])), timers: cfg.timers,
-  sparks: { count: cfg.sparks, record: cfg.sparksRecord }, serverTime: now().toISOString(), tz: TZ });
+  sparks: { count: cfg.sparks, record: cfg.sparksRecord, resetAt: resetAt() }, serverTime: now().toISOString(), tz: TZ });
 const full = () => ({ ...pub(), page: { ...pub().page, sparkDays: cfg.sparkDays }, sparks: { count: cfg.sparks, record: cfg.sparksRecord, since: cfg.sparksSince,
-  resetAt: new Date(+new Date(cfg.sparksSince) + cfg.sparkDays * DAY).toISOString() }, history: cfg.history });
+  resetAt: resetAt() }, history: cfg.history });
 // History keeps an action code + name, so the admin page can show it in any language
 const log = (act, name) => { cfg.history = [{ at: now().toISOString(), act, ...(name !== undefined && { name }) }, ...cfg.history].slice(0, 30); };
 
