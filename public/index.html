@@ -84,7 +84,7 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .status::before{content:"\201C";position:absolute;left:7px;top:3px;font:700 1.2rem/1 Georgia,serif;color:var(--accent)}
 .done{margin:8px 0 0;font:800 1.25rem/1.1 var(--sans);letter-spacing:-.02em;color:var(--accent);overflow-wrap:anywhere}
 .meta span{overflow:hidden;text-overflow:ellipsis}
-.dates{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);color:var(--mute);font-size:.68rem;font-variant-numeric:tabular-nums}
+.dates{display:flex;align-items:center;gap:6px;white-space:nowrap;margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);color:var(--mute);font-size:.68rem;font-variant-numeric:tabular-nums}
 .one .card{padding:clamp(18px,4vw,28px)}
 .one h2{font-size:clamp(1.15rem,3vw,1.4rem)}
 .one .label{font-size:.9rem}
@@ -108,6 +108,25 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 @container card (max-width:200px){.stamp{font-size:.56rem;padding:2px 5px;border-width:2px;right:6px;bottom:24px}}
 @media(prefers-reduced-motion:reduce){.stamp.in{animation:none}}
 .tick{position:fixed;z-index:6;pointer-events:none;font:800 1rem/1 var(--sans);white-space:nowrap;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 80%,transparent)}
+.dates span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.shr{flex:none;display:grid;place-items:center;width:1.9em;height:1.5em;margin:-.3em -.3em -.3em 0;padding:0;border:0;border-radius:6px;background:none;color:var(--mute);cursor:pointer;transition:opacity .2s,color .2s}
+.shr svg{width:1.25em;height:1.25em}
+.shr:hover{color:var(--accent)}.shr:focus-visible{outline:2px solid var(--ink);opacity:1}
+@media(hover:hover){.card:not(:hover) .shr{opacity:0}}
+/* The card as a picture: a preview and the options */
+.share-dlg{width:min(460px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:14px 16px 16px;border:1px solid var(--edge);border-radius:20px;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px -20px rgb(0 0 0/.5)}
+.share-dlg::backdrop{background:rgb(10 12 8/.55);backdrop-filter:blur(3px)}
+.sh-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sh-head b{font-size:1.05rem}
+.share-dlg canvas{display:block;margin:0 auto;max-width:100%;max-height:min(56vh,520px);width:auto;height:auto;border-radius:12px;box-shadow:0 6px 20px -8px rgb(0 0 0/.35)}
+.sh-opts{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px;margin:12px 0}
+.seg{display:inline-flex;padding:3px;border-radius:999px;background:var(--track)}
+.seg button{font:600 .82rem/1 var(--sans);color:var(--mute);background:none;border:0;border-radius:999px;padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
+.sh-chk{display:flex;align-items:center;gap:6px;font-size:.88rem;color:var(--mute);cursor:pointer}
+.sh-act{display:flex;gap:8px}
+.sh-act button{flex:1;font:600 .95rem var(--sans);border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:none;color:var(--ink);cursor:pointer}
+.sh-act button.pri{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 /* Everyone's service in one number; it runs one second faster for every person serving now */
 .together{display:flex;align-items:center;justify-content:center;gap:4px 14px;flex-wrap:wrap;width:min(1108px,calc(100% - max(16px,env(safe-area-inset-left)) - max(16px,env(safe-area-inset-right))));margin:4px auto 6px;padding:10px 18px;border-radius:18px;text-align:center}
@@ -226,6 +245,7 @@ footer a:hover{color:var(--ink)}
 <script src="/statuses.js"></script>
 <script src="/backdrop.js"></script>
 <script src="/fire.js"></script>
+<script src="/share.js"></script>
 <script>
 const {t,tp}=I18N, COL={'en-US':2,'ru-RU':3,'be-BY':4}; // STATUSES text column per language
 let cfg=null, offset=0, clock=null;
@@ -234,7 +254,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const fmt=d=>new Date(d).toLocaleDateString(I18N.lang,{day:'numeric',month:'numeric',year:'2-digit'});
 const DAY=864e5;
 async function load(){
-  try{cfg=await (await fetch('/api/config',{cache:'no-store'})).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?BACKDROP.stop():BACKDROP.start();fire();
+  try{cfg=await (await fetch('/api/config',{cache:'no-store'})).json();offset=new Date(cfg.serverTime)-Date.now();window.SHARE_OFFSET=offset;cfg.page.showBackground===false?BACKDROP.stop():BACKDROP.start();fire();
   // hours and seasons follow the server (unit) time zone, not the visitor's
   try{clock=new Intl.DateTimeFormat('en-US',{timeZone:cfg.tz,month:'numeric',day:'numeric',hour:'numeric',hourCycle:'h23'})}catch{clock=null}
   title();}catch{}
@@ -267,6 +287,11 @@ function count(d,unit,short,ms,p){
   return `<div class="count"><span class="days">${d}</span><span class="unit">${unit}${hmsText(ms,p.showSeconds)}</span></div>`;
 }
 const SOON_DAYS=60;
+const SHARE_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+// The share button in a card's dates row opens the card as a picture (share.js). Cards are re-drawn every second, so a click
+// can lose its button between press and release: the release opens it, and click only serves the keyboard
+$.addEventListener('pointerup',e=>{const c=e.button===0&&e.target.closest?.('.shr')?.closest('.card');if(c)SHARE.open(c)});
+$.addEventListener('click',e=>{const c=e.detail===0&&e.target.closest?.('.shr')?.closest('.card');if(c)SHARE.open(c)});
 // Milestones of a service: the day a quarter, half or three quarters is served, and 100 / 30 / 7 / last day left
 function milestone(phase,s,e,now,d){
   if(phase==='done')return now-e<DAY?'demob':null; // demob day: the first 24 hours at home
@@ -305,7 +330,7 @@ function card(tm,p,now){
   const ms=milestone(phase,s,e,now,Math.floor((e-now)/DAY));
   let stamp='';if(ms){const a=once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${ms==='demob'?' big':''}${a>=0?' in':''}"${a>=0?` style="animation-delay:-${Math.round(a)}ms" data-new="${a<50?1:''}"`:''}>${t('ms.'+ms)}</div></div>`}
   return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''} style="--accent:${accent}${ms==='demob'?`;animation-delay:-${Math.round(performance.now()%2400)}ms`:''}">${head}${main}<div class="fill"></div>${stamp}${st?`<p class="status">${esc(st)}</p>`:''}
-    <div class="dates" title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${tm.pending?`<b class="nt">${t('dates.notice')}</b> ${fmt(s)} → ?`:`${fmt(s)} → ${fmt(e)}`}</div></article>`;
+    <div class="dates"><span title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${tm.pending?`<b class="nt">${t('dates.notice')}</b> ${fmt(s)} → ?`:`${fmt(s)} → ${fmt(e)}`}</span><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></article>`;
 }
 // On phones the visitor can switch between one wide card and two squares per row; the admin's choice is the default
 const colsBtn=document.getElementById('colsBtn');
