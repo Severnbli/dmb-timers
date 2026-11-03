@@ -59,12 +59,12 @@ main.one{max-width:420px;grid-template-columns:1fr;padding-top:3vh}
 .card>*{flex:none}
 .fill{flex:1 0 6px}
 .head{min-width:0}
-h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* the name on one line, the label under it */
-.label{margin:1px 0 0;color:var(--mute);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+h2{margin:0;font-size:1.32rem;line-height:1.25;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* the name on one line, the label under it */
+.label{margin:1px 0 0;color:var(--mute);font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* The service state sits on the card's top edge: half above it, half inside */
-.chip{position:absolute;z-index:2;top:0;right:14px;transform:translateY(-50%);display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font:600 .62rem/1.4 var(--sans);letter-spacing:.05em;text-transform:uppercase;
+.chip{position:absolute;z-index:2;top:0;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;padding:4px 13px;border-radius:999px;font:700 .74rem/1.4 var(--sans);letter-spacing:.05em;text-transform:uppercase;
  color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);box-shadow:0 2px 8px -3px rgb(0 0 0/.25);white-space:nowrap}
-.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
 .chip.is-soon::before,.chip.is-summons::before{animation:pulse 1.6s ease-in-out infinite}
 .card.is-summons,.card.is-notice{border:1.5px dashed var(--accent)}
 @keyframes pulse{50%{opacity:.25}}
@@ -86,7 +86,7 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 .meta span{overflow:hidden;text-overflow:ellipsis}
 .dates{display:flex;align-items:center;gap:6px;white-space:nowrap;margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);color:var(--mute);font-size:.68rem;font-variant-numeric:tabular-nums}
 .one .card{padding:clamp(18px,4vw,28px)}
-.one h2{font-size:clamp(1.15rem,3vw,1.4rem)}
+.one h2{font-size:clamp(1.4rem,3.6vw,1.75rem)}
 .one .label{font-size:.9rem}
 .one .days{font-size:clamp(3.6rem,16vw,6rem)}
 .one .unit{font-size:clamp(.85rem,2.4vw,1rem)}
@@ -222,9 +222,9 @@ footer a:hover{color:var(--ink)}
 @media(max-width:600px) and (max-height:520px){main:not(.one):not(.two) .card{aspect-ratio:2/1;max-height:none}} /* phones on their side */
 /* Small squares: sizes follow the card's own content width, secondary lines drop out as it shrinks */
 @container card (max-width:200px){ /* content width; cards up to about 218px */
- h2{font-size:.78rem}
+ h2{font-size:1rem}
  .label{display:none}
- .chip{font-size:.5rem;padding:1px 6px;gap:4px;right:8px}
+ .chip{font-size:.6rem;padding:2px 9px;gap:5px}
  .chip::before{width:5px;height:5px}
  .count{margin-top:6px;gap:5px}
  .days{font-size:1.9rem}
