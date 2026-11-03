@@ -38,7 +38,7 @@ function read(c) {
     accent: getComputedStyle(c).getPropertyValue('--accent').trim() || '#b23a1e',
     big: txt('.count .days'), units, done: txt('.done'), sub: txt('.sub'),
     bar: bar && { pct: +bar.getAttribute('aria-valuenow'), l: txt('.meta span:first-child'), r: txt('.meta span:last-child') },
-    status: txt('.status'), stamp: txt('.stamp'), bigStamp: !!q('.stamp.big'),
+    status: c.dataset.status || '', stamp: txt('.stamp'), bigStamp: !!q('.stamp.big'),
     dates: dates && (dates.querySelector('span')?.textContent || dates.textContent).trim() };
 }
 
