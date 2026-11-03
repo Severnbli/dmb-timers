@@ -36,7 +36,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Looks.** A topographic map background with a slow wave of light running over it, glass cards, and light and dark themes (they follow the system, or switch with the sun/moon button). The interface is in English, Russian and Belarusian.
 
-**Phones.** Each card is a wide row with big digits. A button in the header switches to two small squares per row and back, and the page remembers the choice. The header fits on one line, and the language switch becomes one button that steps through the languages.
+**Phones.** Each card is a wide row with big digits. A button in the header switches to two small squares per row and back, and the page remembers the choice. In both layouts the unit goes under the number, so the number gets the full width; the small squares leave out the funny status to make room for it. The header fits on one line, and the language switch becomes one button that steps through the languages.
 
 ## Quick start
 
