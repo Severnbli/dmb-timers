@@ -30,7 +30,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 - Tap the burning fire five times quickly and see what happens.
 - On the first visit, a short tip explains the button.
 
-**Share as a picture.** Each card has a share button in its dates row (it shows on hover with a mouse, and is always there on touch screens). It turns the card into a picture: the page title, the name, the big number, the progress, today's status, the milestone stamp, the dates and the date of the snapshot. Choose light or dark, a post (4:5) or story (9:16) size, and whether to hide the dates, then share it through the phone's share menu or save the PNG. The picture is drawn in the browser, and nothing is sent to the server.
+**Share as a picture.** Each card has a share button at the end of its dates row. It turns the card into a picture: the page title, the name, the big number, the progress, today's status, the milestone stamp, the dates and the date of the snapshot. Choose light or dark, a post (4:5) or story (9:16) size, and whether to hide the dates, then share it through the phone's share menu or save the PNG. The picture is drawn in the browser, and nothing is sent to the server.
 
 <p align="center"><img src="docs/screenshots/share.png" alt="A card shared as a picture" width="360"></p>
 
