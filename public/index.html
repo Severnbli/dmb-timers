@@ -65,7 +65,8 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
  color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);white-space:nowrap}
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .chip.is-soon::before,.chip.is-summons::before{animation:pulse 1.6s ease-in-out infinite}
-.card.is-summons{border:1.5px dashed var(--accent)}
+.card.is-summons,.card.is-notice{border:1.5px dashed var(--accent)}
+.dates .nt{font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;font-size:.92em}
 @keyframes pulse{50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.chip.is-soon::before,.chip.is-summons::before{animation:none}}
 .count{display:flex;align-items:flex-start;gap:.25em 8px;margin:8px 0 0}
@@ -243,14 +244,16 @@ function card(tm,p,now){
   const s=+new Date(tm.start), e=+new Date(tm.end), total=Math.round((e-s)/DAY);
   const phase=now<s?'soon':now<e?(tm.pending?'summons':'serve'):'done';
   const ctx={u:(s-now)/DAY,d:(now-s)/DAY,l:(e-now)/DAY,a:(now-e)/DAY,p:Math.max(0,Math.min(100,(now-s)/(e-s)*100))};
-  const chip=phase==='soon'&&ctx.u>SOON_DAYS?'wait':phase;
-  const accent={wait:'var(--wait)',soon:'var(--soon)',summons:'var(--summons)'}[chip]||tm.accent; // the call-up is "soon" only within the last couple of months
+  // with pending set the start is the call-up notice date, not the start of service: the card says so plainly
+  const chip=phase==='soon'&&tm.pending?'notice':phase==='soon'&&ctx.u>SOON_DAYS?'wait':phase;
+  const accent={wait:'var(--wait)',soon:'var(--soon)',summons:'var(--summons)',notice:'var(--summons)'}[chip]||tm.accent; // the call-up is "soon" only within the last couple of months
   const head=`<div class="head"><span class="chip is-${chip}">${t('state.'+chip)}</span><h2>${esc(tm.name)}</h2>${tm.label?`<p class="label">${esc(tm.label)}</p>`:''}</div>`;
   const bar=(pct,l,r)=>p.showProgress?`<div class="bar" role="progressbar" aria-valuenow="${pct.toFixed(1)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i><em title="${t('half')}"></em></div><div class="meta"><span>${l}</span><span>${r}</span></div>`:'';
   let main;
   if(phase==='soon'){ // counting to the call-up; the service length itself is shown separately
     const left=s-now, d=Math.floor(left/DAY);
-    main=`${count(d,tp('unit.toStart',d),t('unit.toStartShort'),left,p)}<p class="sub">${t('then',{n:total,days:tp('days',total)})}</p>`;
+    main=tm.pending?`${count(d,tp('unit.toNotice',d),t('unit.toNoticeShort'),left,p)}<p class="sub">${t('noticeSub')}</p>`
+      :`${count(d,tp('unit.toStart',d),t('unit.toStartShort'),left,p)}<p class="sub">${t('then',{n:total,days:tp('days',total)})}</p>`;
   }else if(phase==='summons'){ // after a call-up notice nobody knows yet when he is back, until the admin confirms he has left
     main=`<p class="done">${t('summons.big')}</p><p class="sub">${t('summons.sub',{date:fmt(s)})}</p>`;
   }else if(phase==='serve'){
@@ -261,8 +264,8 @@ function card(tm,p,now){
     main=`<p class="done">${esc(tm.doneMessage||t('timer.defaultDone'))}</p><p class="sub">${d} ${tp('unit.home',d)}</p>`;
   }
   const st=p.showStatuses===false?'':statusFor(phase,tm,now,ctx);
-  return `<article class="card${chip==='summons'?' is-summons':''}" data-id="${tm.id}" style="--accent:${accent}">${head}${main}<div class="fill"></div>${st?`<p class="status">${esc(st)}</p>`:''}
-    <div class="dates">${fmt(s)} → ${phase==='summons'?'?':fmt(e)}</div></article>`;
+  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}" data-id="${tm.id}" style="--accent:${accent}">${head}${main}<div class="fill"></div>${st?`<p class="status">${esc(st)}</p>`:''}
+    <div class="dates" title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${tm.pending?`<b class="nt">${t('dates.notice')}</b> ${fmt(s)} → ?`:`${fmt(s)} → ${fmt(e)}`}</div></article>`;
 }
 // On phones the visitor can switch between one wide card and two squares per row; the admin's choice is the default
 const colsBtn=document.getElementById('colsBtn');
