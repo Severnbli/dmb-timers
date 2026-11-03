@@ -109,10 +109,19 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 @media(prefers-reduced-motion:reduce){.stamp.in{animation:none}}
 .tick{position:fixed;z-index:6;pointer-events:none;font:800 1rem/1 var(--sans);white-space:nowrap;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 80%,transparent)}
 .dates span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
-.shr{flex:none;display:grid;place-items:center;width:1.9em;height:1.5em;margin:-.3em -.3em -.3em 0;padding:0;border:0;border-radius:6px;background:none;color:var(--mute);cursor:pointer;transition:opacity .2s,color .2s}
+.shr{flex:none;display:grid;place-items:center;width:1.9em;height:1.5em;margin:-.3em -.3em -.3em 0;padding:0;border:0;border-radius:6px;background:none;color:var(--mute);cursor:pointer;
+ transition:opacity .35s ease,color .25s ease,background-color .25s ease,transform .25s cubic-bezier(.3,1.4,.5,1)}
+.shr:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);transform:scale(1.08)}
+.shr:active{transform:scale(.92)}
 .shr svg{width:1.25em;height:1.25em}
 .shr:hover{color:var(--accent)}.shr:focus-visible{outline:2px solid var(--ink);opacity:1}
-@media(hover:hover){.card:not(:hover) .shr{opacity:0}}
+@media(hover:hover){.card:not(:hover):not(:focus-within) .shr{opacity:0;transform:translateY(2px)}}
+.share-dlg[open]{animation:dlg-in .28s cubic-bezier(.2,.8,.3,1)}
+.share-dlg[open]::backdrop{animation:dlg-fade .28s ease-out}
+@keyframes dlg-in{from{opacity:0;transform:translateY(14px) scale(.97)}}
+@keyframes dlg-fade{from{opacity:0}}
+.share-dlg canvas{transition:opacity .2s}
+@media(prefers-reduced-motion:reduce){.share-dlg[open],.share-dlg[open]::backdrop{animation:none}}
 /* The card as a picture: a preview and the options */
 .share-dlg{width:min(460px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:14px 16px 16px;border:1px solid var(--edge);border-radius:20px;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px -20px rgb(0 0 0/.5)}
 .share-dlg::backdrop{background:rgb(10 12 8/.55);backdrop-filter:blur(3px)}
@@ -121,11 +130,12 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .share-dlg canvas{display:block;margin:0 auto;max-width:100%;max-height:min(56vh,520px);width:auto;height:auto;border-radius:12px;box-shadow:0 6px 20px -8px rgb(0 0 0/.35)}
 .sh-opts{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px;margin:12px 0}
 .seg{display:inline-flex;padding:3px;border-radius:999px;background:var(--track)}
-.seg button{font:600 .82rem/1 var(--sans);color:var(--mute);background:none;border:0;border-radius:999px;padding:8px 12px;cursor:pointer}
+.seg button{font:600 .82rem/1 var(--sans);color:var(--mute);background:none;border:0;border-radius:999px;padding:8px 12px;cursor:pointer;transition:background-color .25s,color .25s}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
 .sh-chk{display:flex;align-items:center;gap:6px;font-size:.88rem;color:var(--mute);cursor:pointer}
 .sh-act{display:flex;gap:8px}
-.sh-act button{flex:1;font:600 .95rem var(--sans);border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:none;color:var(--ink);cursor:pointer}
+.sh-act button{flex:1;font:600 .95rem var(--sans);border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:none;color:var(--ink);cursor:pointer;transition:transform .2s,filter .2s}
+.sh-act button:hover{filter:brightness(1.08)}.sh-act button:active{transform:scale(.97)}
 .sh-act button.pri{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 /* Everyone's service in one number; it runs one second faster for every person serving now */
@@ -148,13 +158,14 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .fire-btn .lbl{font-weight:600;font-size:.9rem}
 .fire-btn b{min-width:1ch;transition:transform .25s}
 .fire-btn b.bump{transform:scale(1.35)}
-.fire-btn:not(.lit){animation:fire-call 2.6s ease-in-out infinite} /* a quiet invitation while this visitor can add a log */
+.fire-btn::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;border:2px solid color-mix(in srgb,var(--fire) 60%,transparent);opacity:0}
+.fire-btn:not(.lit)::after{animation:fire-call 2.8s cubic-bezier(.25,.6,.35,1) infinite} /* a quiet invitation while this visitor can add a log */
 .fire-btn.lit{border-color:color-mix(in srgb,var(--fire) 55%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--fire) 25%,transparent),0 8px 30px -8px color-mix(in srgb,var(--fire) 65%,transparent),inset 0 1px 0 var(--hi)}
-.fire-btn.lit .fl{fill:url(#flame);stroke:none;animation:flame 1.3s ease-in-out infinite alternate}
-.fire-btn.lit .fl+.fl{fill:#fff3c4;animation-duration:.9s}
+.fire-btn.lit .fl{fill:url(#flame);stroke:none;animation:flame 2.6s ease-in-out infinite}
+.fire-btn.lit .fl+.fl{fill:#fff3c4;animation-duration:1.9s;animation-delay:-.7s}
 .fire-btn.away{translate:0 calc(100% + 40px);opacity:0;pointer-events:none}
-@keyframes fire-call{0%,100%{box-shadow:inset 0 1px 0 var(--hi),var(--shadow),0 0 0 0 color-mix(in srgb,var(--fire) 40%,transparent)}50%{box-shadow:inset 0 1px 0 var(--hi),var(--shadow),0 0 0 8px transparent}}
-@keyframes flame{0%{transform:scale(1,1) skewX(0)}50%{transform:scale(.94,1.06) skewX(-3deg)}100%{transform:scale(1.04,.95) skewX(3deg)}}
+@keyframes fire-call{0%{transform:scale(1);opacity:.75}75%,100%{transform:scale(1.1,1.32);opacity:0}}
+@keyframes flame{0%,100%{transform:scale(1,1) skewX(0)}25%{transform:scale(.97,1.04) skewX(-1.6deg)}50%{transform:scale(1.02,.98) skewX(.8deg)}75%{transform:scale(.98,1.03) skewX(1.6deg)}}
 .plus{position:fixed;z-index:6;pointer-events:none;font:800 1.1rem/1 var(--sans);color:var(--fire);text-shadow:0 1px 8px rgb(255 140 40/.5)}
 .fire-tip{position:fixed;z-index:6;right:max(16px,env(safe-area-inset-right));bottom:calc(max(16px,env(safe-area-inset-bottom)) + 66px);width:min(330px,calc(100% - 32px));
  padding:14px 16px;border-radius:18px;background:var(--ink);color:var(--surface);font-size:.9rem;line-height:1.4;box-shadow:0 14px 40px -12px rgb(0 0 0/.5);
@@ -288,10 +299,8 @@ function count(d,unit,short,ms,p){
 }
 const SOON_DAYS=60;
 const SHARE_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
-// The share button in a card's dates row opens the card as a picture (share.js). Cards are re-drawn every second, so a click
-// can lose its button between press and release: the release opens it, and click only serves the keyboard
-$.addEventListener('pointerup',e=>{const c=e.button===0&&e.target.closest?.('.shr')?.closest('.card');if(c)SHARE.open(c)});
-$.addEventListener('click',e=>{const c=e.detail===0&&e.target.closest?.('.shr')?.closest('.card');if(c)SHARE.open(c)});
+// The share button in a card's dates row opens the card as a picture (share.js)
+$.addEventListener('click',e=>{const c=e.target.closest?.('.shr')?.closest('.card');if(c)SHARE.open(c)});
 // Milestones of a service: the day a quarter, half or three quarters is served, and 100 / 30 / 7 / last day left
 function milestone(phase,s,e,now,d){
   if(phase==='done')return now-e<DAY?'demob':null; // demob day: the first 24 hours at home
@@ -299,7 +308,7 @@ function milestone(phase,s,e,now,d){
   for(const [k,p] of [['q1',25],['half',50],['q3',75]]){const at=now-(s+(e-s)*p/100);if(at>=0&&at<DAY)return k}
   return {100:'d100',30:'d30',7:'d7',0:'d0'}[d]||null;
 }
-// One-shot effects survive the 1 s re-render: each remembers when it started, and a re-drawn element continues it with a negative delay
+// One-shot effects: each remembers when it started in this page view, so it plays once
 const shown=new Map(); // effect key => time it first showed in this page view
 const once=(key,ms)=>{const now=performance.now();if(!shown.has(key))shown.set(key,now);const t=now-shown.get(key);return t<ms?t:-1}; // ms since start while running, else -1
 function card(tm,p,now){
@@ -328,8 +337,8 @@ function card(tm,p,now){
   }
   const st=p.showStatuses===false?'':statusFor(phase,tm,now,ctx);
   const ms=milestone(phase,s,e,now,Math.floor((e-now)/DAY));
-  let stamp='';if(ms){const a=once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${ms==='demob'?' big':''}${a>=0?' in':''}"${a>=0?` style="animation-delay:-${Math.round(a)}ms" data-new="${a<50?1:''}"`:''}>${t('ms.'+ms)}</div></div>`}
-  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''} style="--accent:${accent}${ms==='demob'?`;animation-delay:-${Math.round(performance.now()%2400)}ms`:''}">${head}${main}<div class="fill"></div>${stamp}${st?`<p class="status">${esc(st)}</p>`:''}
+  let stamp='';if(ms){const a=once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${ms==='demob'?' big':''}${a>=0?' in':''}"${a>=0&&a<50?' data-new="1"':''}>${t('ms.'+ms)}</div></div>`}
+  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''} style="--accent:${accent}">${head}${main}<div class="fill"></div>${stamp}${st?`<p class="status">${esc(st)}</p>`:''}
     <div class="dates"><span title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${tm.pending?`<b class="nt">${t('dates.notice')}</b> ${fmt(s)} → ?`:`${fmt(s)} → ${fmt(e)}`}</span><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></article>`;
 }
 // On phones the visitor can switch between one wide card and two squares per row; the admin's choice is the default
@@ -339,11 +348,25 @@ const COLS_ICON={1:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const cols=()=>{let v=null;try{v=+localStorage.getItem('cols')}catch{}return v===1||v===2?v:cfg?.page.phoneCols===2?2:1};
 function drawCols(){const next=cols()===2?1:2;colsBtn.innerHTML=COLS_ICON[next];colsBtn.title=t('cols.'+next);colsBtn.setAttribute('aria-label',colsBtn.title)} // the icon shows the layout a tap switches to
 colsBtn.onclick=()=>{const next=cols()===2?1:2;try{localStorage.setItem('cols',next)}catch{}fitted.clear();render()};
+// The page is re-drawn every second, but only what changed is touched: elements that stay keep their running animations,
+// hover transitions and focus. sync() makes a's children look like b's, reusing a's nodes where the tags match
+function sync(a,b){
+  const ac=[...a.childNodes],bc=[...b.childNodes];
+  bc.forEach((n,i)=>{const o=ac[i];
+    if(!o)a.append(n);
+    else if(o.nodeType!==n.nodeType||o.nodeName!==n.nodeName)o.replaceWith(n);
+    else if(o.nodeType!==1){if(o.data!==n.data)o.data=n.data}
+    else{for(const {name} of [...o.attributes])if(!n.hasAttribute(name))o.removeAttribute(name);
+      for(const {name,value} of [...n.attributes])if(o.getAttribute(name)!==value)o.setAttribute(name,value);
+      sync(o,n)}});
+  for(let i=bc.length;i<ac.length;i++)ac[i].remove();
+}
 function render(){
   if(!cfg)return;
   const now=Date.now()+offset, ts=[...cfg.timers].sort((a,b)=>new Date(a.end)-new Date(b.end));
   $.className=ts.length===1?'one':cols()===2?'two':'';colsBtn.hidden=ts.length<2;drawCols();
-  $.innerHTML=ts.length?ts.map(x=>card(x,cfg.page,now)).join(''):`<p class="empty">${t('empty')}</p>`;
+  const tpl=document.createElement('template');tpl.innerHTML=ts.length?ts.map(x=>card(x,cfg.page,now)).join(''):`<p class="empty">${t('empty')}</p>`;
+  sync($,tpl.content);
   fitCards();
   for(const c of $.querySelectorAll('.card[data-day]')){const d=+c.dataset.day,was=lastDay.get(c.dataset.id);lastDay.set(c.dataset.id,d);if(was!==undefined&&d!==was)dayTick(c,d-was)}
   if(!matchMedia('(prefers-reduced-motion:reduce)').matches)for(const el of $.querySelectorAll('.stamp[data-new="1"]')){ // sparks as the stamp hits
@@ -470,12 +493,15 @@ function tip(html,ms=3800){ // a bubble over the button: the first-visit hint (s
 const LOG_SVG='<svg viewBox="0 0 50 20" aria-hidden="true"><rect x="1" y="3" width="42" height="14" rx="7" fill="var(--bark)"/><path d="M9 7.5h17M15 12.5h19" stroke="var(--grain)" stroke-width="1.4" stroke-linecap="round"/><ellipse cx="42" cy="10" rx="6.5" ry="7" fill="var(--core)" stroke="var(--bark)" stroke-width="1.5"/><ellipse cx="42" cy="10" rx="3.2" ry="3.6" fill="none" stroke="var(--ring)" stroke-width="1.2"/></svg>';
 function dropLog(x,y,land,kind='oak'){
   if(matchMedia('(prefers-reduced-motion:reduce)').matches)return land();
-  const el=document.createElement('div'),dx=(Math.random()-.5)*60,turn=Math.random()<.5?-1:1;el.className='log '+kind;el.innerHTML=LOG_SVG;
+  const el=document.createElement('div'),tilt=(Math.random()<.5?-1:1)*(4+Math.random()*6);el.className='log '+kind;el.innerHTML=LOG_SVG;
   el.style.left=x+'px';el.style.top=y+'px';document.body.append(el);
-  el.animate([{transform:`translate(-50%,-50%) translate(${dx}px,-220px) rotate(${turn*-70}deg)`,opacity:0,easing:'cubic-bezier(.5,0,1,.6)'},
-    {transform:`translate(-50%,-50%) translate(${dx*.8}px,-180px) rotate(${turn*-55}deg)`,opacity:1,offset:.12,easing:'cubic-bezier(.45,0,1,.7)'},
-    {transform:`translate(-50%,-50%) translate(0,0) rotate(${turn*6}deg)`,opacity:1,offset:.78,easing:'ease-out'},
-    {transform:'translate(-50%,-50%) translate(0,6px) rotate(0) scale(.55)',opacity:0}],{duration:720}).onfinish=()=>el.remove();
+  const at=(dy,r,s=1,sy=s)=>`translate(-50%,-50%) translate(0,${dy}px) rotate(${r}deg) scale(${s},${sy})`;
+  el.animate([ // straight down with gravity, a small squash on the flame, then it sinks into the button
+    {transform:at(-240,tilt),opacity:0,easing:'cubic-bezier(.55,0,1,.45)'},
+    {transform:at(-200,tilt),opacity:1,offset:.1,easing:'cubic-bezier(.5,0,1,.5)'},
+    {transform:at(0,tilt*.3),offset:.7,easing:'ease-out'},
+    {transform:at(-5,0,1.08,.85),offset:.8,easing:'ease-in'},
+    {transform:at(10,0,.4),opacity:0}],{duration:800}).onfinish=()=>el.remove();
   setTimeout(land,560);
 }
 // Wood types: mostly oak, sometimes birch (crackles) or pine (resin pops), rarely a golden log. Only for the show: every log counts as one
