@@ -16,7 +16,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Demob day.** For the first 24 hours after a timer ends, its card glows gold, carries a big "Demob!" stamp and fires salutes of sparks.
 
-**Funny statuses.** Each card shows a short status that follows the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Every status has its own time window, so nobody is waiting at the station two days early.
+**Funny statuses.** Pictures shared from a card carry a short status that follows the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Every status has its own time window, so nobody is waiting at the station two days early. The cards on the page leave them out, so the numbers get the room.
 
 **Shared counter.** Above the cards, everyone's time served is added up into one number (or the time left for everyone, if you choose). Every second it adds one second for each person serving now, so with five people serving, the seconds run five times faster.
 
@@ -36,7 +36,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Looks.** A topographic map background with a slow wave of light running over it, glass cards, and light and dark themes (they follow the system, or switch with the sun/moon button). The interface is in English, Russian and Belarusian.
 
-**Phones.** Each card is a wide row with big digits. A button in the header switches to two small squares per row and back, and the page remembers the choice. In both layouts the unit goes under the number, so the number gets the full width; the small squares leave out the funny status to make room for it. The header fits on one line, and the language switch becomes one button that steps through the languages.
+**Phones.** Each card is a wide row with big digits. A button in the header switches to two small squares per row and back, and the page remembers the choice. As on a computer, the unit goes under the number, so the number gets the full width. The header fits on one line, and the language switch becomes one button that steps through the languages.
 
 ## Quick start
 
@@ -135,7 +135,7 @@ The tab also shows the current count and when it starts over, with a **Start ove
 ### Settings
 
 - **Look**: page title and the map background.
-- **Cards**: hours, minutes and seconds next to the days, seconds, progress bars, statuses, and the default cards per row on phones (one wide card or two small squares); visitors can switch it with the button in the header.
+- **Cards**: hours, minutes and seconds next to the days, seconds, progress bars, funny statuses on shared pictures, and the default cards per row on phones (one wide card or two small squares); visitors can switch it with the button in the header.
 - **Shared counter**: show or hide it, and whether it counts the time served or the time left. Unconfirmed call-ups are not counted.
 
 ### History
