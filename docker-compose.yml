@@ -4,9 +4,29 @@ services:
     build: .
     env_file: .env
     ports:
-      - "777:3000"
+      - "${HTTP_BIND:-0.0.0.0}:777:3000" # with the https profile set HTTP_BIND=127.0.0.1, so the site is only reachable through Caddy
     volumes:
       - timer-data:/data
     restart: unless-stopped
+  # HTTPS with an automatic certificate: set DOMAIN, TRUST_PROXY=1 and HTTP_BIND=127.0.0.1 in .env,
+  # then run `docker compose --profile https up -d`
+  caddy:
+    image: caddy:2-alpine
+    profiles: [https]
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - timer
+    restart: unless-stopped
 volumes:
   timer-data:
+  caddy-data:
+  caddy-config:

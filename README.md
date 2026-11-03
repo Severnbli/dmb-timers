@@ -60,7 +60,25 @@ Node.js 18 or newer is enough, there is nothing to install:
 ADMIN_PASSWORD=change-me DATA_DIR=./data TZ=Europe/Minsk node server.js
 ```
 
-If the site is reachable from the internet, put it behind a reverse proxy with HTTPS.
+### HTTPS
+
+If the site is reachable from the internet, serve it over HTTPS. The easiest way is the bundled [Caddy](https://caddyserver.com) setup, which gets and renews a free Let's Encrypt certificate on its own:
+
+1. Point your domain's DNS at the server and open ports 80 and 443.
+2. In `.env` set `DOMAIN=timers.example.com`, `TRUST_PROXY=1` and `HTTP_BIND=127.0.0.1` (so port 777 is no longer open to the world).
+3. Run `docker compose --profile https up -d`.
+
+You can also use your own reverse proxy (set `TRUST_PROXY=1` and pass `X-Forwarded-For` and `X-Forwarded-Proto`), or let the app serve HTTPS itself with `TLS_CERT` and `TLS_KEY` (it re-reads them every 12 hours, so renewed certificates are picked up).
+
+### Security
+
+- Over HTTPS the server sends HSTS, and the admin cookie is marked `Secure`.
+- Pages carry a strict Content-Security-Policy (scripts only from this server, inline ones by a one-time nonce), cannot be framed, and send no referrer.
+- Changes are only accepted from the site itself: cross-site requests are refused, and admin requests must be JSON (on top of the `SameSite=Strict` cookie).
+- Logging out revokes the session on the server. Five wrong passwords lock an address for a minute, and only a salted hash of the address is kept.
+- Behind a proxy, the visitor's address is the last `X-Forwarded-For` entry (the one your proxy added), so clients cannot fake it.
+- Slow requests time out, request bodies are capped, and `config.json` is written atomically and readable only by the server's user.
+- The server warns at start if `ADMIN_PASSWORD` or `SESSION_SECRET` is the example value or the password is short.
 
 ## Environment variables
 
@@ -71,7 +89,11 @@ If the site is reachable from the internet, put it behind a reverse proxy with H
 | `SESSION_HOURS` | `12` | How long an admin session lasts |
 | `TZ` | `Europe/Minsk` | Time zone for month arithmetic (start + 6 or 12 months) and for status timing (seasons, wake-up, lights-out) |
 | `PORT` | `3000` | HTTP port inside the container |
-| `TRUST_PROXY` | (off) | Set to `1` behind a reverse proxy, so the login and fire button limits see the visitor's address from `X-Forwarded-For` |
+| `TRUST_PROXY` | (off) | Set to `1` behind a reverse proxy, so the login and fire button limits see the visitor's address from `X-Forwarded-For`, and HTTPS is detected from `X-Forwarded-Proto` |
+| `DOMAIN` | (none) | Domain for the bundled Caddy HTTPS setup (`--profile https`) |
+| `HTTP_BIND` | `0.0.0.0` | Address port 777 is published on in `docker-compose.yml`; `127.0.0.1` with Caddy |
+| `TLS_CERT`, `TLS_KEY` | (none) | PEM certificate and key paths: the app then serves HTTPS itself |
+| `HTTP_PORT` | (none) | With `TLS_CERT`/`TLS_KEY`: a plain HTTP port that only redirects to HTTPS |
 | `DATA_DIR` | `/data` | Where `config.json` is stored |
 
 ## Admin panel
@@ -148,6 +170,7 @@ The page picks a status at random, weighted by `w`, from those whose window fits
 
 - No cookies for visitors, nothing loaded from third parties.
 - The fire button keeps only a shared count. To allow one log per visitor, a salted hash of the IP address stays in memory until the wait is over. It is never written to disk.
+- Failed admin logins are also tracked by a salted hash of the IP address only, in memory, for a few minutes.
 - Names and dates entered in the admin panel are public, so get people's consent before you add them.
 
 The full notice is at `/privacy` and is linked from every page.
