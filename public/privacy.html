@@ -68,10 +68,12 @@ section[lang]{display:none}
 <p>The site administrator enters names, service dates, labels and messages. This information is public: anyone who opens the page can see it. It is stored on the server in a single file and is deleted when the administrator deletes the timer. If you are shown here and want your data changed or removed, ask the administrator of this site.</p>
 <h2>Administrators</h2>
 <ul>
-<li>Logging in sets one strictly necessary cookie, <code>session</code>. It is HttpOnly, only valid for this site, and expires after the session time (12 hours by default) or when you log out.</li>
-<li>To slow down password guessing, the server keeps the IP address of failed logins in memory for a few minutes at most. It is not written to disk and disappears on restart.</li>
+<li>Logging in sets one strictly necessary cookie, <code>session</code>. It is HttpOnly, only valid for this site, sent only over HTTPS when the site uses it, and expires after the session time (12 hours by default). Logging out ends the session on the server too, so a copied cookie stops working.</li>
+<li>To slow down password guessing, the server keeps a salted hash of the IP address of failed logins (never the address itself) in memory for a few minutes at most. It is not written to disk, cannot be turned back into the address, and disappears on restart.</li>
 <li>The last 30 admin changes (action, timer name, time) are stored to show the change history.</li>
 </ul>
+<h2>Security</h2>
+<p>When the site is set up with HTTPS, everything between your browser and the site is encrypted, and browsers are told to always use HTTPS for it. Pages may only run scripts from this server and cannot be embedded in other sites, and other sites cannot make changes here through your browser.</p>
 <h2>Server logs</h2>
 <p>The application itself does not write access logs. The hosting provider or a reverse proxy in front of this site may keep standard technical logs (such as IP address and requested page). The site operator is responsible for those.</p>
 <h2>Source code</h2>
@@ -94,10 +96,12 @@ section[lang]{display:none}
 <p>Имена, даты службы, подписи и сообщения вводит администратор сайта. Эта информация публична: её видит любой, кто открыл страницу. Она хранится на сервере в одном файле и удаляется, когда администратор удаляет таймер. Если вы есть на этой странице и хотите изменить или удалить свои данные, обратитесь к администратору сайта.</p>
 <h2>Администраторы</h2>
 <ul>
-<li>При входе устанавливается один строго необходимый файл cookie – <code>session</code>. Он HttpOnly, действует только для этого сайта и истекает по окончании сессии (по умолчанию 12 часов) или при выходе.</li>
-<li>Чтобы затруднить подбор пароля, сервер хранит в памяти не дольше нескольких минут IP-адреса неудачных попыток входа. Они не записываются на диск и пропадают при перезапуске.</li>
+<li>При входе устанавливается один строго необходимый файл cookie – <code>session</code>. Он HttpOnly, действует только для этого сайта, передаётся только по HTTPS, если сайт его использует, и истекает по окончании сессии (по умолчанию 12 часов). Выход завершает сессию и на сервере, так что скопированный cookie перестаёт работать.</li>
+<li>Чтобы затруднить подбор пароля, сервер хранит в памяти не дольше нескольких минут солёный хеш IP-адреса неудачных попыток входа (но не сам адрес). Он не записывается на диск, по нему нельзя восстановить адрес, и он пропадает при перезапуске.</li>
 <li>Для истории изменений хранятся последние 30 действий администратора (действие, имя таймера, время).</li>
 </ul>
+<h2>Безопасность</h2>
+<p>Если сайт настроен на HTTPS, всё, что передаётся между вашим браузером и сайтом, зашифровано, и браузеру указано всегда открывать сайт по HTTPS. Страницы могут запускать скрипты только с этого сервера, их нельзя встроить в другие сайты, а другие сайты не могут ничего изменить здесь через ваш браузер.</p>
 <h2>Журналы сервера</h2>
 <p>Само приложение не ведёт журналы запросов. Хостинг-провайдер или обратный прокси перед сайтом могут вести стандартные технические журналы (например, IP-адрес и запрошенную страницу). За них отвечает владелец сайта.</p>
 <h2>Исходный код</h2>
@@ -120,10 +124,12 @@ section[lang]{display:none}
 <p>Імёны, даты службы, подпісы і паведамленні ўводзіць адміністратар сайта. Гэтая інфармацыя публічная: яе бачыць кожны, хто адкрыў старонку. Яна захоўваецца на серверы ў адным файле і выдаляецца, калі адміністратар выдаляе таймер. Калі вы ёсць на гэтай старонцы і хочаце змяніць ці выдаліць свае даныя, звярніцеся да адміністратара сайта.</p>
 <h2>Адміністратары</h2>
 <ul>
-<li>Пры ўваходзе ўсталёўваецца адзін строга неабходны файл cookie – <code>session</code>. Ён HttpOnly, дзейнічае толькі для гэтага сайта і сканчаецца па заканчэнні сесіі (па змаўчанні 12 гадзін) або пры выхадзе.</li>
-<li>Каб абцяжарыць падбор пароля, сервер захоўвае ў памяці не даўжэй за некалькі хвілін IP-адрасы няўдалых спроб уваходу. Яны не запісваюцца на дыск і знікаюць пры перазапуску.</li>
+<li>Пры ўваходзе ўсталёўваецца адзін строга неабходны файл cookie – <code>session</code>. Ён HttpOnly, дзейнічае толькі для гэтага сайта, перадаецца толькі па HTTPS, калі сайт яго выкарыстоўвае, і сканчаецца па заканчэнні сесіі (па змаўчанні 12 гадзін). Выхад завяршае сесію і на серверы, так што скапіяваны cookie перастае працаваць.</li>
+<li>Каб абцяжарыць падбор пароля, сервер захоўвае ў памяці не даўжэй за некалькі хвілін салёны хэш IP-адраса няўдалых спроб уваходу (але не сам адрас). Ён не запісваецца на дыск, па ім нельга аднавіць адрас, і ён знікае пры перазапуску.</li>
 <li>Для гісторыі змен захоўваюцца апошнія 30 дзеянняў адміністратара (дзеянне, імя таймера, час).</li>
 </ul>
+<h2>Бяспека</h2>
+<p>Калі сайт наладжаны на HTTPS, усё, што перадаецца паміж вашым браўзерам і сайтам, зашыфравана, і браўзеру ўказана заўсёды адкрываць сайт па HTTPS. Старонкі могуць запускаць скрыпты толькі з гэтага сервера, іх нельга ўбудаваць у іншыя сайты, а іншыя сайты не могуць нічога змяніць тут праз ваш браўзер.</p>
 <h2>Журналы сервера</h2>
 <p>Сама праграма не вядзе журналы запытаў. Хостынг-правайдар або зваротны проксі перад сайтам могуць весці стандартныя тэхнічныя журналы (напрыклад, IP-адрас і запытаную старонку). За іх адказвае ўладальнік сайта.</p>
 <h2>Зыходны код</h2>

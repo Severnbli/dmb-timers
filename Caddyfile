@@ -1,0 +1,6 @@
+# HTTPS in front of the timers: Caddy gets and renews a free Let's Encrypt certificate for DOMAIN on its own
+# and sends plain HTTP visitors to HTTPS. Used by `docker compose --profile https up -d` (see the README)
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy timer:3000
+}
