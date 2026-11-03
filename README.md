@@ -10,7 +10,11 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Timer cards.** One card per person, with the days left, a progress bar and the current day of service. On the last day, hours, minutes and seconds become the big number. Each state has its own color: civilian (green), starts soon (orange), serving, and home.
 
-**Call-up notices.** The start date can be a call-up notice. From that date the card says "Not clear yet" instead of counting down, until the admin confirms that the person has left.
+**Call-up notices.** The start date can be a call-up notice. Until then the card counts the days until the notice and says plainly that this is the notice date, not the start of service. From that date the card says "Not clear yet" instead of counting down, until the admin confirms that the person has left.
+
+**Milestones.** On the day a quarter, half or three quarters is served, and with 100, 30 and 7 days left and on the last day, the card carries an ink stamp that lands with a burst of sparks. When the day count changes while the page is open, "-1 day" floats off the number.
+
+**Demob day.** For the first 24 hours after a timer ends, its card glows gold, carries a big "Demob!" stamp and fires salutes of sparks.
 
 **Funny statuses.** Each card shows a short status that follows the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Every status has its own time window, so nobody is waiting at the station two days early.
 
@@ -21,7 +25,9 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 - Each tap adds a log to a shared fire. A visitor can add one log every 12 hours (the browser remembers when, in local storage).
 - The count starts over from zero every 45 days.
 - The more logs, the more sparks of fire dust drift over the cards and the bigger and hotter they are. The sparks cover the whole page and scroll with it.
-- A tap throws a burst of sparks. Logs added by other visitors arrive as sparks from below.
+- A tap drops a log into the fire with a burst of sparks. Most logs are oak; some are birch (crackling white sparks) or pine (resin pops), and one in forty is golden. Logs added by other visitors arrive as sparks from below.
+- The fire remembers its record, the most logs it ever had, and a tap that beats it is celebrated.
+- Tap the burning fire five times quickly and see what happens.
 - On the first visit, a short tip explains the button.
 
 **Looks.** A topographic map background with a slow wave of light running over it, glass cards, and light and dark themes (they follow the system, or switch with the sun/moon button). The interface is in English, Russian and Belarusian.
