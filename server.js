@@ -53,7 +53,7 @@ const newTimer = (o = {}) => {
 // The fire dust grows from dustMin to dustMax sparks (per 1440x900 screen) as the logs reach dustFull
 const defaults = () => ({ pageTitle: '', showBackground: true, showClock: false, showSeconds: true, showProgress: true, showStatuses: true,
   phoneCols: 1, counterOn: true, counterMode: 'served', sparkOn: true, sparkHours: 12, sparkDays: 45, dustOn: true, dustMin: 15, dustMax: 120, dustFull: 100,
-  sparks: 0, sparksSince: now().toISOString(), timers: [], history: [] });
+  sparks: 0, sparksRecord: 0, sparksSince: now().toISOString(), timers: [], history: [] });
 const NUMS = { sparkHours: [1, 720], sparkDays: [1, 365], dustMin: [0, 300], dustMax: [0, 300], dustFull: [1, 100000] }; // allowed ranges
 const OLD_DEFAULTS = { label: 'Until demobilization', doneMessage: 'Demobilized. Welcome home!', pageTitle: 'Demobilization timers' };
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -70,6 +70,7 @@ try {
   cfg.history = cfg.history.filter(h => h.act !== 'wordsCleared');
   cfg.timers = cfg.timers.map(t => ({ id: rid(), mode: 'custom', ...t })); // old timers keep their exact end date
   // English defaults from older versions become empty, so every visitor sees them in their own language
+  cfg.sparksRecord = Math.max(cfg.sparksRecord || 0, cfg.sparks || 0); // the most logs the fire ever had; it outlives the count starting over
   if (cfg.pageTitle === OLD_DEFAULTS.pageTitle) cfg.pageTitle = '';
   for (const t of cfg.timers) for (const k of ['label', 'doneMessage']) if (t[k] === OLD_DEFAULTS[k]) t[k] = '';
 } catch {}
@@ -95,8 +96,8 @@ setInterval(() => rollover() && save(), 36e5).unref();
 const SALT = crypto.randomBytes(16);
 const ipKey = ip => crypto.createHmac('sha256', SALT).update(String(ip)).digest('base64');
 const pub = () => ({ page: Object.fromEntries(PAGE_KEYS.map(k => [k, cfg[k]])), timers: cfg.timers,
-  sparks: { count: cfg.sparks }, serverTime: now().toISOString(), tz: TZ });
-const full = () => ({ ...pub(), page: { ...pub().page, sparkDays: cfg.sparkDays }, sparks: { count: cfg.sparks, since: cfg.sparksSince,
+  sparks: { count: cfg.sparks, record: cfg.sparksRecord }, serverTime: now().toISOString(), tz: TZ });
+const full = () => ({ ...pub(), page: { ...pub().page, sparkDays: cfg.sparkDays }, sparks: { count: cfg.sparks, record: cfg.sparksRecord, since: cfg.sparksSince,
   resetAt: new Date(+new Date(cfg.sparksSince) + cfg.sparkDays * DAY).toISOString() }, history: cfg.history });
 // History keeps an action code + name, so the admin page can show it in any language
 const log = (act, name) => { cfg.history = [{ at: now().toISOString(), act, ...(name !== undefined && { name }) }, ...cfg.history].slice(0, 30); };
@@ -192,8 +193,9 @@ async function handle(req, res) {
     if (M === 'POST' && url === '/api/spark') { // a visitor adds a log to the fire
       if (!cfg.sparkOn) return err(res, 403, 'spark_off');
       if (rollover()) save();
-      cfg.sparks++; save();
-      return json(res, 200, { count: cfg.sparks });
+      cfg.sparks++;
+      const newRecord = cfg.sparks > cfg.sparksRecord; if (newRecord) cfg.sparksRecord = cfg.sparks;
+      save(); return json(res, 200, { count: cfg.sparks, record: cfg.sparksRecord, newRecord });
     }
     if (M === 'GET' && url === '/healthz') return json(res, 200, { ok: true });
 

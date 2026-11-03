@@ -271,7 +271,7 @@ function render(){
   $('pageTitle').placeholder=t('page.defaultTitle');
   $('panel').querySelectorAll('[data-k]').forEach(el=>{const v=S.page[el.dataset.k]??S[el.dataset.k];el.type==='checkbox'?el.checked=v:el.value=v});
   const sp=S.sparks||{count:0};$('sparkCount').textContent=t('fa.count',{n:sp.count.toLocaleString(I18N.lang)});
-  $('sparkReset').textContent=sp.resetAt?t('fa.resetAt',{date:new Date(sp.resetAt).toLocaleString(I18N.lang,{dateStyle:'medium',timeStyle:'short'})}):'';
+  $('sparkReset').textContent=[sp.record?t('fa.record',{n:sp.record.toLocaleString(I18N.lang)}):'',sp.resetAt?t('fa.resetAt',{date:new Date(sp.resetAt).toLocaleString(I18N.lang,{dateStyle:'medium',timeStyle:'short'})}):''].filter(Boolean).join(' · ');
   $('list').innerHTML=S.timers.map(tm=>`<div class="person" data-name="${esc(tm.name.toLowerCase())}" style="--c:${tm.accent}">
     <button type="button" class="open" data-open="${tm.id}"><span><b>${esc(tm.name)}</b><small>${summary(tm)}</small></span></button>${tm.pending?`<span class="pill">${t('pending.badge')}</span>${Date.now()>=+new Date(tm.start)?`<button type="button" class="ok" data-act="confirm" data-id="${tm.id}" data-name="${esc(tm.name)}">${t('btn.confirm')}</button>`:''}`:''}</div>`).join('')||`<p class="empty">${t('admin.emptyTimers')}</p>`;
   $('find').hidden=S.timers.length<6;find();
