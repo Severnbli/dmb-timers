@@ -2,7 +2,7 @@
 
 A small self-hosted website with demob (demobilization) timers: countdowns to the end of military service for one or many people on one page.
 
-![Timers page in a browser and on a phone, dark theme](docs/screenshots/hero-dark.png)
+![Timers page in a browser and on a phone, dark theme](docs/screenshots/hero-dark-v2.png)
 
 No database, no dependencies, no tracking: one Node.js file and one JSON config file.
 
@@ -10,7 +10,11 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Timer cards.** One card per person, with the days left, a progress bar and the current day of service. On the last day, hours, minutes and seconds become the big number. Each state has its own color: civilian (green), starts soon (orange), serving, and home.
 
-**Call-up notices.** The start date can be a call-up notice. From that date the card says "Not clear yet" instead of counting down, until the admin confirms that the person has left.
+**Call-up notices.** The start date can be a call-up notice. Until then the card counts the days until the notice and says plainly that this is the notice date, not the start of service. From that date the card says "Not clear yet" instead of counting down, until the admin confirms that the person has left.
+
+**Milestones.** On the day a quarter, half or three quarters is served, and with 100, 30 and 7 days left and on the last day, the card carries an ink stamp that lands with a burst of sparks. When the day count changes while the page is open, "-1 day" floats off the number.
+
+**Demob day.** For the first 24 hours after a timer ends, its card glows gold, carries a big "Demob!" stamp and fires salutes of sparks.
 
 **Funny statuses.** Each card shows a short status that follows the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Every status has its own time window, so nobody is waiting at the station two days early.
 
@@ -18,11 +22,17 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Fire button.** A button in the corner lets visitors show the guys that someone is visiting and waiting for them:
 
-- Each tap adds a log to a shared fire. One visitor (IP address) can add one log every 12 hours.
+- Each tap adds a log to a shared fire. A visitor can add one log every 12 hours (the browser remembers when, in local storage).
 - The count starts over from zero every 45 days.
-- The more logs, the more sparks of fire dust drift over the cards, the bigger and hotter they are, and the brighter the glow from the bottom of the screen.
-- A tap throws a burst of sparks. Logs added by other visitors arrive as sparks from below.
+- The more logs, the more sparks of fire dust drift over the cards and the bigger and hotter they are. The sparks cover the whole page and scroll with it.
+- A tap drops a log into the fire with a burst of sparks. Most logs are oak; some are birch (crackling white sparks) or pine (resin pops), and one in forty is golden. Logs added by other visitors arrive as sparks from below.
+- The fire remembers its record, the most logs it ever had, and a tap that beats it is celebrated.
+- Tap the burning fire five times quickly and see what happens.
 - On the first visit, a short tip explains the button.
+
+**Share as a picture.** Each card has a share button in its dates row (it shows on hover with a mouse, and is always there on touch screens). It turns the card into a picture: the page title, the name, the big number, the progress, today's status, the milestone stamp, the dates and the date of the snapshot. Choose light or dark, a post (4:5) or story (9:16) size, and whether to hide the dates, then share it through the phone's share menu or save the PNG. The picture is drawn in the browser, and nothing is sent to the server.
+
+<p align="center"><img src="docs/screenshots/share.png" alt="A card shared as a picture" width="360"></p>
 
 **Looks.** A topographic map background with a slow wave of light running over it, glass cards, and light and dark themes (they follow the system, or switch with the sun/moon button). The interface is in English, Russian and Belarusian.
 
@@ -89,7 +99,7 @@ You can also use your own reverse proxy (set `TRUST_PROXY=1` and pass `X-Forward
 | `SESSION_HOURS` | `12` | How long an admin session lasts |
 | `TZ` | `Europe/Minsk` | Time zone for month arithmetic (start + 6 or 12 months) and for status timing (seasons, wake-up, lights-out) |
 | `PORT` | `3000` | HTTP port inside the container |
-| `TRUST_PROXY` | (off) | Set to `1` behind a reverse proxy, so the login and fire button limits see the visitor's address from `X-Forwarded-For`, and HTTPS is detected from `X-Forwarded-Proto` |
+| `TRUST_PROXY` | (off) | Set to `1` behind a reverse proxy, so the login limit sees the visitor's address from `X-Forwarded-For`, and HTTPS is detected from `X-Forwarded-Proto` |
 | `DOMAIN` | (none) | Domain for the bundled Caddy HTTPS setup (`--profile https`) |
 | `HTTP_BIND` | `0.0.0.0` | Address port 777 is published on in `docker-compose.yml`; `127.0.0.1` with Caddy |
 | `TLS_CERT`, `TLS_KEY` | (none) | PEM certificate and key paths: the app then serves HTTPS itself |
@@ -113,7 +123,7 @@ The panel has four tabs and remembers the last one you opened. Everything except
 | Setting | Default | What it does |
 | --- | --- | --- |
 | Show the fire button | on | Shows or hides the button |
-| One log per visitor (IP), hours | `12` | How long one visitor waits between logs |
+| One log per visitor, hours | `12` | How long one visitor waits between logs |
 | Count starts over every, days | `45` | The log count goes back to zero after this many days |
 | Sparks drift over the page | on | Shows or hides the fire dust |
 | Sparks with no logs | `15` | Sparks on a 1440×900 screen when the fire is empty (smaller screens get fewer) |
@@ -169,8 +179,9 @@ The page picks a status at random, weighted by `w`, from those whose window fits
 ## Privacy
 
 - No cookies for visitors, nothing loaded from third parties.
-- The fire button keeps only a shared count. To allow one log per visitor, a salted hash of the IP address stays in memory until the wait is over. It is never written to disk.
-- Failed admin logins are also tracked by a salted hash of the IP address only, in memory, for a few minutes.
+- The fire button keeps only a shared count. The wait between one visitor's logs is kept in their browser's local storage, not on the server.
+- Pictures of cards are drawn in the visitor's browser; nothing about them reaches the server.
+- Failed admin logins are tracked by a salted hash of the IP address only, in memory, for a few minutes.
 - Names and dates entered in the admin panel are public, so get people's consent before you add them.
 
 The full notice is at `/privacy` and is linked from every page.

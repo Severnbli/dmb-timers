@@ -65,7 +65,8 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
  color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);white-space:nowrap}
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .chip.is-soon::before,.chip.is-summons::before{animation:pulse 1.6s ease-in-out infinite}
-.card.is-summons{border:1.5px dashed var(--accent)}
+.card.is-summons,.card.is-notice{border:1.5px dashed var(--accent)}
+.dates .nt{font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;font-size:.92em}
 @keyframes pulse{50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.chip.is-soon::before,.chip.is-summons::before{animation:none}}
 .count{display:flex;align-items:flex-start;gap:.25em 8px;margin:8px 0 0}
@@ -83,7 +84,7 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .status::before{content:"\201C";position:absolute;left:7px;top:3px;font:700 1.2rem/1 Georgia,serif;color:var(--accent)}
 .done{margin:8px 0 0;font:800 1.25rem/1.1 var(--sans);letter-spacing:-.02em;color:var(--accent);overflow-wrap:anywhere}
 .meta span{overflow:hidden;text-overflow:ellipsis}
-.dates{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);color:var(--mute);font-size:.68rem;font-variant-numeric:tabular-nums}
+.dates{display:flex;align-items:center;gap:6px;white-space:nowrap;margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);color:var(--mute);font-size:.68rem;font-variant-numeric:tabular-nums}
 .one .card{padding:clamp(18px,4vw,28px)}
 .one h2{font-size:clamp(1.15rem,3vw,1.4rem)}
 .one .label{font-size:.9rem}
@@ -91,6 +92,41 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .one .unit{font-size:clamp(.85rem,2.4vw,1rem)}
 .one .clock{font-size:clamp(1rem,3.5vw,1.3rem)}
 .one .done{font-size:clamp(1.8rem,7vw,2.8rem)}
+/* Milestones: an ink stamp on the card for the whole day; it lands once per page view, with a burst of sparks */
+/* Demob day: a gold edge that breathes, a big stamp and a salute of sparks */
+.card.is-demob{border:1.5px solid #e2a93b;animation:demob 2.4s ease-in-out infinite alternate}
+@keyframes demob{from{box-shadow:var(--shadow),0 0 0 0 rgb(240 170 60/.0),0 0 18px -6px rgb(255 170 60/.5)}to{box-shadow:var(--shadow),0 0 0 3px rgb(240 170 60/.25),0 0 42px -4px rgb(255 160 50/.75)}}
+.stamp.big{font-size:1.15rem;padding:4px 14px;border-width:3px;bottom:auto;top:44%;right:14px;transform:rotate(-12deg);--r:-12deg}
+@container card (max-width:200px){.stamp.big{font-size:.8rem;padding:2px 8px}}
+@media(prefers-reduced-motion:reduce){.card.is-demob{animation:none;box-shadow:var(--shadow),0 0 0 3px rgb(240 170 60/.25)}}
+.fxl{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;border-radius:inherit} /* card effects; clipped, so they never count as overflow when the digits are fitted */
+.stamp{position:absolute;right:12px;bottom:34px;padding:3px 9px;border:2.5px solid var(--accent);border-radius:8px;color:var(--accent);
+ background:color-mix(in srgb,var(--surface) 55%,transparent);font:800 .8rem/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;
+ transform:rotate(-9deg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 30%,transparent);opacity:.92}
+.stamp.in{animation:stamp-in .7s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes stamp-in{0%{transform:rotate(var(--r,-9deg)) scale(2.6);opacity:0}55%{transform:rotate(var(--r,-9deg)) scale(.9);opacity:1}100%{transform:rotate(var(--r,-9deg)) scale(1);opacity:.92}}
+@container card (max-width:200px){.stamp{font-size:.56rem;padding:2px 5px;border-width:2px;right:6px;bottom:24px}}
+@media(prefers-reduced-motion:reduce){.stamp.in{animation:none}}
+.tick{position:fixed;z-index:6;pointer-events:none;font:800 1rem/1 var(--sans);white-space:nowrap;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 80%,transparent)}
+.dates span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.shr{flex:none;display:grid;place-items:center;width:1.9em;height:1.5em;margin:-.3em -.3em -.3em 0;padding:0;border:0;border-radius:6px;background:none;color:var(--mute);cursor:pointer;transition:opacity .2s,color .2s}
+.shr svg{width:1.25em;height:1.25em}
+.shr:hover{color:var(--accent)}.shr:focus-visible{outline:2px solid var(--ink);opacity:1}
+@media(hover:hover){.card:not(:hover) .shr{opacity:0}}
+/* The card as a picture: a preview and the options */
+.share-dlg{width:min(460px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:14px 16px 16px;border:1px solid var(--edge);border-radius:20px;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px -20px rgb(0 0 0/.5)}
+.share-dlg::backdrop{background:rgb(10 12 8/.55);backdrop-filter:blur(3px)}
+.sh-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sh-head b{font-size:1.05rem}
+.share-dlg canvas{display:block;margin:0 auto;max-width:100%;max-height:min(56vh,520px);width:auto;height:auto;border-radius:12px;box-shadow:0 6px 20px -8px rgb(0 0 0/.35)}
+.sh-opts{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px;margin:12px 0}
+.seg{display:inline-flex;padding:3px;border-radius:999px;background:var(--track)}
+.seg button{font:600 .82rem/1 var(--sans);color:var(--mute);background:none;border:0;border-radius:999px;padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
+.sh-chk{display:flex;align-items:center;gap:6px;font-size:.88rem;color:var(--mute);cursor:pointer}
+.sh-act{display:flex;gap:8px}
+.sh-act button{flex:1;font:600 .95rem var(--sans);border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:none;color:var(--ink);cursor:pointer}
+.sh-act button.pri{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 /* Everyone's service in one number; it runs one second faster for every person serving now */
 .together{display:flex;align-items:center;justify-content:center;gap:4px 14px;flex-wrap:wrap;width:min(1108px,calc(100% - max(16px,env(safe-area-inset-left)) - max(16px,env(safe-area-inset-right))));margin:4px auto 6px;padding:10px 18px;border-radius:18px;text-align:center}
@@ -126,6 +162,17 @@ h2{margin:0;font-size:1.05rem;line-height:1.25;letter-spacing:-.01em;overflow-wr
 .fire-tip::after{content:"";position:absolute;right:30px;bottom:-7px;width:14px;height:14px;background:inherit;transform:rotate(45deg);border-radius:0 0 3px 0}
 .fire-tip p{margin:0}.fire-tip b{display:block;margin-bottom:3px;font-size:.98rem}
 .fire-tip button{display:block;margin:10px 0 0 auto;font:600 .85rem var(--sans);border:0;border-radius:10px;padding:8px 14px;background:var(--surface);color:var(--ink);cursor:pointer}
+.fire-btn.wobble{animation:btn-shake .55s ease-in-out 2}
+.fire-btn.wobble .lg{animation:logs-wobble .18s ease-in-out 7 alternate;transform-box:fill-box;transform-origin:50% 50%}
+.fire-btn.wobble .fl{animation:flame .12s ease-in-out 10 alternate}
+@keyframes btn-shake{0%,100%{transform:none}20%{transform:translateX(-4px) rotate(-4deg)}40%{transform:translateX(4px) rotate(3deg)}60%{transform:translateX(-3px) rotate(-2deg)}80%{transform:translateX(2px) rotate(1deg)}}
+@keyframes logs-wobble{from{transform:rotate(-9deg) translateY(-1px)}to{transform:rotate(9deg) translateY(1px)}}
+.log{position:fixed;z-index:7;width:54px;height:21px;pointer-events:none;--bark:#7a4a26;--grain:#563216;--core:#e6b67c;--ring:#b47a42;filter:drop-shadow(0 3px 4px rgb(0 0 0/.3))}
+.log.birch{--bark:#eee8db;--grain:#2b2b2b;--core:#f2deb6;--ring:#c8a26a}
+.log.pine{--bark:#94401f;--grain:#5c210d;--core:#f0c27a;--ring:#c4823a}
+.log.gold{--bark:#d9a21c;--grain:#9a6a06;--core:#ffe68e;--ring:#c99512;filter:drop-shadow(0 0 7px rgb(255 200 60/.95))}
+.log svg{display:block;width:100%;height:100%}
+.fire-tip .rec{display:block;margin-top:3px;opacity:.7;font-size:.8em}
 .fire-tip.short{width:auto;max-width:min(300px,calc(100% - 32px));padding:10px 14px}
 @keyframes tip-in{from{opacity:0;transform:translateY(8px) scale(.9)}}
 @media(prefers-reduced-motion:reduce){.fire-btn,.fire-btn .fl,.fire-tip{animation:none!important}}
@@ -198,6 +245,7 @@ footer a:hover{color:var(--ink)}
 <script src="/statuses.js"></script>
 <script src="/backdrop.js"></script>
 <script src="/fire.js"></script>
+<script src="/share.js"></script>
 <script>
 const {t,tp}=I18N, COL={'en-US':2,'ru-RU':3,'be-BY':4}; // STATUSES text column per language
 let cfg=null, offset=0, clock=null;
@@ -206,7 +254,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const fmt=d=>new Date(d).toLocaleDateString(I18N.lang,{day:'numeric',month:'numeric',year:'2-digit'});
 const DAY=864e5;
 async function load(){
-  try{cfg=await (await fetch('/api/config',{cache:'no-store'})).json();offset=new Date(cfg.serverTime)-Date.now();cfg.page.showBackground===false?BACKDROP.stop():BACKDROP.start();fire();
+  try{cfg=await (await fetch('/api/config',{cache:'no-store'})).json();offset=new Date(cfg.serverTime)-Date.now();window.SHARE_OFFSET=offset;cfg.page.showBackground===false?BACKDROP.stop():BACKDROP.start();fire();
   // hours and seasons follow the server (unit) time zone, not the visitor's
   try{clock=new Intl.DateTimeFormat('en-US',{timeZone:cfg.tz,month:'numeric',day:'numeric',hour:'numeric',hourCycle:'h23'})}catch{clock=null}
   title();}catch{}
@@ -239,30 +287,50 @@ function count(d,unit,short,ms,p){
   return `<div class="count"><span class="days">${d}</span><span class="unit">${unit}${hmsText(ms,p.showSeconds)}</span></div>`;
 }
 const SOON_DAYS=60;
+const SHARE_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+// The share button in a card's dates row opens the card as a picture (share.js). Cards are re-drawn every second, so a click
+// can lose its button between press and release: the release opens it, and click only serves the keyboard
+$.addEventListener('pointerup',e=>{const c=e.button===0&&e.target.closest?.('.shr')?.closest('.card');if(c)SHARE.open(c)});
+$.addEventListener('click',e=>{const c=e.detail===0&&e.target.closest?.('.shr')?.closest('.card');if(c)SHARE.open(c)});
+// Milestones of a service: the day a quarter, half or three quarters is served, and 100 / 30 / 7 / last day left
+function milestone(phase,s,e,now,d){
+  if(phase==='done')return now-e<DAY?'demob':null; // demob day: the first 24 hours at home
+  if(phase!=='serve')return null;
+  for(const [k,p] of [['q1',25],['half',50],['q3',75]]){const at=now-(s+(e-s)*p/100);if(at>=0&&at<DAY)return k}
+  return {100:'d100',30:'d30',7:'d7',0:'d0'}[d]||null;
+}
+// One-shot effects survive the 1 s re-render: each remembers when it started, and a re-drawn element continues it with a negative delay
+const shown=new Map(); // effect key => time it first showed in this page view
+const once=(key,ms)=>{const now=performance.now();if(!shown.has(key))shown.set(key,now);const t=now-shown.get(key);return t<ms?t:-1}; // ms since start while running, else -1
 function card(tm,p,now){
   const s=+new Date(tm.start), e=+new Date(tm.end), total=Math.round((e-s)/DAY);
   const phase=now<s?'soon':now<e?(tm.pending?'summons':'serve'):'done';
   const ctx={u:(s-now)/DAY,d:(now-s)/DAY,l:(e-now)/DAY,a:(now-e)/DAY,p:Math.max(0,Math.min(100,(now-s)/(e-s)*100))};
-  const chip=phase==='soon'&&ctx.u>SOON_DAYS?'wait':phase;
-  const accent={wait:'var(--wait)',soon:'var(--soon)',summons:'var(--summons)'}[chip]||tm.accent; // the call-up is "soon" only within the last couple of months
+  // with pending set the start is the call-up notice date, not the start of service: the card says so plainly
+  const chip=phase==='soon'&&tm.pending?'notice':phase==='soon'&&ctx.u>SOON_DAYS?'wait':phase;
+  const accent={wait:'var(--wait)',soon:'var(--soon)',summons:'var(--summons)',notice:'var(--summons)'}[chip]||tm.accent; // the call-up is "soon" only within the last couple of months
   const head=`<div class="head"><span class="chip is-${chip}">${t('state.'+chip)}</span><h2>${esc(tm.name)}</h2>${tm.label?`<p class="label">${esc(tm.label)}</p>`:''}</div>`;
   const bar=(pct,l,r)=>p.showProgress?`<div class="bar" role="progressbar" aria-valuenow="${pct.toFixed(1)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i><em title="${t('half')}"></em></div><div class="meta"><span>${l}</span><span>${r}</span></div>`:'';
-  let main;
-  if(phase==='soon'){ // counting to the call-up; the service length itself is shown separately
+  let main, day=null; // the day count on the card: a change while the page is open floats off as -1 / +1
+  if(phase==='soon'){day=Math.floor((s-now)/DAY); // counting to the call-up; the service length itself is shown separately
     const left=s-now, d=Math.floor(left/DAY);
-    main=`${count(d,tp('unit.toStart',d),t('unit.toStartShort'),left,p)}<p class="sub">${t('then',{n:total,days:tp('days',total)})}</p>`;
+    main=tm.pending?`${count(d,tp('unit.toNotice',d),t('unit.toNoticeShort'),left,p)}<p class="sub">${t('noticeSub')}</p>`
+      :`${count(d,tp('unit.toStart',d),t('unit.toStartShort'),left,p)}<p class="sub">${t('then',{n:total,days:tp('days',total)})}</p>`;
   }else if(phase==='summons'){ // after a call-up notice nobody knows yet when he is back, until the admin confirms he has left
     main=`<p class="done">${t('summons.big')}</p><p class="sub">${t('summons.sub',{date:fmt(s)})}</p>`;
   }else if(phase==='serve'){
+    day=Math.floor((e-now)/DAY);
     const left=e-now, d=Math.floor(left/DAY), dayNo=Math.min(total,Math.floor(ctx.d)+1);
     main=`${count(d,tp('unit.left',d),t('unit.leftShort'),left,p)}${bar(ctx.p,t('served',{p:ctx.p.toFixed(2)}),t('dayOf',{n:dayNo,t:total}))}`;
   }else{
-    const d=Math.floor(ctx.a);
+    const d=day=Math.floor(ctx.a);
     main=`<p class="done">${esc(tm.doneMessage||t('timer.defaultDone'))}</p><p class="sub">${d} ${tp('unit.home',d)}</p>`;
   }
   const st=p.showStatuses===false?'':statusFor(phase,tm,now,ctx);
-  return `<article class="card${chip==='summons'?' is-summons':''}" data-id="${tm.id}" style="--accent:${accent}">${head}${main}<div class="fill"></div>${st?`<p class="status">${esc(st)}</p>`:''}
-    <div class="dates">${fmt(s)} → ${phase==='summons'?'?':fmt(e)}</div></article>`;
+  const ms=milestone(phase,s,e,now,Math.floor((e-now)/DAY));
+  let stamp='';if(ms){const a=once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${ms==='demob'?' big':''}${a>=0?' in':''}"${a>=0?` style="animation-delay:-${Math.round(a)}ms" data-new="${a<50?1:''}"`:''}>${t('ms.'+ms)}</div></div>`}
+  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''} style="--accent:${accent}${ms==='demob'?`;animation-delay:-${Math.round(performance.now()%2400)}ms`:''}">${head}${main}<div class="fill"></div>${stamp}${st?`<p class="status">${esc(st)}</p>`:''}
+    <div class="dates"><span title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${tm.pending?`<b class="nt">${t('dates.notice')}</b> ${fmt(s)} → ?`:`${fmt(s)} → ${fmt(e)}`}</span><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></article>`;
 }
 // On phones the visitor can switch between one wide card and two squares per row; the admin's choice is the default
 const colsBtn=document.getElementById('colsBtn');
@@ -277,6 +345,26 @@ function render(){
   $.className=ts.length===1?'one':cols()===2?'two':'';colsBtn.hidden=ts.length<2;drawCols();
   $.innerHTML=ts.length?ts.map(x=>card(x,cfg.page,now)).join(''):`<p class="empty">${t('empty')}</p>`;
   fitCards();
+  for(const c of $.querySelectorAll('.card[data-day]')){const d=+c.dataset.day,was=lastDay.get(c.dataset.id);lastDay.set(c.dataset.id,d);if(was!==undefined&&d!==was)dayTick(c,d-was)}
+  if(!matchMedia('(prefers-reduced-motion:reduce)').matches)for(const el of $.querySelectorAll('.stamp[data-new="1"]')){ // sparks as the stamp hits
+    const id=el.closest('.card').dataset.id, big=el.classList.contains('big');
+    setTimeout(()=>{const r=$.querySelector(`.card[data-id="${id}"] .stamp`)?.getBoundingClientRect();if(r)FIRE.burst(r.left+r.width/2,r.top+r.height/2,34,.8)},380);
+    if(big)salute(id,4);
+  }
+}
+function salute(id,n){ // demob day: volleys of sparks from random points of the card
+  for(let i=0;i<n;i++)setTimeout(()=>{const r=$.querySelector(`.card[data-id="${id}"]`)?.getBoundingClientRect();
+    if(r&&r.bottom>0&&r.top<innerHeight)FIRE.burst(r.left+r.width*(.2+Math.random()*.6),r.top+r.height*(.25+Math.random()*.5),46,1.25)},700+i*650);
+}
+setInterval(()=>{if(!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches)$.querySelectorAll('.card.is-demob').forEach(c=>salute(c.dataset.id,1))},2e4);
+const lastDay=new Map(); // card id => its day count at the last render
+function dayTick(c,n){ // "-1 day" rises from the big number and fades out
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const r=(c.querySelector('.days')||c.querySelector('.done')||c).getBoundingClientRect(), el=document.createElement('div');
+  el.className='tick';el.style.color=getComputedStyle(c).getPropertyValue('--accent');el.textContent=`${n<0?'−':'+'}${Math.abs(n)} ${tp('days',Math.abs(n))}`;
+  el.style.left=r.right+'px';el.style.top=r.top+'px';document.body.append(el);
+  el.animate([{transform:'translate(-30%,0) scale(.7)',opacity:0},{transform:'translate(-30%,-14px) scale(1.1)',opacity:1,offset:.2},{transform:'translate(-30%,-60px) scale(1)',opacity:0}],{duration:2400,easing:'ease-out'}).onfinish=()=>el.remove();
+  FIRE.burst(r.left+r.width/2,r.top+r.height/2,14,.5);
 }
 const fitted=new Map(); // fitted sizes per set of cards + width + texts, so the 1 s re-render does not measure again
 function fitCards(){ // one digit size for every countdown, the largest with which every card still fits; names get one height so the digits line up
@@ -339,25 +427,29 @@ addEventListener('resize',()=>{render();clearTimeout(resizing);resizing=setTimeo
     ctx.globalAlpha=1;raf=c||ps.length?requestAnimationFrame(tick):0;
   }
 })();
-// The fire: everyone's logs in one count. A visitor adds one every few hours (the server checks by IP); the more logs,
+// The fire: everyone's logs in one count. A visitor adds one every few hours (the browser keeps the time of its last log,
+// on the server's clock, in localStorage as fireAt); the more logs,
 // the more fire dust over the page. Someone else's new logs arrive with the next config refresh as sparks from below
 const fb=document.getElementById('fireBtn'), fc=document.getElementById('fireCount');
 const store={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
-let logs=null, nextLog=0, tipEl=null, tipT=0, sending=false;
+const record=()=>Math.max(cfg?.sparks?.record||0,logs||0);
+const recLine=()=>record()?`<small class="rec">${esc(t('fire.record',{n:record().toLocaleString(I18N.lang)}))}</small>`:'';
+let pokes=[], logs=null, tipEl=null, tipT=0, sending=false;
+const waitLeft=()=>(+store.get('fireAt')||0)+cfg.page.sparkHours*36e5-Date.now()-offset; // > 0 while this visitor's log still burns
 const hm=ms=>{const n=Math.max(1,Math.ceil(ms/6e4)),h=Math.floor(n/60),m=n%60;return h&&m?t('fire.hm',{h,m}):h?t('fire.h',{h}):t('fire.m',{m})};
 function drawFire(){
-  const lit=nextLog>Date.now()+offset;
+  const w=waitLeft(),lit=w>0;
   fb.classList.toggle('lit',lit);fb.querySelector('.lbl').textContent=t(lit?'fire.lit':'fire.btn');fc.textContent=(logs||0).toLocaleString(I18N.lang);
-  const l=t('fire.label',{n:(logs||0).toLocaleString(I18N.lang)})+(lit?' '+t('fire.wait',{time:hm(nextLog-Date.now()-offset)}):'');
+  const l=t('fire.label',{n:(logs||0).toLocaleString(I18N.lang)})+(lit?' '+t('fire.wait',{time:hm(w)}):'')+(record()?' '+t('fire.record',{n:record().toLocaleString(I18N.lang)})+'.':'');
   fb.setAttribute('aria-label',l);fb.title=l;
 }
 function fire(){
-  const p=cfg.page,sp=cfg.sparks||{count:0,next:0};
+  const p=cfg.page,sp=cfg.sparks||{count:0};
   FIRE.set({on:p.dustOn!==false,logs:sp.count,full:p.dustFull,lo:p.dustMin,hi:p.dustMax});
   if(logs!==null&&sp.count>logs&&!fb.hidden){ // someone else added logs since the last look
     const n=Math.min(6,sp.count-logs);for(let i=0;i<n;i++)setTimeout(()=>FIRE.burst(Math.random()*innerWidth,innerHeight+8,26,1.3),i*700);bump();
   }
-  if(!sending){logs=sp.count;nextLog=sp.next}fb.hidden=p.sparkOn===false;
+  if(!sending)logs=sp.count;fb.hidden=p.sparkOn===false;
   if(fb.hidden)return tip(null);
   drawFire();
   const n=document.querySelector('.notice'); // wait until the privacy banner is closed
@@ -374,6 +466,27 @@ function tip(html,ms=3800){ // a bubble over the button: the first-visit hint (s
   tipEl.querySelector('button')?.addEventListener('click',()=>{store.set('fireHint','1');tip(null)});
   document.body.append(tipEl);if(ms)tipT=setTimeout(()=>tip(null),ms);
 }
+// A log falls from above, turning, into the fire on the button; land() runs as it hits
+const LOG_SVG='<svg viewBox="0 0 50 20" aria-hidden="true"><rect x="1" y="3" width="42" height="14" rx="7" fill="var(--bark)"/><path d="M9 7.5h17M15 12.5h19" stroke="var(--grain)" stroke-width="1.4" stroke-linecap="round"/><ellipse cx="42" cy="10" rx="6.5" ry="7" fill="var(--core)" stroke="var(--bark)" stroke-width="1.5"/><ellipse cx="42" cy="10" rx="3.2" ry="3.6" fill="none" stroke="var(--ring)" stroke-width="1.2"/></svg>';
+function dropLog(x,y,land,kind='oak'){
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return land();
+  const el=document.createElement('div'),dx=(Math.random()-.5)*60,turn=Math.random()<.5?-1:1;el.className='log '+kind;el.innerHTML=LOG_SVG;
+  el.style.left=x+'px';el.style.top=y+'px';document.body.append(el);
+  el.animate([{transform:`translate(-50%,-50%) translate(${dx}px,-220px) rotate(${turn*-70}deg)`,opacity:0,easing:'cubic-bezier(.5,0,1,.6)'},
+    {transform:`translate(-50%,-50%) translate(${dx*.8}px,-180px) rotate(${turn*-55}deg)`,opacity:1,offset:.12,easing:'cubic-bezier(.45,0,1,.7)'},
+    {transform:`translate(-50%,-50%) translate(0,0) rotate(${turn*6}deg)`,opacity:1,offset:.78,easing:'ease-out'},
+    {transform:'translate(-50%,-50%) translate(0,6px) rotate(0) scale(.55)',opacity:0}],{duration:720}).onfinish=()=>el.remove();
+  setTimeout(land,560);
+}
+// Wood types: mostly oak, sometimes birch (crackles) or pine (resin pops), rarely a golden log. Only for the show: every log counts as one
+const wood=()=>{const r=Math.random();return r<.025?'gold':r<.2?'birch':r<.33?'pine':'oak'};
+function flare(kind,x,y){
+  const k=kind==='oak'?'':kind, later=(ms,n,p)=>setTimeout(()=>FIRE.burst(x+(Math.random()-.5)*16,y,n,p,k),ms);
+  FIRE.burst(x,y,{oak:60,birch:44,pine:66,gold:90}[kind],{oak:1.15,birch:1,pine:1.25,gold:1.4}[kind],k);
+  if(kind==='birch')for(let i=0;i<5;i++)later(120+Math.random()*900,7,.55); // crackle
+  if(kind==='pine')for(const ms of [320,700,1100])later(ms,18,.95); // resin pops
+  if(kind==='gold')later(380,70,1.3);
+}
 function bump(){fc.classList.add('bump');setTimeout(()=>fc.classList.remove('bump'),250)}
 function plus(x,y){
   if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
@@ -383,16 +496,23 @@ function plus(x,y){
 fb.onclick=async()=>{
   store.set('fireHint','1');
   const r=fb.querySelector('svg').getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height*.4;
-  if(nextLog>Date.now()+offset){FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(nextLog-Date.now()-offset)})))}
-  logs++;nextLog=Date.now()+offset+cfg.page.sparkHours*36e5;drawFire();bump();plus(x,r.top);FIRE.burst(x,y,60,1.15); // at once, the server confirms after
+  const w=waitLeft();
+  if(w>0){ // still burning; five quick taps knock the logs about (an easter egg)
+    const n=performance.now();pokes=pokes.filter(p=>n-p<2500);pokes.push(n);
+    if(pokes.length>=5){pokes=[];fb.classList.remove('wobble');void fb.offsetWidth;fb.classList.add('wobble');setTimeout(()=>fb.classList.remove('wobble'),1300);
+      FIRE.burst(x,y,36,.9);setTimeout(()=>FIRE.burst(x,y,20,.7),300);return tip(esc(t('fire.egg')),4500)}
+    FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(w)}))+recLine())}
+  const prev=store.get('fireAt')||'';store.set('fireAt',String(Date.now()+offset));
+  const kind=wood();
+  logs++;drawFire();const landed=new Promise(ok=>dropLog(x,y,()=>{bump();plus(x,r.top);flare(kind,x,y);ok()},kind)); // at once, the server confirms after
   sending=true;
   try{
-    const res=await fetch('/api/spark',{method:'POST'}),d=await res.json().catch(()=>({}));
-    if(typeof d.count==='number'){logs=d.count;cfg.sparks={count:d.count,next:d.next||0}}
-    nextLog=d.next||0;
-    if(res.ok)tip(esc(t('fire.thanks')));
-    else tip(esc(d.code==='spark_wait'?t('fire.wait',{time:hm(nextLog-Date.now()-offset)}):t(d.code?'err.'+d.code:'err.request')));
-  }catch{logs--;nextLog=0;tip(esc(t('err.request')))}
+    const res=await fetch('/api/spark',{method:'POST'}),d=await res.json().catch(()=>({}));await landed; // the tip waits until the log is in the fire
+    if(typeof d.count==='number'){logs=d.count;cfg.sparks={count:d.count,record:d.record}}
+    if(res.ok&&d.newRecord){tip(`<b>${esc(t('fire.newRecord',{n:d.count.toLocaleString(I18N.lang)}))}</b>`,5e3);for(let i=1;i<4;i++)setTimeout(()=>FIRE.burst(x,y,50,1.3),i*450)}
+    else if(res.ok)tip(esc(t(kind==='oak'?'fire.thanks':'wood.'+kind))+recLine());
+    else{store.set('fireAt',prev);tip(esc(t(d.code?'err.'+d.code:'err.request')))}
+  }catch{await landed;logs--;store.set('fireAt',prev);tip(esc(t('err.request')))}
   sending=false;drawFire();FIRE.set({on:cfg.page.dustOn!==false,logs,full:cfg.page.dustFull,lo:cfg.page.dustMin,hi:cfg.page.dustMax});
 };
 setInterval(()=>{if(cfg&&!fb.hidden)drawFire()},3e4);

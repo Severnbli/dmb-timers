@@ -157,7 +157,7 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
     <h3 data-i18n="fa.title">Fire button</h3><p class="hint" data-i18n="fa.hint"></p>
     <div class="count"><div><b id="sparkCount"></b><small id="sparkReset"></small></div><button type="button" class="danger" id="sparkZero" data-i18n="fa.reset">Start over</button></div>
     <label class="chk"><span data-i18n="fa.on">Show the fire button</span><input data-k="sparkOn" type="checkbox"></label>
-    <div class="grid"><div><label for="sparkHours" data-i18n="fa.hours">One log per visitor (IP), hours</label><input id="sparkHours" data-k="sparkHours" type="number" min="1" max="720" inputmode="numeric"></div>
+    <div class="grid"><div><label for="sparkHours" data-i18n="fa.hours">One log per visitor, hours</label><input id="sparkHours" data-k="sparkHours" type="number" min="1" max="720" inputmode="numeric"></div>
     <div><label for="sparkDays" data-i18n="fa.days">Count starts over every, days</label><input id="sparkDays" data-k="sparkDays" type="number" min="1" max="365" inputmode="numeric"></div></div>
   </section>
   <section class="box">
@@ -228,7 +228,7 @@ async function api(m,u,b){
 function show(on){$('login').hidden=on;$('panel').hidden=!on;$('logout').hidden=!on}
 function summary(tm){ // short state line for the list row
   const now=Date.now(),s=+new Date(tm.start),e=+new Date(tm.end);
-  if(now<s){const d=Math.floor((s-now)/DAY);return `${t(d>SOON_DAYS?'state.wait':'state.soon')} · ${d} ${tp('unit.toStart',d)}`}
+  if(now<s){const d=Math.floor((s-now)/DAY);return tm.pending?`${t('state.notice')} · ${d} ${tp('unit.toNotice',d)}`:`${t(d>SOON_DAYS?'state.wait':'state.soon')} · ${d} ${tp('unit.toStart',d)}`}
   if(now<e){if(tm.pending)return t('state.summons');const d=Math.floor((e-now)/DAY);return `${t('state.serve')} · ${d} ${tp('unit.left',d)}`}
   return t('state.done');
 }
@@ -243,7 +243,7 @@ function renderEdit(){ // the editor dialog for one person; closes when that per
     <div><label>${t('f.label')}</label><input type="text" name="label" value="${esc(tm.label)}" maxlength="200"></div></div>
     <label>${t('f.accent')}</label><input type="color" name="accent" value="${tm.accent}"></div>
     <div class="group"><b>${t('g.service')}</b>
-    <div class="grid"><div><label>${t('f.start')}</label><input type="datetime-local" name="start" value="${toLocal(tm.start)}" required></div>
+    <div class="grid"><div><label id="startLbl">${t(tm.pending?'f.startNotice':'f.start')}</label><input type="datetime-local" name="start" value="${toLocal(tm.start)}" required></div>
     <div><label>${t('f.mode')}</label><select name="mode">${opt(tm,'year')}${opt(tm,'half')}${opt(tm,'custom')}</select></div></div>
     <label>${t('f.end')} ${tm.mode==='custom'?'':`<small>(${t('f.endAuto')})</small>`}</label>
     <input type="datetime-local" name="end" value="${toLocal(tm.end)}" required${tm.mode==='custom'?'':' disabled'}>
@@ -271,7 +271,7 @@ function render(){
   $('pageTitle').placeholder=t('page.defaultTitle');
   $('panel').querySelectorAll('[data-k]').forEach(el=>{const v=S.page[el.dataset.k]??S[el.dataset.k];el.type==='checkbox'?el.checked=v:el.value=v});
   const sp=S.sparks||{count:0};$('sparkCount').textContent=t('fa.count',{n:sp.count.toLocaleString(I18N.lang)});
-  $('sparkReset').textContent=sp.resetAt?t('fa.resetAt',{date:new Date(sp.resetAt).toLocaleString(I18N.lang,{dateStyle:'medium',timeStyle:'short'})}):'';
+  $('sparkReset').textContent=[sp.record?t('fa.record',{n:sp.record.toLocaleString(I18N.lang)}):'',sp.resetAt?t('fa.resetAt',{date:new Date(sp.resetAt).toLocaleString(I18N.lang,{dateStyle:'medium',timeStyle:'short'})}):''].filter(Boolean).join(' · ');
   $('list').innerHTML=S.timers.map(tm=>`<div class="person" data-name="${esc(tm.name.toLowerCase())}" style="--c:${tm.accent}">
     <button type="button" class="open" data-open="${tm.id}"><span><b>${esc(tm.name)}</b><small>${summary(tm)}</small></span></button>${tm.pending?`<span class="pill">${t('pending.badge')}</span>${Date.now()>=+new Date(tm.start)?`<button type="button" class="ok" data-act="confirm" data-id="${tm.id}" data-name="${esc(tm.name)}">${t('btn.confirm')}</button>`:''}`:''}</div>`).join('')||`<p class="empty">${t('admin.emptyTimers')}</p>`;
   $('find').hidden=S.timers.length<6;find();
@@ -292,7 +292,8 @@ $('panel').onchange=e=>{ // every page setting saves as soon as it changes, like
   if(el.type==='number'&&!(v>=lo&&v<=hi)){el.value=S.page[k]??S[k];return say(t('err.number',{min:lo,max:hi}),1)}
   run('PUT','/api/admin/settings',{[k]:v},'msg.settings')};
 $('edit').onchange=e=>{ // live preview of the computed end date; the server recalculates on save
-  const n=e.target.name;if(n!=='mode'&&n!=='start')return;
+  const n=e.target.name;if(n==='pending'){$('startLbl').textContent=t(e.target.checked?'f.startNotice':'f.start');return}
+  if(n!=='mode'&&n!=='start')return;
   const f=e.target.form,m=f.elements.mode.value,end=f.elements.end,st=f.elements.start.value;
   end.disabled=m!=='custom';
   if(m!=='custom'&&st)end.value=toLocal(addMonths(new Date(st),MONTHS[m]));
