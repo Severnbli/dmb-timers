@@ -142,6 +142,7 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 /* The back of a card: a tap turns it over (a random one turns by itself now and then). The front stays laid out underneath, only hidden,
    so the digit fitting never sees the back */
 .card.can-flip{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.card.turning{will-change:transform} /* drawn once and turned as a picture: redrawn at every step of the turn, a dashed outline (call-up notices) trembles */
 .card.can-flip:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .card>.back{display:none}
 .card.flipped>.back{display:flex}
@@ -380,15 +381,16 @@ function flip(c,user){
   const toBack=!flipped.has(id);if(user)closeCardHint();
   const swap=()=>{if(toBack){flipped.add(id);user?held.add(id):held.delete(id)}else{flipped.delete(id);held.delete(id)}render()};
   if(still())return swap();
-  turning.add(id);springFlip(c,id,toBack,swap);
+  turning.add(id);c.classList.add('turning');springFlip(c,id,toBack,swap);
 }
 function springFlip(c,id,toBack,swap){
   const P='perspective(1100px) ',dir=toBack?1:-1;
   c.animate([{transform:P+'rotateY(0) skewY(0)'},{transform:P+`rotateY(${dir*90}deg) skewY(${-dir*6}deg)`}],{duration:220,easing:'cubic-bezier(.55,0,.8,.45)'}).onfinish=()=>{
-    swap();const n=$.querySelector(`.card[data-id="${id}"]`);if(!n)return turning.delete(id);
+    const done=()=>{turning.delete(id);$.querySelector(`.card[data-id="${id}"]`)?.classList.remove('turning')};
+    swap();const n=$.querySelector(`.card[data-id="${id}"]`);if(!n)return done();
     n.animate([{transform:P+`rotateY(${-dir*90}deg) skewY(${dir*6}deg)`},{transform:P+`rotateY(${dir*9}deg) skewY(${-dir*1}deg)`,offset:.55},
       {transform:P+`rotateY(${-dir*4}deg)`,offset:.78},{transform:P+`rotateY(${dir*1.5}deg)`,offset:.9},{transform:P+'rotateY(0)'}],
-      {duration:560,easing:'cubic-bezier(.25,.7,.4,1)'}).onfinish=()=>turning.delete(id);
+      {duration:560,easing:'cubic-bezier(.25,.7,.4,1)'}).onfinish=done;
   };
 }
 // Now and then a random card in view turns over by itself, but only while nobody is using the page: after flipIdle seconds without
@@ -465,7 +467,7 @@ function card(tm,p,now,quiet){
   const ms=milestone(phase,s,e,now,Math.floor((e-now)/DAY));
   let stamp='';if(ms){const a=quiet?-1:once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${ms==='demob'?' big':''}${a>=0?' in':''}"${a>=0&&a<50?' data-new="1"':''}>${t('ms.'+ms)}</div></div>`}
   const can=p.cardBacks!==false, fl=can&&flipped.has(tm.id);
-  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}${can?' can-flip':''}${fl?' flipped':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''}${st?` data-status="${esc(st)}"`:''}${can?' tabindex="0"':''} style="--accent:${accent}">${head}${main}<div class="fill"></div>${stamp}
+  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}${can?' can-flip':''}${fl?' flipped':''}${turning.has(tm.id)?' turning':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''}${st?` data-status="${esc(st)}"`:''}${can?' tabindex="0"':''} style="--accent:${accent}">${head}${main}<div class="fill"></div>${stamp}
     <div class="dates"><span title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${fmt(s)} → ${tm.pending?'?':fmt(e)}</span><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div>${can?back(tm,phase,s,e,now,ctx,p):''}</article>`;
 }
 // On phones the visitor can switch between one wide card and two squares per row; the admin's choice is the default
