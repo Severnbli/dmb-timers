@@ -144,11 +144,10 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 .card.can-flip:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .card>.back{display:none}
 main{position:relative}
-.card.leaf{position:absolute;z-index:5;margin:0;pointer-events:none;backface-visibility:visible;will-change:transform;animation:none;
- background:linear-gradient(color-mix(in srgb,var(--accent) 4%,var(--surface)),var(--surface));-webkit-backdrop-filter:none;backdrop-filter:none} /* solid paper: the other side must not show through it */
-.leaf-shade{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;background:linear-gradient(to right,rgb(0 0 0/.28),rgb(0 0 0/.06) 60%,rgb(255 255 255/.08))}
-.card.leaf.rev{background:color-mix(in srgb,var(--ink) 5%,var(--surface))}
-.card.leaf.rev>:not(.leaf-shade){visibility:hidden}
+.flex-turn{position:absolute;z-index:5;pointer-events:none}
+.card.strip{position:absolute;inset:0;width:100%;height:100%;margin:0;pointer-events:none;will-change:transform;
+ background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none} /* solid: the strips must not show through each other */
+.card.strip,.card.strip *{animation:none!important;transition:none!important}
 .card.flipped>.back{display:flex}
 .card.flipped>:not(.back):not(.head),.card.flipped>.head>:not(.chip){visibility:hidden}
 .back{position:absolute;inset:0;z-index:1;flex-direction:column;padding:inherit;border-radius:inherit;overflow:hidden;min-width:0}
@@ -371,32 +370,36 @@ function back(tm,phase,s,e,now,ctx,p){
     <div class="dates bk-foot"><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></div>`;
 }
 const still=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
-// A turn like a page of a book: a copy of the side in view lies on the card as a leaf and swings away on one edge (the left one
-// to the back, the right one to the front, as when paging back), while the other side is already underneath. Past edge-on the
-// leaf shows its plain paper back, settles and fades. The leaf lives in the grid but sync() and the fitting leave it alone
+// A soft turn around the vertical middle line, as if the card were a sheet of very soft material held by its top edge: the card is
+// cut into thin horizontal strips that all turn about the same axis, each a moment after the one above it, so the top leads,
+// the rest lags behind and the card bends while it turns. The old side turns away to edge-on, then the new side turns in the same
+// way and settles with a little overshoot. The strips are copies of the card (the real one is hidden meanwhile) in a layer that
+// sync() and the fitting leave alone
+const STRIPS=22, LAG=15, OUT=240, IN=340; // strips, ms between neighbouring strips, ms to turn away, ms to turn in
 function flip(c,user){
   const id=c.dataset.id;if(cfg?.page.cardBacks===false||turning.has(id))return;
   const toBack=!flipped.has(id);
   const swap=()=>{if(toBack){const k=picks.get(id);if(k)k.stale=true;flipped.add(id);user?held.add(id):held.delete(id)}else{flipped.delete(id);held.delete(id)}render()};
   if(still())return swap();
   turning.add(id);
-  const leaf=c.cloneNode(true),dir=toBack?-1:1;
-  for(const a of ['data-id','data-day','tabindex','data-status'])leaf.removeAttribute(a);
-  leaf.classList.add('leaf');leaf.setAttribute('aria-hidden','true');leaf.getAnimations?.().forEach(a=>a.cancel());
-  Object.assign(leaf.style,{left:c.offsetLeft+'px',top:c.offsetTop+'px',width:c.offsetWidth+'px',height:c.offsetHeight+'px',transformOrigin:toBack?'left center':'right center'});
-  leaf.insertAdjacentHTML('beforeend','<i class="leaf-shade"></i>');
-  $.append(leaf);swap();
-  const P='perspective(1600px) ',sh=leaf.lastChild,half=420;
-  // first half: the leaf lifts and turns edge-on, its shadow grows on the page underneath and its face darkens
-  leaf.animate([{transform:P+'rotateY(0)',boxShadow:'0 2px 8px -4px rgb(0 0 0/.2)'},{transform:P+`rotateY(${dir*90}deg) translateZ(10px)`,boxShadow:`${-dir*30}px 18px 40px -10px rgb(0 0 0/.35)`}],
-    {duration:half,easing:'cubic-bezier(.5,0,.75,.4)',fill:'forwards'}).onfinish=()=>{
-    leaf.classList.add('rev'); // now its back is in view: plain paper, lit from the other side
-    sh.animate([{opacity:.55},{opacity:0}],{duration:half,fill:'forwards'});
-    const a=leaf.animate([{transform:P+`rotateY(${dir*90}deg) translateZ(10px)`,opacity:1},{transform:P+`rotateY(${dir*150}deg)`,opacity:.9,offset:.6},{transform:P+`rotateY(${dir*178}deg)`,opacity:0}],
-      {duration:half*1.15,easing:'cubic-bezier(.25,.6,.4,1)',fill:'forwards'});
-    a.onfinish=()=>{leaf.remove();turning.delete(id)};
-  };
-  sh.animate([{opacity:0},{opacity:.55}],{duration:half,easing:'ease-in',fill:'forwards'});
+  const copy=el=>{const x=el.cloneNode(true);for(const a of ['data-id','data-day','tabindex','data-status'])x.removeAttribute(a);x.classList.add('leaf','strip');x.setAttribute('aria-hidden','true');return x};
+  const old=copy(c), box={left:c.offsetLeft+'px',top:c.offsetTop+'px',width:c.offsetWidth+'px',height:c.offsetHeight+'px'};
+  swap();
+  const n=$.querySelector(`.card[data-id="${id}"]`);if(!n)return turning.delete(id);
+  const neu=copy(n), layer=document.createElement('div');layer.className='leaf flex-turn';Object.assign(layer.style,box);
+  const P='perspective(1300px) ',dir=toBack?1:-1,total=(STRIPS-1)*LAG+OUT+IN;
+  for(let i=0;i<STRIPS;i++){
+    const top=i?`${i/STRIPS*100}%`:'-60px', bottom=i<STRIPS-1?`calc(${100-(i+1)/STRIPS*100}% - 1px)`:'-20px'; // a pixel of overlap hides the seams; the top strip takes the chip above the edge
+    const clip=`inset(${top} -40px ${bottom} -40px)`, a=old.cloneNode(true), b=neu.cloneNode(true);
+    a.style.clipPath=b.style.clipPath=clip;layer.append(a,b);
+    a.animate([{transform:P+'rotateY(0)',filter:'brightness(1)'},{transform:P+`rotateY(${dir*90}deg)`,filter:'brightness(.72)'}],
+      {duration:OUT,delay:i*LAG,easing:'cubic-bezier(.55,0,.8,.45)',fill:'both'});
+    b.animate([{transform:P+`rotateY(${-dir*90}deg)`,filter:'brightness(.72)'},{transform:P+`rotateY(${dir*7}deg)`,filter:'brightness(1.03)',offset:.7},{transform:P+'rotateY(0)',filter:'brightness(1)'}],
+      {duration:IN,delay:i*LAG+OUT,easing:'cubic-bezier(.2,.6,.35,1)',fill:'both'});
+  }
+  $.append(layer);
+  n.animate([{opacity:0},{opacity:0}],{duration:total}); // the real card shows again when the last strip has settled
+  setTimeout(()=>{layer.animate([{opacity:1},{opacity:0}],{duration:160,easing:'ease-out'}).onfinish=()=>{layer.remove();turning.delete(id)}},total); // fades into the real (glass) card
 }
 // Now and then a random card in view turns over by itself, and back after a while, unless the visitor is looking at it
 let autoT=0,autoKey='';
