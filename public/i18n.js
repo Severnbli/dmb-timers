@@ -85,7 +85,7 @@ const DICT = {
   'u.weeks': { one: 'week', other: 'weeks' }, 'u.hours': { one: 'hour', other: 'hours' }, 'u.minutes': { one: 'minute', other: 'minutes' }, 'u.seconds': { one: 'second', other: 'seconds' }, 'u.beats': { one: 'heartbeat', other: 'heartbeats' },
   'share.front': 'Front', 'share.back': 'Back', 'share.copy': 'Copy', 'share.copied': 'Copied!', 'share.copyFail': 'Could not copy', 'share.status': 'Status', 'share.stats': 'Stats', 'share.lang': 'Language of the picture', 'share.side': 'Side of the card',
   's.backs': 'Card backs', 's.cardBacks': 'Tap a card to turn it over: a funny status, the time left and comparisons', 's.backStatus': 'Funny status on the back', 's.backItems': 'Comparisons on the back (0–3)',
-  's.flipEvery': 'A random card turns over every, seconds (0 = never)', 's.flipHold': 'It turns back after, seconds', 's.backsHint': 'The status and comparisons are picked at random every time a card turns over, and neighbouring cards get different ones.',
+  's.flipEvery': 'A random card turns over every, seconds (0 = never)', 's.flipHold': 'It turns back after, seconds', 's.backsHint': 'The status and comparisons change every 3 hours, and neighbouring cards get different ones.',
   'privacy.title': 'Privacy notice', 'privacy.back': 'Back to timers',
 },
 'ru-RU': {
@@ -154,7 +154,7 @@ const DICT = {
   'u.weeks': { one: 'неделя', few: 'недели', many: 'недель', other: 'недели' }, 'u.hours': { one: 'час', few: 'часа', many: 'часов', other: 'часа' }, 'u.minutes': { one: 'минута', few: 'минуты', many: 'минут', other: 'минуты' }, 'u.seconds': { one: 'секунда', few: 'секунды', many: 'секунд', other: 'секунды' }, 'u.beats': { one: 'удар сердца', few: 'удара сердца', many: 'ударов сердца', other: 'удара сердца' },
   'share.front': 'Лицевая', 'share.back': 'Обратная', 'share.copy': 'Копировать', 'share.copied': 'Скопировано!', 'share.copyFail': 'Не удалось скопировать', 'share.status': 'Статус', 'share.stats': 'Статистика', 'share.lang': 'Язык картинки', 'share.side': 'Сторона карточки',
   's.backs': 'Обратная сторона карточек', 's.cardBacks': 'Карточку можно перевернуть нажатием: смешной статус, сколько осталось и сравнения', 's.backStatus': 'Смешной статус на обороте', 's.backItems': 'Сравнений на обороте (0–3)',
-  's.flipEvery': 'Случайная карточка переворачивается каждые, секунд (0 – никогда)', 's.flipHold': 'Обратно через, секунд', 's.backsHint': 'Статус и сравнения выбираются случайно при каждом перевороте, и у соседних карточек они разные.',
+  's.flipEvery': 'Случайная карточка переворачивается каждые, секунд (0 – никогда)', 's.flipHold': 'Обратно через, секунд', 's.backsHint': 'Статус и сравнения меняются каждые 3 часа, и у соседних карточек они разные.',
   'privacy.title': 'Политика конфиденциальности', 'privacy.back': 'К таймерам',
 },
 'be-BY': {
@@ -223,7 +223,7 @@ const DICT = {
   'u.weeks': { one: 'тыдзень', few: 'тыдні', many: 'тыдняў', other: 'тыдня' }, 'u.hours': { one: 'гадзіна', few: 'гадзіны', many: 'гадзін', other: 'гадзіны' }, 'u.minutes': { one: 'хвіліна', few: 'хвіліны', many: 'хвілін', other: 'хвіліны' }, 'u.seconds': { one: 'секунда', few: 'секунды', many: 'секунд', other: 'секунды' }, 'u.beats': { one: 'удар сэрца', few: 'удары сэрца', many: 'удараў сэрца', other: 'удару сэрца' },
   'share.front': 'Пярэдні', 'share.back': 'Адваротны', 'share.copy': 'Капіяваць', 'share.copied': 'Скапіявана!', 'share.copyFail': 'Не атрымалася скапіяваць', 'share.status': 'Статус', 'share.stats': 'Статыстыка', 'share.lang': 'Мова карцінкі', 'share.side': 'Бок карткі',
   's.backs': 'Адваротны бок картак', 's.cardBacks': 'Картку можна перавярнуць націсканнем: смешны статус, колькі засталося і параўнанні', 's.backStatus': 'Смешны статус на адвароце', 's.backItems': 'Параўнанняў на адвароце (0–3)',
-  's.flipEvery': 'Выпадковая картка пераварочваецца кожныя, секунд (0 – ніколі)', 's.flipHold': 'Назад праз, секунд', 's.backsHint': 'Статус і параўнанні выбіраюцца выпадкова пры кожным пераварочванні, і ў суседніх картак яны розныя.',
+  's.flipEvery': 'Выпадковая картка пераварочваецца кожныя, секунд (0 – ніколі)', 's.flipHold': 'Назад праз, секунд', 's.backsHint': 'Статус і параўнанні мяняюцца кожныя 3 гадзіны, і ў суседніх картак яны розныя.',
   'privacy.title': 'Палітыка канфідэнцыйнасці', 'privacy.back': 'Да таймераў',
 }};
 
