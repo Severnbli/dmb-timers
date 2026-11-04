@@ -67,7 +67,7 @@ function fill(spread = 3e3) { // tops the dust up to the target; extra sparks si
 }
 function retarget() {
   const area = Math.max(.35, Math.min(1.6, VW * VH / BASE)), screens = Math.max(1, Math.min(SPAN, PH / VH)); // as many per screen on any page
-  target = on && !still.matches ? Math.min(touch.matches ? 200 : 500, Math.round((min + (max - min) * level) * area * screens)) : 0;
+  target = on && !still.matches ? Math.min(touch.matches ? 120 : 500, Math.round((min + (max - min) * level) * area * screens)) : 0;
 }
 // Throws n sparks out of (x, y) in screen pixels, mostly upward, then lets the wind take them; kind colors them (birch, pine, gold)
 function burst(x, y, n = 40, power = 1, kind = '') {

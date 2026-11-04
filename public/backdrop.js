@@ -35,7 +35,8 @@ const CSS = `.backdrop>canvas{position:absolute;left:0;top:0;width:100%;height:1
 .backdrop>.wave{--band:linear-gradient(120deg,transparent 30%,#000 50%,transparent 70%);-webkit-mask:var(--band) 100% 100%/300% 300% no-repeat;
   mask:var(--band) 100% 100%/300% 300% no-repeat;animation:bd-wave 16s ease-in-out infinite}
 @keyframes bd-wave{to{-webkit-mask-position:0 0;mask-position:0 0}}
-@media (prefers-reduced-motion:reduce){.backdrop>.wave{display:none}}`;
+@media (prefers-reduced-motion:reduce){.backdrop>.wave{display:none}}
+@media (pointer:coarse){.backdrop>.wave{display:none}}`; /* a moving mask is repainted on the main thread every frame; on phones that makes scrolling drag */
 // The canvas is as tall as the screen with the browser bars hidden (100lvh in the CSS), so on phones it does not
 // change size, and the picture does not move, when the address bar slides away while scrolling
 const box = () => [wrap.clientWidth || innerWidth, wrap.clientHeight || innerHeight];

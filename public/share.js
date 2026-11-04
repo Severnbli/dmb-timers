@@ -17,7 +17,7 @@
 // A card as a picture to share: everything is drawn on a canvas in the browser, nothing is sent anywhere.
 // It copies what the card shows at the moment it is opened (name, number, progress, status, stamp, dates) or its back
 // (funny status, time left, comparisons), and the visitor picks the side, the language of the picture, a light or dark look,
-// a post (4:5) or story (9:16) size, and whether to hide the dates and the status. The picture can be shared, copied or saved.
+// a post (4:5) or story (9:16) size, whether to hide the dates, and whether to show the funny status and the funny stats. The picture can be shared, copied or saved.
 (() => {
 const { t } = I18N;
 const PAL = { // the site's own colors, per theme; state accents follow the theme too
@@ -90,17 +90,20 @@ function draw(cv, d, o) {
     const b = d.back; let y = cy + 104;
     let ns = 64; font(700, ns); while (ns > 44 && x.measureText(d.name).width > iw) font(700, --ns);
     x.fillStyle = P.ink; x.fillText(fit(d.name, iw), ix, y); y += 60;
-    if (b.status && !o.hideStatus) {
-      font('italic 500', 48); const lines = wrap(b.status, iw - 40).slice(0, 4);
+    font('italic 500', 48); const sl = b.status && o.status ? wrap(b.status, iw - 40).slice(0, 4) : [];
+    const big = o.stats ? 130 : 170; // without the stats the time gets their room, and the rest sits in the middle of the card
+    if (!o.stats) { const h = (sl.length ? sl.length * 62 + 60 : 30) + 30 + big * .85, room = dy - 80 - y; y += Math.max(0, (room - h) / 2); }
+    if (sl.length) {
+      font('italic 500', 48); const lines = sl;
       x.fillStyle = A; rr(ix, y, 8, lines.length * 62 + 10, 4); x.fill();
       x.fillStyle = P.ink; lines.forEach((l, i) => x.fillText(fit(l, iw - 40), ix + 36, y + 36 + i * 62)); y += lines.length * 62 + 60;
     } else y += 30;
     const label = (s) => { x.fillStyle = P.mute; font(700, 32); x.letterSpacing = '3px'; x.fillText(fit(s.toUpperCase(), iw), ix, y); x.letterSpacing = '0px'; };
     label(b.labels[0] || ''); y += 30; x.textBaseline = 'alphabetic';
-    let ts = 130; font(800, ts); while (ts > 60 && x.measureText(b.time).width > iw) font(800, ts -= 4);
+    let ts = big; font(800, ts); while (ts > 60 && x.measureText(b.time).width > iw) font(800, ts -= 4);
     x.fillStyle = A; x.fillText(b.time, ix, y + ts * .85); y += ts * .85 + 54;
-    x.fillStyle = P.mute; font(500, 40); x.fillText(fit(b.alt, iw), ix, y); y += 40; x.textBaseline = 'middle';
-    if (b.items.length) {
+    if (o.stats) { x.fillStyle = P.mute; font(500, 40); x.fillText(fit(b.alt, iw), ix, y); } y += 40; x.textBaseline = 'middle';
+    if (b.items.length && o.stats) {
       y += 44; label(b.labels[1] || ''); y += 64;
       for (const [n, s] of b.items) { font(800, 46); const nw = x.measureText(n).width; x.fillStyle = A; x.fillText(n, ix, y);
         font(500, 44); x.fillStyle = P.ink; x.fillText(fit(s, iw - nw - 18), ix + nw + 18, y); y += 64; }
@@ -135,7 +138,7 @@ function draw(cv, d, o) {
     x.fillStyle = P.mute; x.globalAlpha = .5; rr(ix + iw / 2 - 3, y - 8, 6, 42, 3); x.fill(); x.globalAlpha = 1;
     y += 74; font(500, 34); x.fillText(d.bar.l, ix, y); x.textAlign = 'right'; x.fillText(d.bar.r, ix + iw, y); x.textAlign = 'left'; y += 10;
   }
-  if (d.status && !o.hideStatus) { // the funny status as a quote, as long as there is room above the dates
+  if (d.status && o.status) { // the funny status as a quote, as long as there is room above the dates
     font(500, 42); let lines = wrap(d.status, iw - 110); const room = Math.floor((dy - 80 - (y + 40) - 50) / 56); lines = lines.slice(0, Math.max(1, Math.min(4, room)));
     y += 40; const sh = lines.length * 56 + 50; rr(ix, y, iw, sh, 22); x.fillStyle = alpha(A, .09); x.fill();
     x.fillStyle = A; font(700, 80, 'Georgia,serif'); x.fillText('“', ix + 22, y + 78);
@@ -163,7 +166,7 @@ function draw(cv, d, o) {
 
 // The dialog: preview, options, share / copy / save
 let dlg, card = null, data = null, name = 'card';
-const opts = { theme: null, fmt: 'post', side: 'front', lang: null, hideDates: false, hideStatus: false };
+const opts = { theme: null, fmt: 'post', side: 'front', lang: null, hideDates: false, status: true, stats: true };
 const canShare = () => { try { return !!navigator.canShare?.({ files: [new File([''], 'x.png', { type: 'image/png' })] }); } catch { return false; } };
 const canCopy = () => !!(window.ClipboardItem && navigator.clipboard?.write);
 const seg = (k, vs) => `<div class="seg" data-k="${k}">${vs.map(([v, l]) => `<button type="button" data-v="${v}"${l.startsWith('share.') ? ` data-i18n="${l}"` : ` lang="${v.slice(0, 2)}"`}>${l.startsWith('share.') ? '' : l}</button>`).join('')}</div>`;
@@ -174,7 +177,8 @@ function build() {
     <div class="sh-opts">${seg('side', [['front', 'share.front'], ['back', 'share.back']])}${seg('lang', Object.entries(I18N.LANGS))}
     ${seg('theme', [['light', 'share.light'], ['dark', 'share.dark']])}${seg('fmt', [['post', 'share.post'], ['story', 'share.story']])}
     <label class="sh-chk" data-c="hideDates"><input type="checkbox"> <span data-i18n="share.hideDates"></span></label>
-    <label class="sh-chk" data-c="hideStatus"><input type="checkbox"> <span data-i18n="share.hideStatus"></span></label></div>
+    <label class="sh-chk" data-c="status"><input type="checkbox" checked> <span data-i18n="share.status"></span></label>
+    <label class="sh-chk" data-c="stats"><input type="checkbox" checked> <span data-i18n="share.stats"></span></label></div>
     <div class="sh-act"><button type="button" class="pri" data-act="share" data-i18n="share.share"></button><button type="button" data-act="copy" data-i18n="share.copy"></button><button type="button" data-act="save" data-i18n="share.save"></button></div>`;
   document.body.append(dlg);
   dlg.addEventListener('click', e => {
@@ -195,7 +199,8 @@ function redraw() {
   dlg.querySelector('[data-k="side"]').hidden = !data.back;
   dlg.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', opts[b.parentNode.dataset.k] === b.dataset.v || (b.parentNode.dataset.k === 'lang' && !opts.lang && b.dataset.v === l)));
   dlg.querySelector('[data-c="hideDates"]').hidden = !data.dates;
-  dlg.querySelector('[data-c="hideStatus"]').hidden = !(opts.side === 'back' ? data.back?.status : data.status);
+  dlg.querySelector('[data-c="status"]').hidden = !(opts.side === 'back' ? data.back?.status : data.status);
+  dlg.querySelector('[data-c="stats"]').hidden = opts.side !== 'back' || !data.back;
   const title = window.CARDS ? CARDS.title(l) : document.title;
   draw(dlg.querySelector('canvas'), data, { ...opts, title, when: new Date(Date.now() + (window.SHARE_OFFSET || 0)).toLocaleDateString(l, { day: 'numeric', month: 'long', year: 'numeric' }) });
 }
