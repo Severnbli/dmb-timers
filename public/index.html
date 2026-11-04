@@ -146,8 +146,10 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 main{position:relative}
 .flex-turn{position:absolute;z-index:5;pointer-events:none}
 .card.strip{position:absolute;inset:0;width:100%;height:100%;margin:0;pointer-events:none;will-change:transform;
- background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none} /* solid: the strips must not show through each other */
+ -webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none} /* the card's own see-through glass, without the blur (too heavy on this many moving pieces); the strips meet edge to edge, so none shows through another */
 .card.strip,.card.strip *{animation:none!important;transition:none!important}
+.strip-shade{position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none}
+.card.strip .strip-shade{animation:none}
 .card.flipped>.back{display:flex}
 .card.flipped>:not(.back):not(.head),.card.flipped>.head>:not(.chip){visibility:hidden}
 .back{position:absolute;inset:0;z-index:1;flex-direction:column;padding:inherit;border-radius:inherit;overflow:hidden;min-width:0}
@@ -342,22 +344,25 @@ $.addEventListener('click',e=>{
   if(!e.target.closest('.dates')&&!getSelection().toString())flip(c,true);
 });
 $.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.card.can-flip')){e.preventDefault();flip(e.target,true)}});
-// The back: a funny status, the time left (or since) and what it compares to. They are picked at random whenever the card
-// turns over, avoiding what the other cards show; the picks are kept per card, so every re-render and every language shows the same ones
+// The back: a funny status, the time left (or since) and what it compares to. They are picked at random every 3 hours,
+// avoiding what the other cards show; the picks are kept per card, so every re-render, every turn and every language shows the same ones
 const picks=new Map(), flipped=new Set(), held=new Set(), turning=new Set(); // held: turned by the visitor, stays until turned back
 const ALT={weeks:6048e5,hours:36e5,minutes:6e4,seconds:1e3,beats:800}; // a heart at 75 beats a minute
 const PR={},plural=(f,n)=>f[(PR[I18N.lang]??=new Intl.PluralRules(I18N.lang)).select(n)]??f.other;
 const round=n=>n>=10?Math.round(n):Math.round(n*10)/10;
-const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
-function pick(id,phase,ms,now,ctx){
-  let p=picks.get(id);if(p&&!p.stale&&p.phase===phase)return p; // a new pick on every turn to the back, and when the phase changes
-  const others=[...picks].filter(([k])=>k!==id).map(([,v])=>v), taken=(k,v)=>others.some(o=>o[k]===v||o.items?.includes(v));
-  const sts=fits(phase,now,ctx), free=sts.filter(x=>!taken('st',x)&&x!==p?.st);
-  const st=(free.length?free:sts)[Math.random()*(free.length||sts.length)|0]||null;
-  const ok=COMPARE.filter(([m])=>{const n=ms/(m*6e4);return n>=1&&n<=1e6}), mine=shuffle(ok.filter(x=>!taken('items',x)&&!p?.items.includes(x)));
-  const items=[...mine,...shuffle(ok.filter(x=>!mine.includes(x)))].slice(0,3);
-  const units=Object.keys(ALT).filter(u=>u!==p?.unit&&ms/ALT[u]>=2);
-  p={phase,st,items,unit:units[Math.random()*units.length|0]||'seconds'};picks.set(id,p);return p;
+// Seeded randomness: the same card in the same 3-hour window always gets the same picks, for every visitor, like the shared status
+const seeded=str=>{let h=1779033703^str.length;for(const ch of str)h=Math.imul(h^ch.charCodeAt(0),3432918353),h=h<<13|h>>>19;
+  return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return((h^=h>>>16)>>>0)/4294967296}};
+const shuffle=(a,rnd)=>{for(let i=a.length-1;i>0;i--){const j=rnd()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function pick(id,phase,ms,now,ctx){ // the back's status, comparisons and unit: new every 3 hours (and when the phase changes), not on every turn
+  const win=Math.floor(now/108e5), key=phase+':'+win;let p=picks.get(id);if(p&&p.key===key)return p;
+  const rnd=seeded(id+':'+key), others=[...picks].filter(([k,v])=>k!==id&&v.win===win).map(([,v])=>v); // the other cards' picks in this window, any phase
+  const sts=fits(phase,now,ctx), free=sts.filter(x=>!others.some(o=>o.st===x));
+  const from=free.length?free:sts, st=from[rnd()*from.length|0]||null;
+  const ok=COMPARE.filter(([m])=>{const n=ms/(m*6e4);return n>=1&&n<=1e6}), mine=shuffle(ok.filter(x=>!others.some(o=>o.items.includes(x))),rnd);
+  const items=[...mine,...shuffle(ok.filter(x=>!mine.includes(x)),rnd)].slice(0,3);
+  const units=Object.keys(ALT).filter(u=>ms/ALT[u]>=2);
+  p={key,win,st,items,unit:units[rnd()*units.length|0]||'seconds'};picks.set(id,p);return p;
 }
 function back(tm,phase,s,e,now,ctx,p){
   const [lk,raw]={serve:['back.left',e-now],soon:[tm.pending?'back.toNotice':'back.toStart',s-now],summons:['back.since',now-s],done:['back.home',now-e]}[phase];
@@ -375,11 +380,11 @@ const still=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
 // the rest lags behind and the card bends while it turns. The old side turns away to edge-on, then the new side turns in the same
 // way and settles with a little overshoot. The strips are copies of the card (the real one is hidden meanwhile) in a layer that
 // sync() and the fitting leave alone
-const STRIPS=22, LAG=15, OUT=240, IN=340; // strips, ms between neighbouring strips, ms to turn away, ms to turn in
+const STRIPS=16, LAG=20, OUT=260, IN=360; // strips, ms between neighbouring strips, ms to turn away, ms to turn in
 function flip(c,user){
   const id=c.dataset.id;if(cfg?.page.cardBacks===false||turning.has(id))return;
   const toBack=!flipped.has(id);
-  const swap=()=>{if(toBack){const k=picks.get(id);if(k)k.stale=true;flipped.add(id);user?held.add(id):held.delete(id)}else{flipped.delete(id);held.delete(id)}render()};
+  const swap=()=>{if(toBack){flipped.add(id);user?held.add(id):held.delete(id)}else{flipped.delete(id);held.delete(id)}render()};
   if(still())return swap();
   turning.add(id);
   const copy=el=>{const x=el.cloneNode(true);for(const a of ['data-id','data-day','tabindex','data-status'])x.removeAttribute(a);x.classList.add('leaf','strip');x.setAttribute('aria-hidden','true');return x};
@@ -388,18 +393,22 @@ function flip(c,user){
   const n=$.querySelector(`.card[data-id="${id}"]`);if(!n)return turning.delete(id);
   const neu=copy(n), layer=document.createElement('div');layer.className='leaf flex-turn';Object.assign(layer.style,box);
   const P='perspective(1300px) ',dir=toBack?1:-1,total=(STRIPS-1)*LAG+OUT+IN;
+  // only transforms and opacity move, so the browser runs it all off the main thread; the cuts fall on whole pixels, so the
+  // see-through strips meet without hairlines
+  const H=c.offsetHeight, cut=k=>Math.round(H*k/STRIPS), shade='<i class="strip-shade"></i>';
   for(let i=0;i<STRIPS;i++){
-    const top=i?`${i/STRIPS*100}%`:'-60px', bottom=i<STRIPS-1?`calc(${100-(i+1)/STRIPS*100}% - 1px)`:'-20px'; // a pixel of overlap hides the seams; the top strip takes the chip above the edge
+    const top=i?cut(i)+'px':'-60px', bottom=i<STRIPS-1?H-cut(i+1)+'px':'-20px'; // the top strip takes the chip above the edge
     const clip=`inset(${top} -40px ${bottom} -40px)`, a=old.cloneNode(true), b=neu.cloneNode(true);
-    a.style.clipPath=b.style.clipPath=clip;layer.append(a,b);
-    a.animate([{transform:P+'rotateY(0)',filter:'brightness(1)'},{transform:P+`rotateY(${dir*90}deg)`,filter:'brightness(.72)'}],
-      {duration:OUT,delay:i*LAG,easing:'cubic-bezier(.55,0,.8,.45)',fill:'both'});
-    b.animate([{transform:P+`rotateY(${-dir*90}deg)`,filter:'brightness(.72)'},{transform:P+`rotateY(${dir*7}deg)`,filter:'brightness(1.03)',offset:.7},{transform:P+'rotateY(0)',filter:'brightness(1)'}],
-      {duration:IN,delay:i*LAG+OUT,easing:'cubic-bezier(.2,.6,.35,1)',fill:'both'});
+    a.style.clipPath=b.style.clipPath=clip;a.insertAdjacentHTML('beforeend',shade);b.insertAdjacentHTML('beforeend',shade);layer.append(a,b);
+    const t0=i*LAG, outE='cubic-bezier(.55,0,.8,.45)', inE='cubic-bezier(.2,.6,.35,1)';
+    a.animate([{transform:P+'rotateY(0)'},{transform:P+`rotateY(${dir*90}deg)`}],{duration:OUT,delay:t0,easing:outE,fill:'both'});
+    a.lastChild.animate([{opacity:0},{opacity:.22}],{duration:OUT,delay:t0,easing:outE,fill:'both'}); // darker as it turns edge-on
+    b.animate([{transform:P+`rotateY(${-dir*90}deg)`},{transform:P+`rotateY(${dir*7}deg)`,offset:.7},{transform:P+'rotateY(0)'}],{duration:IN,delay:t0+OUT,easing:inE,fill:'both'});
+    b.lastChild.animate([{opacity:.22},{opacity:0}],{duration:IN*.7,delay:t0+OUT,easing:inE,fill:'both'});
   }
   $.append(layer);
   n.animate([{opacity:0},{opacity:0}],{duration:total}); // the real card shows again when the last strip has settled
-  setTimeout(()=>{layer.animate([{opacity:1},{opacity:0}],{duration:160,easing:'ease-out'}).onfinish=()=>{layer.remove();turning.delete(id)}},total); // fades into the real (glass) card
+  setTimeout(()=>{layer.remove();turning.delete(id)},total); // the strips look like the card itself, so it simply takes over
 }
 // Now and then a random card in view turns over by itself, and back after a while, unless the visitor is looking at it
 let autoT=0,autoKey='';
