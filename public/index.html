@@ -209,8 +209,9 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 .log.gold{--bark:#d9a21c;--grain:#9a6a06;--core:#ffe68e;--ring:#c99512;filter:drop-shadow(0 0 7px rgb(255 200 60/.95))}
 .log svg{display:block;width:100%;height:100%}
 .fire-tip .rec{display:block;margin-top:3px;opacity:.7;font-size:.8em}
-.card-tip{position:absolute;right:auto;bottom:auto;transform-origin:50% 0}
-.card-tip::after{display:none}
+/* the card hint sits by its card, not by the fire button: .fire-tip.card-tip outranks every later .fire-tip rule (the phone one too) */
+.fire-tip.card-tip{position:absolute;right:auto;bottom:auto;height:auto;transform-origin:50% 0}
+.fire-tip.card-tip::after{display:none}
 .fire-tip.short{width:auto;max-width:min(300px,calc(100% - 32px));padding:10px 14px}
 @keyframes tip-in{from{opacity:0;transform:translateY(8px) scale(.9)}}
 @media(prefers-reduced-motion:reduce){.fire-btn,.fire-btn .fl,.fire-tip{animation:none!important}}
