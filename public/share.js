@@ -40,7 +40,7 @@ function read(c, accent) {
     accent: accent || getComputedStyle(c).getPropertyValue('--accent').trim() || '#b23a1e',
     big: txt('.count .days'), units, done: txt('.done'), sub: txt('.sub'),
     bar: bar && { pct: +bar.getAttribute('aria-valuenow'), l: txt('.meta span:first-child'), r: txt('.meta span:last-child') },
-    dashed: c.matches('.is-summons,.is-notice'), status: c.dataset.status || '', stamp: txt('.stamp'), bigStamp: !!q('.stamp.big'),
+    status: c.dataset.status || '', stamp: txt('.stamp'), bigStamp: !!q('.stamp.big'),
     dates: dates && (dates.querySelector('span')?.textContent || dates.textContent).trim(),
     back: bk && { status: bq('.bk-q'), labels: [...bk.querySelectorAll('.bk-l')].map(e => e.textContent.trim()), time: bq('.bk-t'), alt: bq('.bk-alt'),
       items: [...bk.querySelectorAll('.bk-c li')].map(li => { const b = li.querySelector('b')?.textContent || ''; return [b, li.textContent.slice(b.length).trim()]; }) } };
@@ -77,7 +77,7 @@ function draw(cv, d, o) {
   x.globalAlpha = o.theme === 'dark' ? .1 : .08; x.fillStyle = g; x.fillRect(cx, cy, cw, ch); x.globalAlpha = 1;
   g = x.createLinearGradient(0, cy, 0, cy + 160); g.addColorStop(0, P.hi); g.addColorStop(1, 'rgba(255,255,255,0)'); x.strokeStyle = g; x.lineWidth = 3; rr(cx + 1.5, cy + 1.5, cw - 3, ch - 3, 55); x.stroke(); x.restore();
   rr(cx, cy, cw, ch, 56);
-  if (d.bigStamp) { x.strokeStyle = '#e2a93b'; x.lineWidth = 6; } else if (d.dashed) { x.strokeStyle = A; x.lineWidth = 4; x.setLineDash([18, 12]); } else { x.strokeStyle = P.edge; x.lineWidth = 3; }
+  if (d.bigStamp) { x.strokeStyle = '#e2a93b'; x.lineWidth = 6; } else { x.strokeStyle = P.edge; x.lineWidth = 3; }
   x.stroke(); x.setLineDash([]);
   x.textBaseline = 'middle'; font(700, 32); x.letterSpacing = '2px';
   const chip = d.chip.toUpperCase(), chipW = Math.min(cw - 120, x.measureText(chip).width + 72), chipX = W / 2 - chipW / 2;

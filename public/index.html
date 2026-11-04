@@ -67,7 +67,6 @@ h2{margin:0;font-size:1.32rem;line-height:1.25;letter-spacing:-.01em;white-space
 .chip{position:absolute;z-index:2;top:0;left:50%;transform:translate(-50%,-50%);padding:4px 13px;border-radius:999px;font:700 .74rem/1.4 var(--sans);letter-spacing:.05em;text-transform:uppercase;
  color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);box-shadow:0 2px 8px -3px rgb(0 0 0/.25);white-space:nowrap}
 .chip.is-soon,.chip.is-summons{animation:blink 1.6s ease-in-out infinite}
-.card.is-summons,.card.is-notice{border:1.5px dashed var(--accent)}
 @keyframes blink{50%{color:color-mix(in srgb,var(--accent) 25%,transparent)}}
 @media(prefers-reduced-motion:reduce){.chip.is-soon,.chip.is-summons{animation:none}}
 .count{display:flex;align-items:flex-start;gap:.25em 8px;margin:8px 0 0}
@@ -142,26 +141,26 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 /* The back of a card: a tap turns it over (a random one turns by itself now and then). The front stays laid out underneath, only hidden,
    so the digit fitting never sees the back */
 .card.can-flip{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.card.turning{will-change:transform} /* drawn once and turned as a picture: redrawn at every step of the turn, a dashed outline (call-up notices) trembles */
+.card.turning{will-change:transform} /* drawn once and turned as a picture, so nothing on it trembles while it turns */
 .card.can-flip:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .card>.back{display:none}
 .card.flipped>.back{display:flex}
 .card.flipped>:not(.back):not(.head),.card.flipped>.head>:not(.chip){visibility:hidden}
-.back{position:absolute;inset:0;z-index:1;flex-direction:column;padding:inherit;border-radius:inherit;overflow:hidden;min-width:0}
-.back>*{flex:none;min-width:0}
-.bk-name{margin:0;font-weight:700;font-size:1.05rem;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bk-q{margin:6px 0 0;padding:1px 0 1px 9px;border-left:3px solid var(--accent);font-size:.92rem;line-height:1.3;font-style:italic;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.back{position:absolute;inset:0;z-index:1;flex-direction:column;padding:inherit;border-radius:inherit;overflow:hidden;min-width:0;font-size:calc(1rem*var(--bk,1))}
+/* Nothing on the back is cut off: every line wraps whole, and when it all does not fit, fitBacks() makes the text smaller
+   (--bk, a scale for every size below, which are in em for that) */
+.back>*{flex:none;min-width:0;overflow-wrap:anywhere}
+.bk-name{margin:0;font-weight:700;font-size:1.05em;line-height:1.25}
+.bk-q{margin:.4em 0 0;padding:1px 0 1px 9px;border-left:3px solid var(--accent);font-size:.92em;line-height:1.3;font-style:italic}
 .bk-gap{flex:1 1 4px}
-.bk-l{margin:8px 0 0;color:var(--mute);font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bk-t{margin:1px 0 0;font:800 1.4rem/1.1 var(--sans);color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-l{margin:.5em 0 0;color:var(--mute);font-size:.66em;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.bk-t{margin:1px 0 0;font:800 1.4em/1.1 var(--sans);color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap;overflow-wrap:normal} /* one line: the fitting checks its width too */
 .bk-t small{font:600 .55em var(--sans);color:var(--mute);letter-spacing:0}
-.bk-alt{margin:0;color:var(--mute);font-size:.76rem;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bk-c{flex:0 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column;flex-wrap:wrap;list-style:none;margin:2px 0 0;padding:0;font-size:.84rem;line-height:1.3} /* gives way first, so the share button always stays on the card; a line that does not fit wraps into a hidden second column, whole */
-.bk-c li{width:100%}
-.bk-c li{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bk-alt{margin:0;color:var(--mute);font-size:.76em;font-variant-numeric:tabular-nums}
+.bk-c{display:flex;flex-direction:column;list-style:none;margin:2px 0 0;padding:0;font-size:.84em;line-height:1.3}
 .bk-c b{color:var(--accent);font-variant-numeric:tabular-nums}
 .bk-foot .shr{margin-left:auto}
-@container card (min-width:300px){.bk-name{font-size:1.3rem}.bk-q{font-size:1.1rem}.bk-t{font-size:2rem}.bk-alt{font-size:.9rem}.bk-c{font-size:1rem}.bk-l{font-size:.74rem}}
+@container card (min-width:300px){.bk-name{font-size:1.3em}.bk-q{font-size:1.1em}.bk-t{font-size:2em}.bk-alt{font-size:.9em}.bk-c{font-size:1em}.bk-l{font-size:.74em}}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 /* Everyone's service in one number; it runs one second faster for every person serving now */
 .together{display:flex;align-items:center;justify-content:center;gap:4px 14px;flex-wrap:wrap;width:min(1108px,calc(100% - max(16px,env(safe-area-inset-left)) - max(16px,env(safe-area-inset-right))));margin:4px auto 6px;padding:10px 18px;border-radius:18px;text-align:center}
@@ -238,7 +237,8 @@ footer a:hover{color:var(--ink)}
  .together .tv{font-size:1.3rem}
  main{gap:26px 12px}
  main:not(.one):not(.two){grid-template-columns:1fr}
- main:not(.one):not(.two) .card{aspect-ratio:1;max-height:86vh;max-height:86svh;padding:16px 16px 10px} /* tall, so the number can be big */
+ main .card{aspect-ratio:5/6} /* a little taller than square, so the back has room too */
+ main:not(.one):not(.two) .card{max-height:86vh;max-height:86svh;padding:16px 16px 10px} /* tall, so the number can be big */
  main.two{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 10px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
  main.two .card{padding:13px 9px 7px;border-radius:16px}
  main.two .sub{display:none} /* small squares give their room to the number */
@@ -248,7 +248,7 @@ footer a:hover{color:var(--ink)}
  .fire-tip::after{right:24px}
  .notice{flex-direction:column;align-items:stretch}
 }
-@media(max-width:600px) and (max-height:520px){main:not(.one):not(.two) .card{aspect-ratio:2/1;max-height:none}} /* phones on their side */
+@media(max-width:600px) and (max-height:520px){main .card{aspect-ratio:1}main:not(.one):not(.two) .card{aspect-ratio:2/1;max-height:none}} /* phones on their side */
 /* Small squares: sizes follow the card's own content width, secondary lines drop out as it shrinks */
 @container card (max-width:200px){ /* content width; cards up to about 218px */
  h2{font-size:1rem}
@@ -263,14 +263,14 @@ footer a:hover{color:var(--ink)}
  .meta{font-size:.52rem;margin-top:4px;gap:4px}
  .dates{font-size:.56rem;margin-top:5px;padding-top:4px}
  .done{margin-top:6px;font-size:.9rem}
- /* small squares keep every stat: the status gets two lines, the "that is about" heading goes (the numbers say it), each comparison one line */
- .bk-name{font-size:.82rem}.bk-q{font-size:.7rem;-webkit-line-clamp:2;margin-top:3px;padding-left:6px;border-left-width:2px}
- .bk-l{font-size:.52rem;margin-top:4px}.bk-like{display:none}.bk-t{font-size:.98rem}.bk-alt{font-size:.56rem;line-height:1.2}.bk-c{font-size:.64rem;margin-top:3px}.bk-c li{-webkit-line-clamp:1}
+ /* small squares keep every stat: the "that is about" heading goes (the numbers say it) */
+ .bk-name{font-size:.82em}.bk-q{font-size:.7em;margin-top:3px;padding-left:6px;border-left-width:2px}
+ .bk-l{font-size:.52em;margin-top:4px}.bk-like{display:none}.bk-t{font-size:.98em}.bk-alt{font-size:.56em;line-height:1.2}.bk-c{font-size:.64em;margin-top:3px}
  .bk-foot{position:absolute;right:9px;bottom:7px;margin:0;padding:0;border:0}.bk-c li:last-child{padding-right:20px} /* the share button sits in the corner instead of taking a row */
 }
 @container card (max-width:135px){ /* very narrow phones, about 150px cards */
  .meta,.sub,.dates{display:none}
- .bk-q{-webkit-line-clamp:1}.bk-foot{display:flex}.bk-c li:last-child{padding-right:18px}
+ .bk-foot{display:flex}.bk-c li:last-child{padding-right:18px}
  .days{font-size:1.6rem}
  .dates{font-size:.52rem}
 }
@@ -497,7 +497,7 @@ function render(){
   $.className=ts.length===1?'one':cols()===2?'two':'';colsBtn.hidden=ts.length<2;drawCols();
   const tpl=document.createElement('template');tpl.innerHTML=ts.length?ts.map(x=>card(x,cfg.page,now)).join(''):`<p class="empty">${t('empty')}</p>`;
   sync($,tpl.content);
-  fitCards();
+  fitCards();fitBacks();
   for(const c of $.querySelectorAll('.card[data-day]')){const d=+c.dataset.day,was=lastDay.get(c.dataset.id);lastDay.set(c.dataset.id,d);if(was!==undefined&&d!==was)dayTick(c,d-was)}
   if(!matchMedia('(prefers-reduced-motion:reduce)').matches)for(const el of $.querySelectorAll('.stamp[data-new="1"]')){ // sparks as the stamp hits
     const id=el.closest('.card').dataset.id, big=el.classList.contains('big');
@@ -522,6 +522,20 @@ function dayTick(c,n){ // "-1 day" rises from the big number and fades out
 const fitted=new Map(); // fitted sizes per set of cards + width + texts, so the 1 s re-render does not measure again
 let bases=new WeakMap(); // element => its font size from the CSS (before fitting) and the class it had then
 const refit=()=>{fitted.clear();bases=new WeakMap()}; // the width changed: the CSS sizes (container queries) may have too
+// The back of a turned card: the largest text (--bk, at most 1) with which everything on it is there whole. Kept while the card
+// and its text keep their size, so the ticking seconds do not lay it out again
+const backFit=new Map();
+function fitBacks(){
+  if(backFit.size>50)backFit.clear();
+  for(const c of $.querySelectorAll('.card.flipped')){
+    const b=c.querySelector('.back');if(!b)continue;
+    const key=[c.clientWidth,c.clientHeight,I18N.lang,b.textContent.length].join('|');if(b.dataset.fit===key)continue;
+    const t=b.querySelector('.bk-t'), ok=()=>b.scrollHeight<=b.clientHeight+.5&&(!t||t.scrollWidth<=t.clientWidth+.5), set=k=>b.style.setProperty('--bk',k);
+    let k=backFit.get(c.dataset.id+'|'+key);
+    if(k===undefined){set(1);if(ok())k=1;else{let lo=.35,hi=1;for(let i=0;i<7;i++){const m=(lo+hi)/2;set(m);ok()?lo=m:hi=m}k=lo*.98}backFit.set(c.dataset.id+'|'+key,k)}
+    set(k);b.dataset.fit=key;
+  }
+}
 function fitCards(){ // one digit size for every countdown, the largest with which every card still fits; names get one height so the digits line up
   if(fitted.size>50)fitted.clear();
   // the CSS size of each element that grows, read once (with the fitted size taken off) and kept while the width stays
