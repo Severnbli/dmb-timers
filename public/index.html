@@ -208,6 +208,8 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 .log.gold{--bark:#d9a21c;--grain:#9a6a06;--core:#ffe68e;--ring:#c99512;filter:drop-shadow(0 0 7px rgb(255 200 60/.95))}
 .log svg{display:block;width:100%;height:100%}
 .fire-tip .rec{display:block;margin-top:3px;opacity:.7;font-size:.8em}
+.card-tip{position:absolute;right:auto;bottom:auto;transform-origin:50% 0}
+.card-tip::after{display:none}
 .fire-tip.short{width:auto;max-width:min(300px,calc(100% - 32px));padding:10px 14px}
 @keyframes tip-in{from{opacity:0;transform:translateY(8px) scale(.9)}}
 @media(prefers-reduced-motion:reduce){.fire-btn,.fire-btn .fl,.fire-tip{animation:none!important}}
@@ -295,7 +297,7 @@ async function load(){
   // hours and seasons follow the server (unit) time zone, not the visitor's
   try{clock=new Intl.DateTimeFormat('en-US',{timeZone:cfg.tz,month:'numeric',day:'numeric',hour:'numeric',hourCycle:'h23'})}catch{clock=null}
   if(cfg.page.cardBacks===false){flipped.clear();held.clear()}
-  autoFlip();title();}catch{}
+  autoFlip();title();setTimeout(cardHint,1200);}catch{}
 }
 // For the picture in another language: the same card, with the same picks, drawn in that language (share.js)
 window.CARDS={
@@ -336,7 +338,7 @@ const SHARE_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 // on the card turns it over. The dates row is left out, so a near miss of the share button does not turn the card
 $.addEventListener('click',e=>{
   const c=e.target.closest?.('.card');if(!c)return;
-  if(e.target.closest('.shr'))return SHARE.open(c,flipped.has(c.dataset.id)?'back':'front');
+  closeCardHint();if(e.target.closest('.shr'))return SHARE.open(c,flipped.has(c.dataset.id)?'back':'front');
   if(!e.target.closest('.dates')&&!getSelection().toString())flip(c,true);
 });
 $.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.card.can-flip')){e.preventDefault();flip(e.target,true)}});
@@ -375,7 +377,7 @@ const still=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
 // lead, the other side is swapped in, and it springs back past flat and settles with a little wobble
 function flip(c,user){
   const id=c.dataset.id;if(cfg?.page.cardBacks===false||turning.has(id))return;
-  const toBack=!flipped.has(id);
+  const toBack=!flipped.has(id);if(user)closeCardHint();
   const swap=()=>{if(toBack){flipped.add(id);user?held.add(id):held.delete(id)}else{flipped.delete(id);held.delete(id)}render()};
   if(still())return swap();
   turning.add(id);springFlip(c,id,toBack,swap);
@@ -389,22 +391,42 @@ function springFlip(c,id,toBack,swap){
       {duration:560,easing:'cubic-bezier(.25,.7,.4,1)'}).onfinish=()=>turning.delete(id);
   };
 }
-// Now and then a random card in view turns over by itself, and back after a while, unless the visitor is looking at it
-let autoT=0,autoKey='';
+// Now and then a random card in view turns over by itself, but only while nobody is using the page: after flipIdle seconds without
+// a touch, click, scroll or key, and then every flipEvery seconds while it stays idle. It turns back after flipHold seconds,
+// unless the visitor is looking at it
+let lastAct=Date.now(),lastAuto=0,autoT=0;
+for(const ev of ['pointerdown','pointermove','keydown','wheel','scroll','touchstart'])addEventListener(ev,()=>{lastAct=Date.now()},{passive:true,capture:true});
 function autoFlip(){
-  const p=cfg?.page,key=p?`${p.cardBacks}|${p.flipEvery}`:'';if(key===autoKey)return;autoKey=key;clearTimeout(autoT);
-  if(!p||p.cardBacks===false||!p.flipEvery)return;
-  const next=()=>{autoT=setTimeout(()=>{next();
+  if(autoT)return;
+  autoT=setInterval(()=>{
+    const p=cfg?.page,now=Date.now();if(!p||p.cardBacks===false||!p.flipEvery)return;
+    if(now-lastAct<(p.flipIdle??10)*1e3||now-lastAuto<p.flipEvery*1e3)return;
     if(document.hidden||still()||document.querySelector('dialog[open]'))return;
     const cs=[...$.querySelectorAll('.card.can-flip')].filter(c=>{const r=c.getBoundingClientRect();
       return r.top>-r.height/3&&r.bottom<innerHeight+r.height/3&&!flipped.has(c.dataset.id)&&!c.matches(':hover')&&!c.contains(document.activeElement)});
-    const c=cs[Math.random()*cs.length|0];if(!c)return;const id=c.dataset.id;flip(c,false);
+    const c=cs[Math.random()*cs.length|0];if(!c)return;const id=c.dataset.id;lastAuto=now;flip(c,false);
     const turnBack=()=>{if(!flipped.has(id)||held.has(id))return;const n=$.querySelector(`.card[data-id="${id}"]`);
       if(!n||n.matches(':hover')||n.contains(document.activeElement)||document.querySelector('dialog[open]'))return setTimeout(turnBack,1500);flip(n,false)};
-    setTimeout(turnBack,(cfg.page.flipHold||6)*1e3);
-  },p.flipEvery*1e3)};
-  next();
+    setTimeout(turnBack,(p.flipHold||6)*1e3);
+  },1000);
 }
+// First visit: a bubble over the first card says the cards turn over, and the card gives a little wiggle. It goes away
+// with a tap on any card or on OK, and is remembered in this browser
+let flipTip=null;
+function cardHint(){
+  if(flipTip||cfg?.page.cardBacks===false||store.get('flipHint'))return;
+  const c=$.querySelector('.card.can-flip');if(!c)return;
+  flipTip=document.createElement('div');flipTip.className='fire-tip card-tip';flipTip.setAttribute('role','dialog');
+  flipTip.innerHTML=`<b>${esc(t('tip.flipTitle'))}</b><p>${esc(t('tip.flip'))}</p><button type="button">${esc(t('notice.ok'))}</button>`;
+  flipTip.querySelector('button').onclick=closeCardHint;document.body.append(flipTip);placeCardHint();
+  if(!still())c.animate([{transform:'perspective(1100px) rotateY(0)'},{transform:'perspective(1100px) rotateY(-14deg)'},{transform:'perspective(1100px) rotateY(9deg)'},{transform:'perspective(1100px) rotateY(-4deg)'},{transform:'perspective(1100px) rotateY(0)'}],{duration:1100,delay:400,easing:'ease-in-out'});
+}
+function placeCardHint(){ // over the lower part of the first card, in page coordinates, so it scrolls with it
+  const c=$.querySelector('.card.can-flip');if(!flipTip||!c)return;const r=c.getBoundingClientRect(),w=flipTip.offsetWidth;
+  flipTip.style.left=Math.max(16,Math.min(innerWidth-w-16,r.left+r.width/2-w/2))+'px';flipTip.style.top=(r.top+scrollY+r.height*.45)+'px';
+}
+function closeCardHint(){if(!flipTip)return;store.set('flipHint','1');flipTip.remove();flipTip=null}
+addEventListener('resize',placeCardHint);
 // Milestones of a service: the day a quarter, half or three quarters is served, and 100 / 30 / 7 / last day left
 function milestone(phase,s,e,now,d){
   if(phase==='done')return now-e<DAY?'demob':null; // demob day: the first 24 hours at home

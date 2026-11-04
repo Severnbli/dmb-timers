@@ -52,11 +52,11 @@ const newTimer = (o = {}) => {
 // The fire button: a visitor adds one log per sparkHours (the browser keeps the wait); the count starts over every sparkDays.
 // The fire dust grows from dustMin to dustMax sparks (per 1440x900 screen) as the logs reach dustFull
 const defaults = () => ({ pageTitle: '', showBackground: true, showClock: false, showSeconds: true, showProgress: true, showStatuses: true,
-  cardBacks: true, backStatus: true, backItems: 2, flipEvery: 10, flipHold: 6,
+  cardBacks: true, backStatus: true, backItems: 2, flipEvery: 10, flipHold: 6, flipIdle: 10,
   phoneCols: 1, counterOn: true, counterMode: 'served', sparkOn: true, sparkHours: 12, sparkDays: 45, dustOn: true, dustMin: 15, dustMax: 120, dustFull: 100,
   sparks: 0, sparksRecord: 0, sparksSince: now().toISOString(), timers: [], history: [] });
 const NUMS = { sparkHours: [1, 720], sparkDays: [1, 365], dustMin: [0, 300], dustMax: [0, 300], dustFull: [1, 100000],
-  backItems: [0, 3], flipEvery: [0, 600], flipHold: [2, 120] }; // allowed ranges
+  backItems: [0, 3], flipEvery: [0, 600], flipHold: [2, 120], flipIdle: [3, 600] }; // allowed ranges
 const OLD_DEFAULTS = { label: 'Until demobilization', doneMessage: 'Demobilized. Welcome home!', pageTitle: 'Demobilization timers' };
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -83,7 +83,7 @@ const save = () => { // write a copy, then swap it in, so a crash mid-write neve
 
 const BOOLS = ['showBackground', 'showClock', 'showSeconds', 'showProgress', 'showStatuses', 'cardBacks', 'backStatus', 'counterOn', 'sparkOn', 'dustOn'];
 const COUNTER_MODES = ['served', 'left']; // the shared counter: time served by everyone together, or time left for everyone
-const PAGE_KEYS = ['pageTitle', ...BOOLS, 'phoneCols', 'counterMode', 'sparkHours', 'dustMin', 'dustMax', 'dustFull', 'backItems', 'flipEvery', 'flipHold'];
+const PAGE_KEYS = ['pageTitle', ...BOOLS, 'phoneCols', 'counterMode', 'sparkHours', 'dustMin', 'dustMax', 'dustFull', 'backItems', 'flipEvery', 'flipHold', 'flipIdle'];
 // The logs burn out together: every sparkDays since sparksSince the count goes back to zero
 const rollover = () => {
   const since = +new Date(cfg.sparksSince), period = cfg.sparkDays * DAY;
