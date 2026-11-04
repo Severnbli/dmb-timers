@@ -16,7 +16,9 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Demob day.** For the first 24 hours after a timer ends, its card glows gold, carries a big "Demob!" stamp and fires salutes of sparks.
 
-**Funny statuses.** Pictures shared from a card carry a short status that follows the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Every status has its own time window, so nobody is waiting at the station two days early. The cards on the page leave them out, so the numbers get the room.
+**Funny statuses.** Pictures shared from a card carry a short status that follows the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Every status has its own time window, so nobody is waiting at the station two days early. The front of a card leaves them out, so the numbers get the room; they live on its back.
+
+**Card backs.** Tap a card and it turns over. The back shows a funny status, the time until demob (or until the call-up or the notice, or since the notice, or at home for), the same time in weeks, hours, minutes, seconds or heartbeats, and what it compares to: "≈ 865 Titanic films", "≈ 94 trips to the Moon", "≈ 3,686 sloths crossing a football pitch". The status and comparisons are picked at random every time a card turns over, and neighbouring cards get different ones. Every 10 seconds a random card in view turns over by itself and turns back after a few seconds, unless you are pointing at it. A tap on the turn button or anywhere on the card turns it back. The share button and the dates row around it never turn the card.
 
 **Shared counter.** Above the cards, everyone's time served is added up into one number (or the time left for everyone, if you choose). Every second it adds one second for each person serving now, so with five people serving, the seconds run five times faster.
 
@@ -24,13 +26,13 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 - Each tap adds a log to a shared fire. A visitor can add one log every 12 hours (the browser remembers when, in local storage).
 - The count starts over from zero every 45 days. Tapping the fire again while your log is still burning tells you when the next log can go in and when the fire starts over.
-- The more logs, the more sparks of fire dust drift over the cards and the bigger and hotter they are. The sparks cover the whole page and scroll with it.
+- The more logs, the more sparks of fire dust drift over the cards and the bigger and hotter they are. The sparks scroll with the page and light up around the part in view, so a long page scrolls as smoothly as a short one.
 - A tap drops a log into the fire with a burst of sparks. Most logs are oak; some are birch (crackling white sparks) or pine (resin pops), and one in forty is golden. Logs added by other visitors arrive as sparks from below.
 - The fire remembers its record, the most logs it ever had, and a tap that beats it is celebrated.
 - Tap the burning fire five times quickly and see what happens.
 - On the first visit, a short tip explains the button.
 
-**Share as a picture.** Each card has a share button at the end of its dates row. It turns the card into a picture laid out like the card itself, with the state on its top edge: the page title, the name, the big number, the progress, today's status, the milestone stamp, the dates and the date of the snapshot. Choose light or dark, a post (4:5) or story (9:16) size, and whether to hide the dates, then share it through the phone's share menu or save the PNG. The picture is drawn in the browser, and nothing is sent to the server.
+**Share as a picture.** Each card has a share button at the end of its dates row. It turns the card into a picture laid out like the card itself, with the state on its top edge and fire dust in front: the page title, the name, the big number, the progress, today's status, the milestone stamp, the dates and the date of the snapshot. Or its back, with the status, the time left and the comparisons. Choose the side, the language of the picture (English, Russian or Belarusian, whatever the page is in), light or dark, a post (4:5) or story (9:16) size, and whether to hide the dates and the status. Then share it through the phone's share menu, copy it to the clipboard or save the PNG. The picture is drawn in the browser, and nothing is sent to the server.
 
 <p align="center"><img src="docs/screenshots/share.png" alt="A card shared as a picture" width="360"></p>
 
@@ -136,6 +138,7 @@ The tab also shows the current count and when it starts over, with a **Start ove
 
 - **Look**: page title and the map background.
 - **Cards**: hours, minutes and seconds next to the days, seconds, progress bars, funny statuses on shared pictures, and the default cards per row on phones (one wide card or two small squares); visitors can switch it with the button in the header.
+- **Card backs**: whether a tap turns a card over, the funny status on the back, how many comparisons it shows (0–3), how often a random card turns over by itself (in seconds, 0 for never) and how long it stays turned.
 - **Shared counter**: show or hide it, and whether it counts the time served or the time left. Unconfirmed call-ups are not counted.
 
 ### History

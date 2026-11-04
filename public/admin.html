@@ -194,6 +194,15 @@ button.ok{flex:none;min-height:34px;padding:5px 12px;font-size:.84rem;background
     <select id="counterMode" data-k="counterMode"><option value="served" data-i18n="cm.served">Time served by everyone together</option><option value="left" data-i18n="cm.left">Time left for everyone together</option></select>
     <p class="hint" data-i18n="s.counterHint"></p>
   </section>
+  <section class="box">
+    <h3 data-i18n="s.backs">Card backs</h3>
+    <label class="chk"><span data-i18n="s.cardBacks">Tap a card to turn it over</span><input data-k="cardBacks" type="checkbox"></label>
+    <label class="chk"><span data-i18n="s.backStatus">Funny status on the back</span><input data-k="backStatus" type="checkbox"></label>
+    <label for="backItems" data-i18n="s.backItems">Comparisons on the back (0–3)</label><input id="backItems" data-k="backItems" type="number" min="0" max="3" inputmode="numeric">
+    <div class="grid"><div><label for="flipEvery" data-i18n="s.flipEvery">A random card turns over every, seconds (0 = never)</label><input id="flipEvery" data-k="flipEvery" type="number" min="0" max="600" inputmode="numeric"></div>
+    <div><label for="flipHold" data-i18n="s.flipHold">It turns back after, seconds</label><input id="flipHold" data-k="flipHold" type="number" min="2" max="120" inputmode="numeric"></div></div>
+    <p class="hint" data-i18n="s.backsHint"></p>
+  </section>
   </div>
 
   <div data-pane="history" hidden>

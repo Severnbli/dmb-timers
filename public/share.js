@@ -15,8 +15,9 @@
  */
 
 // A card as a picture to share: everything is drawn on a canvas in the browser, nothing is sent anywhere.
-// It copies what the card shows at the moment it is opened (name, number, progress, status, stamp, dates),
-// and the visitor picks a light or dark look, a post (4:5) or story (9:16) size, and whether to hide the dates.
+// It copies what the card shows at the moment it is opened (name, number, progress, status, stamp, dates) or its back
+// (funny status, time left, comparisons), and the visitor picks the side, the language of the picture, a light or dark look,
+// a post (4:5) or story (9:16) size, and whether to hide the dates and the status. The picture can be shared, copied or saved.
 (() => {
 const { t } = I18N;
 const PAL = { // the site's own colors, per theme; state accents follow the theme too
@@ -29,17 +30,20 @@ const SANS = 'system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif';
 const STATE = { 'is-wait': 'wait', 'is-soon': 'soon', 'is-summons': 'summons', 'is-notice': 'summons' };
 
 // What the card shows right now, read from the card itself, so the picture always matches the page
-function read(c) {
-  const q = s => c.querySelector(s), txt = s => q(s)?.textContent.trim() || '';
+function read(c, accent) {
+  const q = s => c.querySelector(s), txt = s => q(s)?.textContent.trim() || '', bk = c.querySelector('.back');
+  const bq = s => bk?.querySelector(s)?.textContent.replace(/\s+/g, ' ').trim() || '';
   const chip = q('.chip'), unit = q('.unit'), bar = q('.bar'), dates = q('.dates');
   let units = [];
   if (unit) units = q('.count.bare') ? [...unit.children].map(e => e.textContent) : [unit.firstChild?.textContent || '', txt('.unit .clock')].filter(Boolean);
   return { name: txt('h2'), label: txt('.label'), chip: chip.textContent.trim(), state: STATE[[...chip.classList].find(k => STATE[k])] || null,
-    accent: getComputedStyle(c).getPropertyValue('--accent').trim() || '#b23a1e',
+    accent: accent || getComputedStyle(c).getPropertyValue('--accent').trim() || '#b23a1e',
     big: txt('.count .days'), units, done: txt('.done'), sub: txt('.sub'),
     bar: bar && { pct: +bar.getAttribute('aria-valuenow'), l: txt('.meta span:first-child'), r: txt('.meta span:last-child') },
     dashed: c.matches('.is-summons,.is-notice'), status: c.dataset.status || '', stamp: txt('.stamp'), bigStamp: !!q('.stamp.big'),
-    dates: dates && (dates.querySelector('span')?.textContent || dates.textContent).trim() };
+    dates: dates && (dates.querySelector('span')?.textContent || dates.textContent).trim(),
+    back: bk && { status: bq('.bk-q'), labels: [...bk.querySelectorAll('.bk-l')].map(e => e.textContent.trim()), time: bq('.bk-t'), alt: bq('.bk-alt'),
+      items: [...bk.querySelectorAll('.bk-c li')].map(li => { const b = li.querySelector('b')?.textContent || ''; return [b, li.textContent.slice(b.length).trim()]; }) } };
 }
 
 function draw(cv, d, o) {
@@ -57,9 +61,10 @@ function draw(cv, d, o) {
   x.strokeStyle = P.line; x.lineWidth = 2;
   for (let k = 0; k < 26; k++) { x.beginPath(); for (let i = 0; i <= 60; i++) { const px = i / 60 * W * 1.2 - W * .1, py = k * 1350 / 18 - 135 + Math.sin(i / 9 + k * .7) * 40 + Math.sin(i / 4 + k) * 12 + i * 2.2; i ? x.lineTo(px, py) : x.moveTo(px, py); } x.stroke(); }
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 46 * H / 1350; i++) { const sx = rnd() * W, sy = rnd() * H, r = 1.5 + rnd() * 3.5;
+  const sparks = (n, big, a) => { for (let i = 0; i < n; i++) { const sx = rnd() * W, sy = rnd() * H, r = (1.5 + rnd() * 3.5) * big;
     g = x.createRadialGradient(sx, sy, 0, sx, sy, r * 3); g.addColorStop(0, 'rgba(255,230,170,.95)'); g.addColorStop(.35, 'rgba(255,140,40,.7)'); g.addColorStop(1, 'rgba(255,90,20,0)');
-    x.fillStyle = g; x.beginPath(); x.arc(sx, sy, r * 3, 0, 7); x.fill(); }
+    x.globalAlpha = a * (.55 + rnd() * .45); x.fillStyle = g; x.beginPath(); x.arc(sx, sy, r * 3, 0, 7); x.fill(); } x.globalAlpha = 1; };
+  sparks(46 * H / 1350, 1, 1);
   // page title
   const M = 60, T0 = o.fmt === 'story' ? 365 : 80;
   x.fillStyle = P.ink; x.save(); x.translate(M + 12, T0 + 2); x.rotate(Math.PI / 4); x.fillRect(-11, -11, 22, 22); x.restore();
@@ -79,6 +84,29 @@ function draw(cv, d, o) {
   x.save(); x.shadowColor = 'rgba(0,0,0,.25)'; x.shadowBlur = 20; x.shadowOffsetY = 6; rr(chipX, cy - 34, chipW, 68, 34); x.fillStyle = P.solid; x.fill(); x.restore();
   x.fillStyle = A; x.globalAlpha = .14; x.fill(); x.globalAlpha = .3; x.strokeStyle = A; x.lineWidth = 3; x.stroke(); x.globalAlpha = 1;
   x.textAlign = 'center'; x.fillText(fit(chip, chipW - 72), W / 2, cy + 2); x.textAlign = 'left'; x.letterSpacing = '0px';
+  const dy = cy + ch - 90; // the dates line
+  if (o.side === 'back' && d.back) drawBack(); else drawFront();
+  function drawBack() { // the back: name, the funny status as a quote, the time left, and what it compares to
+    const b = d.back; let y = cy + 104;
+    let ns = 64; font(700, ns); while (ns > 44 && x.measureText(d.name).width > iw) font(700, --ns);
+    x.fillStyle = P.ink; x.fillText(fit(d.name, iw), ix, y); y += 60;
+    if (b.status && !o.hideStatus) {
+      font('italic 500', 48); const lines = wrap(b.status, iw - 40).slice(0, 4);
+      x.fillStyle = A; rr(ix, y, 8, lines.length * 62 + 10, 4); x.fill();
+      x.fillStyle = P.ink; lines.forEach((l, i) => x.fillText(fit(l, iw - 40), ix + 36, y + 36 + i * 62)); y += lines.length * 62 + 60;
+    } else y += 30;
+    const label = (s) => { x.fillStyle = P.mute; font(700, 32); x.letterSpacing = '3px'; x.fillText(fit(s.toUpperCase(), iw), ix, y); x.letterSpacing = '0px'; };
+    label(b.labels[0] || ''); y += 30; x.textBaseline = 'alphabetic';
+    let ts = 130; font(800, ts); while (ts > 60 && x.measureText(b.time).width > iw) font(800, ts -= 4);
+    x.fillStyle = A; x.fillText(b.time, ix, y + ts * .85); y += ts * .85 + 54;
+    x.fillStyle = P.mute; font(500, 40); x.fillText(fit(b.alt, iw), ix, y); y += 40; x.textBaseline = 'middle';
+    if (b.items.length) {
+      y += 44; label(b.labels[1] || ''); y += 64;
+      for (const [n, s] of b.items) { font(800, 46); const nw = x.measureText(n).width; x.fillStyle = A; x.fillText(n, ix, y);
+        font(500, 44); x.fillStyle = P.ink; x.fillText(fit(s, iw - nw - 18), ix + nw + 18, y); y += 64; }
+    }
+  }
+  function drawFront() {
   // name and label, as on the card: the name on one line, the label under it
   let y = cy + 104;
   let ns = 72; font(700, ns); while (ns > 48 && x.measureText(d.name).width > iw) font(700, --ns);
@@ -107,18 +135,18 @@ function draw(cv, d, o) {
     x.fillStyle = P.mute; x.globalAlpha = .5; rr(ix + iw / 2 - 3, y - 8, 6, 42, 3); x.fill(); x.globalAlpha = 1;
     y += 74; font(500, 34); x.fillText(d.bar.l, ix, y); x.textAlign = 'right'; x.fillText(d.bar.r, ix + iw, y); x.textAlign = 'left'; y += 10;
   }
-  const dy = cy + ch - 90;
-  if (d.status) { // the funny status as a quote, as long as there is room above the dates
+  if (d.status && !o.hideStatus) { // the funny status as a quote, as long as there is room above the dates
     font(500, 42); let lines = wrap(d.status, iw - 110); const room = Math.floor((dy - 80 - (y + 40) - 50) / 56); lines = lines.slice(0, Math.max(1, Math.min(4, room)));
     y += 40; const sh = lines.length * 56 + 50; rr(ix, y, iw, sh, 22); x.fillStyle = alpha(A, .09); x.fill();
     x.fillStyle = A; font(700, 80, 'Georgia,serif'); x.fillText('“', ix + 22, y + 78);
     x.fillStyle = P.ink; font(500, 42); lines.forEach((l, i) => x.fillText(l, ix + 82, y + 66 + i * 56));
   }
+  }
   if (d.dates && !o.hideDates) {
     x.strokeStyle = P.dash; x.lineWidth = 3; x.setLineDash([10, 8]); x.beginPath(); x.moveTo(ix, dy - 40); x.lineTo(ix + iw, dy - 40); x.stroke(); x.setLineDash([]);
     x.fillStyle = P.mute; font(500, 36); x.fillText(d.dates, ix, dy + 8);
   }
-  if (d.stamp) { // the milestone stamp, bottom right above the dates
+  if (d.stamp && o.side !== 'back') { // the milestone stamp, bottom right above the dates
     let fs = d.bigStamp ? 96 : 64; const st = d.stamp.toUpperCase(); x.letterSpacing = '4px';
     for (; fs > 34; fs -= 2) { font(800, fs); if (x.measureText(st).width + 60 <= iw * .68) break; } // long stamps shrink to stay on the card
     const sw = x.measureText(st).width + 60, sh = fs * 1.55;
@@ -127,50 +155,76 @@ function draw(cv, d, o) {
     rr(-sw / 2 + 10, -sh / 2 + 10, sw - 20, sh - 20, 12); x.strokeStyle = alpha(A, .33); x.lineWidth = 3; x.stroke();
     x.fillStyle = A; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(st, 0, 4); x.restore(); x.letterSpacing = '0px';
   }
+  // fire dust in front of the card too, as on the page: fewer, a little smaller and fainter, so the text stays readable
+  sparks(14 * H / 1350, .8, .8);
   // footer: when the picture was taken
   x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = P.mute; font(500, 32); x.fillText(o.when, W / 2, cy + ch + 70); x.textAlign = 'left';
 }
 
-// The dialog: preview, options, share / save
-let dlg, data = null, name = 'card';
-const opts = { theme: null, fmt: 'post', hideDates: false };
+// The dialog: preview, options, share / copy / save
+let dlg, card = null, data = null, name = 'card';
+const opts = { theme: null, fmt: 'post', side: 'front', lang: null, hideDates: false, hideStatus: false };
 const canShare = () => { try { return !!navigator.canShare?.({ files: [new File([''], 'x.png', { type: 'image/png' })] }); } catch { return false; } };
+const canCopy = () => !!(window.ClipboardItem && navigator.clipboard?.write);
+const seg = (k, vs) => `<div class="seg" data-k="${k}">${vs.map(([v, l]) => `<button type="button" data-v="${v}"${l.startsWith('share.') ? ` data-i18n="${l}"` : ` lang="${v.slice(0, 2)}"`}>${l.startsWith('share.') ? '' : l}</button>`).join('')}</div>`;
 function build() {
   dlg = document.createElement('dialog'); dlg.className = 'share-dlg';
   dlg.innerHTML = `<div class="sh-head"><b data-i18n="share.title"></b><button type="button" class="theme" data-close>×</button></div>
     <canvas></canvas>
-    <div class="sh-opts"><div class="seg" data-k="theme"><button type="button" data-v="light" data-i18n="share.light"></button><button type="button" data-v="dark" data-i18n="share.dark"></button></div>
-    <div class="seg" data-k="fmt"><button type="button" data-v="post" data-i18n="share.post"></button><button type="button" data-v="story" data-i18n="share.story"></button></div>
-    <label class="sh-chk"><input type="checkbox"> <span data-i18n="share.hideDates"></span></label></div>
-    <div class="sh-act"><button type="button" class="pri" data-act="share" data-i18n="share.share"></button><button type="button" data-act="save" data-i18n="share.save"></button></div>`;
+    <div class="sh-opts">${seg('side', [['front', 'share.front'], ['back', 'share.back']])}${seg('lang', Object.entries(I18N.LANGS))}
+    ${seg('theme', [['light', 'share.light'], ['dark', 'share.dark']])}${seg('fmt', [['post', 'share.post'], ['story', 'share.story']])}
+    <label class="sh-chk" data-c="hideDates"><input type="checkbox"> <span data-i18n="share.hideDates"></span></label>
+    <label class="sh-chk" data-c="hideStatus"><input type="checkbox"> <span data-i18n="share.hideStatus"></span></label></div>
+    <div class="sh-act"><button type="button" class="pri" data-act="share" data-i18n="share.share"></button><button type="button" data-act="copy" data-i18n="share.copy"></button><button type="button" data-act="save" data-i18n="share.save"></button></div>`;
   document.body.append(dlg);
   dlg.addEventListener('click', e => {
     if (e.target === dlg || e.target.closest('[data-close]')) return dlg.close();
     const b = e.target.closest('.seg button'); if (b) { opts[b.parentNode.dataset.k] = b.dataset.v; return redraw(); }
-    const a = e.target.closest('[data-act]'); if (a) out(a.dataset.act);
+    const a = e.target.closest('[data-act]'); if (a) out(a.dataset.act, a);
   });
-  dlg.querySelector('input').onchange = e => { opts.hideDates = e.target.checked; redraw(); };
+  dlg.addEventListener('change', e => { const c = e.target.closest('[data-c]'); if (c) { opts[c.dataset.c] = e.target.checked; redraw(); } });
 }
 function redraw() {
-  dlg.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', opts[b.parentNode.dataset.k] === b.dataset.v));
-  dlg.querySelector('.sh-chk').hidden = !data.dates;
-  draw(dlg.querySelector('canvas'), data, { ...opts, title: document.title, when: new Date(Date.now() + (window.SHARE_OFFSET || 0)).toLocaleDateString(I18N.lang, { day: 'numeric', month: 'long', year: 'numeric' }) });
+  const l = opts.lang || I18N.lang, live = card.isConnected ? card : document.querySelector(`.card[data-id="${card.dataset.id}"]`) || card;
+  card = live;
+  // the card in the picture's language: the page draws it again in that language, with the same status and comparisons
+  let el = live;
+  if (l !== I18N.lang && window.CARDS) { const tpl = document.createElement('template'); tpl.innerHTML = CARDS.html(live.dataset.id, l); el = tpl.content.firstElementChild || live; }
+  data = read(el, getComputedStyle(live).getPropertyValue('--accent').trim());
+  if (!data.back) opts.side = 'front';
+  dlg.querySelector('[data-k="side"]').hidden = !data.back;
+  dlg.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', opts[b.parentNode.dataset.k] === b.dataset.v || (b.parentNode.dataset.k === 'lang' && !opts.lang && b.dataset.v === l)));
+  dlg.querySelector('[data-c="hideDates"]').hidden = !data.dates;
+  dlg.querySelector('[data-c="hideStatus"]').hidden = !(opts.side === 'back' ? data.back?.status : data.status);
+  const title = window.CARDS ? CARDS.title(l) : document.title;
+  draw(dlg.querySelector('canvas'), data, { ...opts, title, when: new Date(Date.now() + (window.SHARE_OFFSET || 0)).toLocaleDateString(l, { day: 'numeric', month: 'long', year: 'numeric' }) });
 }
-function out(act) {
-  dlg.querySelector('canvas').toBlob(b => {
+function flash(btn, key) { // the button says how it went for a moment
+  clearTimeout(btn._t); btn.textContent = t(key); btn._t = setTimeout(() => { btn.textContent = t(btn.dataset.i18n); }, 1800);
+}
+function out(act, btn) {
+  const cv = dlg.querySelector('canvas'), blob = new Promise(ok => cv.toBlob(ok, 'image/png'));
+  if (act === 'copy') { // the item is made right away, inside the tap, with the picture still on its way: Safari needs it so
+    navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => flash(btn, 'share.copied'), () => flash(btn, 'share.copyFail'));
+    return;
+  }
+  blob.then(b => {
     if (!b) return;
     const file = name + '.png';
     if (act === 'share' && canShare()) return navigator.share({ files: [new File([b], file, { type: 'image/png' })] }).catch(() => {});
     const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = file; document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 4e3);
-  }, 'image/png');
+  });
 }
-function open(card) {
+function open(c, side = 'front') {
   if (!dlg) build();
-  data = read(card); name = (data.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'card') + '-dmb';
+  card = c; opts.side = side;
+  const n = c.querySelector('h2')?.textContent.trim() || '';
+  name = (n.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'card') + '-dmb';
   opts.theme ??= (document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
   I18N.apply(dlg); dlg.querySelector('[data-close]').setAttribute('aria-label', t('btn.close'));
   dlg.querySelector('[data-act="share"]').hidden = !canShare();
+  dlg.querySelector('[data-act="copy"]').hidden = !canCopy();
   redraw(); dlg.showModal();
 }
 window.SHARE = { open, draw, read };
