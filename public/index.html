@@ -137,19 +137,13 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 .sh-act{display:flex;gap:8px}
 .sh-act button{flex:1;font:600 .95rem var(--sans);border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:none;color:var(--ink);cursor:pointer;transition:transform .2s,filter .2s}
 .sh-act button:hover{filter:brightness(1.08)}.sh-act button:active{transform:scale(.97)}
+.sh-msg{margin:10px 0 0;text-align:center;color:var(--mute);font-size:.82rem}
 .sh-act button.pri{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 /* The back of a card: a tap turns it over (a random one turns by itself now and then). The front stays laid out underneath, only hidden,
    so the digit fitting never sees the back */
 .card.can-flip{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .card.can-flip:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .card>.back{display:none}
-main{position:relative}
-.flex-turn{position:absolute;z-index:5;pointer-events:none}
-.card.strip{position:absolute;inset:0;width:100%;height:100%;margin:0;pointer-events:none;will-change:transform;
- -webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none} /* the card's own see-through glass, without the blur (too heavy on this many moving pieces); the strips meet edge to edge, so none shows through another */
-.card.strip,.card.strip *{animation:none!important;transition:none!important}
-.strip-shade{position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none}
-.card.strip .strip-shade{animation:none}
 .card.flipped>.back{display:flex}
 .card.flipped>:not(.back):not(.head),.card.flipped>.head>:not(.chip){visibility:hidden}
 .back{position:absolute;inset:0;z-index:1;flex-direction:column;padding:inherit;border-radius:inherit;overflow:hidden;min-width:0}
@@ -265,12 +259,14 @@ footer a:hover{color:var(--ink)}
  .meta{font-size:.52rem;margin-top:4px;gap:4px}
  .dates{font-size:.56rem;margin-top:5px;padding-top:4px}
  .done{margin-top:6px;font-size:.9rem}
- .bk-name{font-size:.82rem}.bk-q{font-size:.7rem;-webkit-line-clamp:3;margin-top:4px;padding-left:6px;border-left-width:2px}
- .bk-l{font-size:.52rem;margin-top:5px}.bk-t{font-size:.98rem}.bk-alt{display:none}.bk-c{font-size:.64rem}.bk-c li{-webkit-line-clamp:1}
+ /* small squares keep every stat: the status gets two lines, the "that is about" heading goes (the numbers say it), each comparison one line */
+ .bk-name{font-size:.82rem}.bk-q{font-size:.7rem;-webkit-line-clamp:2;margin-top:3px;padding-left:6px;border-left-width:2px}
+ .bk-l{font-size:.52rem;margin-top:4px}.bk-like{display:none}.bk-t{font-size:.98rem}.bk-alt{font-size:.56rem;line-height:1.2}.bk-c{font-size:.64rem;margin-top:3px}.bk-c li{-webkit-line-clamp:1}
+ .bk-foot{position:absolute;right:9px;bottom:7px;margin:0;padding:0;border:0}.bk-c li:last-child{padding-right:20px} /* the share button sits in the corner instead of taking a row */
 }
 @container card (max-width:135px){ /* very narrow phones, about 150px cards */
  .meta,.sub,.dates{display:none}
- .bk-c li+li{display:none}
+ .bk-q{-webkit-line-clamp:1}.bk-foot{display:flex}.bk-c li:last-child{padding-right:18px}
  .days{font-size:1.6rem}
  .dates{font-size:.52rem}
 }
@@ -371,49 +367,19 @@ function back(tm,phase,s,e,now,ctx,p){
   const items=k.items.slice(0,p.backItems??2).map(([m,...names])=>{const v=ms/(m*6e4);const n=round(v);return v<.5?'':`<li><b>${n.toLocaleString(I18N.lang)}</b> ${esc(plural(names[COL[I18N.lang]-2],n))}</li>`}).join('');
   return `<div class="back"><p class="bk-name">${esc(tm.name)}</p>${st?`<p class="bk-q">${esc(st)}</p>`:''}<div class="bk-gap"></div>
     <p class="bk-l">${t(lk)}</p><p class="bk-t">${d} <small>${tp('days',d)}</small> ${bigHms(ms%DAY,true)}</p><p class="bk-alt">= ${n.toLocaleString(I18N.lang)} ${tp('u.'+k.unit,n)}</p>
-    ${items?`<p class="bk-l">${t('back.like')}</p><ul class="bk-c">${items}</ul>`:''}<div class="bk-gap"></div>
+    ${items?`<p class="bk-l bk-like">${t('back.like')}</p><ul class="bk-c">${items}</ul>`:''}<div class="bk-gap"></div>
     <div class="dates bk-foot"><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></div>`;
 }
 const still=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
-// Computers: a soft turn around the vertical middle line, as if the card were a sheet of very soft material held by its top edge: the card is
-// cut into thin horizontal strips that all turn about the same axis, each a moment after the one above it, so the top leads,
-// the rest lags behind and the card bends while it turns. The old side turns away to edge-on, then the new side turns in the same
-// way and settles with a little overshoot. The strips are copies of the card (the real one is hidden meanwhile) in a layer that
-// sync() and the fitting leave alone
-const STRIPS=16, LAG=20, OUT=260, IN=360; // strips, ms between neighbouring strips, ms to turn away, ms to turn in
+// The turn: the card itself (no copies, a single layer, transforms only) turns edge-on with a slight skew, so its top seems to
+// lead, the other side is swapped in, and it springs back past flat and settles with a little wobble
 function flip(c,user){
   const id=c.dataset.id;if(cfg?.page.cardBacks===false||turning.has(id))return;
   const toBack=!flipped.has(id);
   const swap=()=>{if(toBack){flipped.add(id);user?held.add(id):held.delete(id)}else{flipped.delete(id);held.delete(id)}render()};
   if(still())return swap();
-  turning.add(id);
-  if(touchFlip)return springFlip(c,id,toBack,swap);
-  const copy=el=>{const x=el.cloneNode(true);for(const a of ['data-id','data-day','tabindex','data-status'])x.removeAttribute(a);x.classList.add('leaf','strip');x.setAttribute('aria-hidden','true');return x};
-  const old=copy(c), box={left:c.offsetLeft+'px',top:c.offsetTop+'px',width:c.offsetWidth+'px',height:c.offsetHeight+'px'};
-  swap();
-  const n=$.querySelector(`.card[data-id="${id}"]`);if(!n)return turning.delete(id);
-  const neu=copy(n), layer=document.createElement('div');layer.className='leaf flex-turn';Object.assign(layer.style,box);
-  const P='perspective(1300px) ',dir=toBack?1:-1,total=(STRIPS-1)*LAG+OUT+IN;
-  // only transforms and opacity move, so the browser runs it all off the main thread; the cuts fall on whole pixels, so the
-  // see-through strips meet without hairlines
-  const H=c.offsetHeight, cut=k=>Math.round(H*k/STRIPS), shade='<i class="strip-shade"></i>';
-  for(let i=0;i<STRIPS;i++){
-    const top=i?cut(i)+'px':'-60px', bottom=i<STRIPS-1?H-cut(i+1)+'px':'-20px'; // the top strip takes the chip above the edge
-    const clip=`inset(${top} -40px ${bottom} -40px)`, a=old.cloneNode(true), b=neu.cloneNode(true);
-    a.style.clipPath=b.style.clipPath=clip;a.insertAdjacentHTML('beforeend',shade);b.insertAdjacentHTML('beforeend',shade);layer.append(a,b);
-    const t0=i*LAG, outE='cubic-bezier(.55,0,.8,.45)', inE='cubic-bezier(.2,.6,.35,1)';
-    a.animate([{transform:P+'rotateY(0)'},{transform:P+`rotateY(${dir*90}deg)`}],{duration:OUT,delay:t0,easing:outE,fill:'both'});
-    a.lastChild.animate([{opacity:0},{opacity:.22}],{duration:OUT,delay:t0,easing:outE,fill:'both'}); // darker as it turns edge-on
-    b.animate([{transform:P+`rotateY(${-dir*90}deg)`},{transform:P+`rotateY(${dir*7}deg)`,offset:.7},{transform:P+'rotateY(0)'}],{duration:IN,delay:t0+OUT,easing:inE,fill:'both'});
-    b.lastChild.animate([{opacity:.22},{opacity:0}],{duration:IN*.7,delay:t0+OUT,easing:inE,fill:'both'});
-  }
-  $.append(layer);
-  n.animate([{opacity:0},{opacity:0}],{duration:total}); // the real card shows again when the last strip has settled
-  setTimeout(()=>{layer.remove();turning.delete(id)},total); // the strips look like the card itself, so it simply takes over
+  turning.add(id);springFlip(c,id,toBack,swap);
 }
-// Phones get a one-piece turn: the card itself (no copies, a single layer, transforms only) turns edge-on with a slight skew, so
-// its top seems to lead, the other side is swapped in, and it springs back past flat and settles with a little wobble
-const touchFlip=matchMedia('(pointer:coarse)').matches;
 function springFlip(c,id,toBack,swap){
   const P='perspective(1100px) ',dir=toBack?1:-1;
   c.animate([{transform:P+'rotateY(0) skewY(0)'},{transform:P+`rotateY(${dir*90}deg) skewY(${-dir*6}deg)`}],{duration:220,easing:'cubic-bezier(.55,0,.8,.45)'}).onfinish=()=>{
@@ -430,7 +396,7 @@ function autoFlip(){
   if(!p||p.cardBacks===false||!p.flipEvery)return;
   const next=()=>{autoT=setTimeout(()=>{next();
     if(document.hidden||still()||document.querySelector('dialog[open]'))return;
-    const cs=[...$.querySelectorAll('.card.can-flip:not(.leaf)')].filter(c=>{const r=c.getBoundingClientRect();
+    const cs=[...$.querySelectorAll('.card.can-flip')].filter(c=>{const r=c.getBoundingClientRect();
       return r.top>-r.height/3&&r.bottom<innerHeight+r.height/3&&!flipped.has(c.dataset.id)&&!c.matches(':hover')&&!c.contains(document.activeElement)});
     const c=cs[Math.random()*cs.length|0];if(!c)return;const id=c.dataset.id;flip(c,false);
     const turnBack=()=>{if(!flipped.has(id)||held.has(id))return;const n=$.querySelector(`.card[data-id="${id}"]`);
@@ -490,7 +456,7 @@ colsBtn.onclick=()=>{const next=cols()===2?1:2;try{localStorage.setItem('cols',n
 // The page is re-drawn every second, but only what changed is touched: elements that stay keep their running animations,
 // hover transitions and focus. sync() makes a's children look like b's, reusing a's nodes where the tags match
 function sync(a,b){
-  const ac=[...a.childNodes].filter(n=>!n.classList?.contains('leaf')),bc=[...b.childNodes]; // a turning leaf is not part of the page
+  const ac=[...a.childNodes],bc=[...b.childNodes];
   bc.forEach((n,i)=>{const o=ac[i];
     if(!o)a.append(n);
     else if(o.nodeType!==n.nodeType||o.nodeName!==n.nodeName)o.replaceWith(n);
@@ -518,7 +484,7 @@ function salute(id,n){ // demob day: volleys of sparks from random points of the
   for(let i=0;i<n;i++)setTimeout(()=>{const r=$.querySelector(`.card[data-id="${id}"]`)?.getBoundingClientRect();
     if(r&&r.bottom>0&&r.top<innerHeight)FIRE.burst(r.left+r.width*(.2+Math.random()*.6),r.top+r.height*(.25+Math.random()*.5),46,1.25)},700+i*650);
 }
-setInterval(()=>{if(!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches)$.querySelectorAll('.card.is-demob:not(.leaf)').forEach(c=>salute(c.dataset.id,1))},2e4);
+setInterval(()=>{if(!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches)$.querySelectorAll('.card.is-demob').forEach(c=>salute(c.dataset.id,1))},2e4);
 const lastDay=new Map(); // card id => its day count at the last render
 function dayTick(c,n){ // "-1 day" rises from the big number and fades out
   if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
@@ -534,9 +500,9 @@ const refit=()=>{fitted.clear();bases=new WeakMap()}; // the width changed: the 
 function fitCards(){ // one digit size for every countdown, the largest with which every card still fits; names get one height so the digits line up
   if(fitted.size>50)fitted.clear();
   // the CSS size of each element that grows, read once (with the fitted size taken off) and kept while the width stays
-  const growing=[...$.querySelectorAll('.card:not(.leaf) .count :is(.days,.unit,.clock),.card:not(.leaf)>.done')], fresh=growing.filter(e=>bases.get(e)?.c!==e.className);
+  const growing=[...$.querySelectorAll('.count :is(.days,.unit,.clock),.card>.done')], fresh=growing.filter(e=>bases.get(e)?.c!==e.className);
   if(fresh.length){fresh.forEach(e=>e.style.fontSize='');fresh.forEach(e=>bases.set(e,{c:e.className,b:parseFloat(getComputedStyle(e).fontSize)}))}
-  const cards=[...$.querySelectorAll('.card:not(.leaf)')].map(c=>{
+  const cards=[...$.querySelectorAll('.card')].map(c=>{
     const cnt=c.querySelector('.count'), done=c.querySelector('.done'), fill=c.querySelector('.fill');
     const CAP={days:9,unit:cnt?.classList.contains('bare')?2.2:1.2,clock:1.6,done:9}; // the days grow freely, the unit label and clock less
     const grow=(cnt?['days','unit','clock'].map(k=>cnt.querySelector('.'+k)):[done]).filter(Boolean);

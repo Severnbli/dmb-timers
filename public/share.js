@@ -168,7 +168,8 @@ function draw(cv, d, o) {
 let dlg, card = null, data = null, name = 'card';
 const opts = { theme: null, fmt: 'post', side: 'front', lang: null, hideDates: false, status: true, stats: true };
 const canShare = () => { try { return !!navigator.canShare?.({ files: [new File([''], 'x.png', { type: 'image/png' })] }); } catch { return false; } };
-const canCopy = () => !!(window.ClipboardItem && navigator.clipboard?.write);
+// copying a picture needs the async clipboard (HTTPS only) and a browser that takes PNGs; newer browsers say so up front
+const canCopy = () => { try { return !!(window.ClipboardItem && navigator.clipboard?.write) && (ClipboardItem.supports ? ClipboardItem.supports('image/png') : true); } catch { return false; } };
 const seg = (k, vs) => `<div class="seg" data-k="${k}">${vs.map(([v, l]) => `<button type="button" data-v="${v}"${l.startsWith('share.') ? ` data-i18n="${l}"` : ` lang="${v.slice(0, 2)}"`}>${l.startsWith('share.') ? '' : l}</button>`).join('')}</div>`;
 function build() {
   dlg = document.createElement('dialog'); dlg.className = 'share-dlg';
@@ -179,7 +180,7 @@ function build() {
     <label class="sh-chk" data-c="hideDates"><input type="checkbox"> <span data-i18n="share.hideDates"></span></label>
     <label class="sh-chk" data-c="status"><input type="checkbox" checked> <span data-i18n="share.status"></span></label>
     <label class="sh-chk" data-c="stats"><input type="checkbox" checked> <span data-i18n="share.stats"></span></label></div>
-    <div class="sh-act"><button type="button" class="pri" data-act="share" data-i18n="share.share"></button><button type="button" data-act="copy" data-i18n="share.copy"></button><button type="button" data-act="save" data-i18n="share.save"></button></div>`;
+    <div class="sh-act"><button type="button" class="pri" data-act="share" data-i18n="share.share"></button><button type="button" data-act="copy" data-i18n="share.copy"></button><button type="button" data-act="save" data-i18n="share.save"></button></div><p class="sh-msg" role="status" hidden></p>`;
   document.body.append(dlg);
   dlg.addEventListener('click', e => {
     if (e.target === dlg || e.target.closest('[data-close]')) return dlg.close();
@@ -209,8 +210,13 @@ function flash(btn, key) { // the button says how it went for a moment
 }
 function out(act, btn) {
   const cv = dlg.querySelector('canvas'), blob = new Promise(ok => cv.toBlob(ok, 'image/png'));
-  if (act === 'copy') { // the item is made right away, inside the tap, with the picture still on its way: Safari needs it so
-    navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => flash(btn, 'share.copied'), () => flash(btn, 'share.copyFail'));
+  if (act === 'copy') { // first with the picture still on its way, inside the tap (Safari needs it so); browsers that want the finished
+    // picture get a second try with it; if both fail, the visitor is pointed to Share or Save
+    const put = v => navigator.clipboard.write([new ClipboardItem({ 'image/png': v })]);
+    put(blob).catch(() => blob.then(put)).then(() => flash(btn, 'share.copied'), e => {
+      console.warn('Copying the picture failed:', e); flash(btn, 'share.copyFail');
+      const m = dlg.querySelector('.sh-msg'); m.textContent = t('share.copyHint'); m.hidden = false; clearTimeout(m._t); m._t = setTimeout(() => { m.hidden = true; }, 5e3);
+    });
     return;
   }
   blob.then(b => {
