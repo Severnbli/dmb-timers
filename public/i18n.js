@@ -81,6 +81,11 @@ const DICT = {
   'fd.hint': 'For a 1440×900 screen; smaller screens get fewer. The first logs make the biggest difference, and the fuller the fire, the bigger and hotter the sparks.',
   'cols.1': 'One card per row', 'cols.2': 'Two cards per row', 'together.served': 'Served together', 'together.left': 'Left for everyone', 'together.rate': '×{n}', 'together.rateTitle': 'Every second adds a second for each of the {n} serving now',
   's.phoneCols': 'Cards per row on phones', 'pc.1': 'One wide card', 'pc.2': 'Two small squares', 's.counter': 'Shared counter', 's.counterOn': 'Show the shared counter above the cards', 's.counterMode': 'It counts', 'cm.served': 'Time served by everyone together', 'cm.left': 'Time left for everyone together', 's.counterHint': 'It runs one second faster for every person serving now. Unconfirmed call-ups are not counted.',
+  'back.left': 'Until demob', 'back.toStart': 'Until call-up', 'back.toNotice': 'Until the notice', 'back.since': 'Since the notice', 'back.home': 'At home for', 'back.like': 'That is about', 'back.flip': 'Turn the card over',
+  'u.weeks': { one: 'week', other: 'weeks' }, 'u.hours': { one: 'hour', other: 'hours' }, 'u.minutes': { one: 'minute', other: 'minutes' }, 'u.seconds': { one: 'second', other: 'seconds' }, 'u.beats': { one: 'heartbeat', other: 'heartbeats' },
+  'share.front': 'Front', 'share.back': 'Back', 'share.copy': 'Copy', 'share.copied': 'Copied!', 'share.copyFail': 'Could not copy', 'share.hideStatus': 'Hide status', 'share.lang': 'Language of the picture', 'share.side': 'Side of the card',
+  's.backs': 'Card backs', 's.cardBacks': 'Tap a card to turn it over: a funny status, the time left and comparisons', 's.backStatus': 'Funny status on the back', 's.backItems': 'Comparisons on the back (0–3)',
+  's.flipEvery': 'A random card turns over every, seconds (0 = never)', 's.flipHold': 'It turns back after, seconds', 's.backsHint': 'The status and comparisons are picked at random every time a card turns over, and neighbouring cards get different ones.',
   'privacy.title': 'Privacy notice', 'privacy.back': 'Back to timers',
 },
 'ru-RU': {
@@ -145,6 +150,11 @@ const DICT = {
   'fd.hint': 'Для экрана 1440×900, на меньших экранах искр меньше. Сильнее всего огонь растёт с первых поленьев, а чем полнее огонь, тем крупнее и жарче искры.',
   'cols.1': 'Одна карточка в ряд', 'cols.2': 'Две карточки в ряд', 'together.served': 'Отслужено вместе', 'together.left': 'Осталось на всех', 'together.rate': '×{n}', 'together.rateTitle': 'Каждую секунду – по секунде за каждого из {n}, кто служит сейчас',
   's.phoneCols': 'Карточек в ряд на телефонах', 'pc.1': 'Одна широкая', 'pc.2': 'Два маленьких квадрата', 's.counter': 'Общий счётчик', 's.counterOn': 'Показывать общий счётчик над карточками', 's.counterMode': 'Что считает', 'cm.served': 'Сколько отслужили все вместе', 'cm.left': 'Сколько осталось всем вместе', 's.counterHint': 'Он идёт на секунду быстрее за каждого, кто служит сейчас. Неподтверждённые повестки не считаются.',
+  'back.left': 'До дембеля', 'back.toStart': 'До призыва', 'back.toNotice': 'До повестки', 'back.since': 'С повестки прошло', 'back.home': 'Дома уже', 'back.like': 'Это примерно', 'back.flip': 'Перевернуть карточку',
+  'u.weeks': { one: 'неделя', few: 'недели', many: 'недель', other: 'недели' }, 'u.hours': { one: 'час', few: 'часа', many: 'часов', other: 'часа' }, 'u.minutes': { one: 'минута', few: 'минуты', many: 'минут', other: 'минуты' }, 'u.seconds': { one: 'секунда', few: 'секунды', many: 'секунд', other: 'секунды' }, 'u.beats': { one: 'удар сердца', few: 'удара сердца', many: 'ударов сердца', other: 'удара сердца' },
+  'share.front': 'Лицевая', 'share.back': 'Обратная', 'share.copy': 'Копировать', 'share.copied': 'Скопировано!', 'share.copyFail': 'Не удалось скопировать', 'share.hideStatus': 'Скрыть статус', 'share.lang': 'Язык картинки', 'share.side': 'Сторона карточки',
+  's.backs': 'Обратная сторона карточек', 's.cardBacks': 'Карточку можно перевернуть нажатием: смешной статус, сколько осталось и сравнения', 's.backStatus': 'Смешной статус на обороте', 's.backItems': 'Сравнений на обороте (0–3)',
+  's.flipEvery': 'Случайная карточка переворачивается каждые, секунд (0 – никогда)', 's.flipHold': 'Обратно через, секунд', 's.backsHint': 'Статус и сравнения выбираются случайно при каждом перевороте, и у соседних карточек они разные.',
   'privacy.title': 'Политика конфиденциальности', 'privacy.back': 'К таймерам',
 },
 'be-BY': {
@@ -209,6 +219,11 @@ const DICT = {
   'fd.hint': 'Для экрана 1440×900, на меншых экранах іскраў менш. Мацней за ўсё агонь расце з першых паленняў, а чым паўнейшы агонь, тым буйнейшыя і гарачэйшыя іскры.',
   'cols.1': 'Адна картка ў радзе', 'cols.2': 'Дзве карткі ў радзе', 'together.served': 'Адслужана разам', 'together.left': 'Засталося на ўсіх', 'together.rate': '×{n}', 'together.rateTitle': 'Кожную секунду – па секундзе за кожнага з {n}, хто служыць зараз',
   's.phoneCols': 'Картак у радзе на тэлефонах', 'pc.1': 'Адна шырокая', 'pc.2': 'Два маленькія квадраты', 's.counter': 'Агульны лічыльнік', 's.counterOn': 'Паказваць агульны лічыльнік над карткамі', 's.counterMode': 'Што лічыць', 'cm.served': 'Колькі адслужылі ўсе разам', 'cm.left': 'Колькі засталося ўсім разам', 's.counterHint': 'Ён ідзе на секунду хутчэй за кожнага, хто служыць зараз. Непацверджаныя позвы не лічацца.',
+  'back.left': 'Да дэмбеля', 'back.toStart': 'Да прызыву', 'back.toNotice': 'Да позвы', 'back.since': 'З позвы прайшло', 'back.home': 'Дома ўжо', 'back.like': 'Гэта прыкладна', 'back.flip': 'Перавярнуць картку',
+  'u.weeks': { one: 'тыдзень', few: 'тыдні', many: 'тыдняў', other: 'тыдня' }, 'u.hours': { one: 'гадзіна', few: 'гадзіны', many: 'гадзін', other: 'гадзіны' }, 'u.minutes': { one: 'хвіліна', few: 'хвіліны', many: 'хвілін', other: 'хвіліны' }, 'u.seconds': { one: 'секунда', few: 'секунды', many: 'секунд', other: 'секунды' }, 'u.beats': { one: 'удар сэрца', few: 'удары сэрца', many: 'удараў сэрца', other: 'удару сэрца' },
+  'share.front': 'Пярэдні', 'share.back': 'Адваротны', 'share.copy': 'Капіяваць', 'share.copied': 'Скапіявана!', 'share.copyFail': 'Не атрымалася скапіяваць', 'share.hideStatus': 'Схаваць статус', 'share.lang': 'Мова карцінкі', 'share.side': 'Бок карткі',
+  's.backs': 'Адваротны бок картак', 's.cardBacks': 'Картку можна перавярнуць націсканнем: смешны статус, колькі засталося і параўнанні', 's.backStatus': 'Смешны статус на адвароце', 's.backItems': 'Параўнанняў на адвароце (0–3)',
+  's.flipEvery': 'Выпадковая картка пераварочваецца кожныя, секунд (0 – ніколі)', 's.flipHold': 'Назад праз, секунд', 's.backsHint': 'Статус і параўнанні выбіраюцца выпадкова пры кожным пераварочванні, і ў суседніх картак яны розныя.',
   'privacy.title': 'Палітыка канфідэнцыйнасці', 'privacy.back': 'Да таймераў',
 }};
 
@@ -240,6 +255,12 @@ function apply(root = document) {
   root.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   root.querySelectorAll('[data-i18n-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nLabel)); if (el.matches('a')) el.title = t(el.dataset.i18nLabel); });
   document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
+}
+// Runs fn with another language for t / tp, then switches back; for drawing a card in a language other than the page's
+function withLang(l, fn) {
+  if (!DICT[l] || l === lang) return fn();
+  const o = lang, r = rules; lang = l; rules = new Intl.PluralRules(l);
+  try { return fn(); } finally { lang = o; rules = r; }
 }
 function setLang(l) {
   if (!DICT[l] || l === lang) return;
@@ -300,5 +321,5 @@ function init() {
   if (!document.body.hasAttribute('data-no-notice')) notice();
 }
 
-window.I18N = { t, tp, apply, setLang, init, get lang() { return lang; } };
+window.I18N = { t, tp, apply, setLang, withLang, init, LANGS, get lang() { return lang; } };
 })();

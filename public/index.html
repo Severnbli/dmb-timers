@@ -110,11 +110,12 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 @media(prefers-reduced-motion:reduce){.stamp.in{animation:none}}
 .tick{position:fixed;z-index:6;pointer-events:none;font:800 1rem/1 var(--sans);white-space:nowrap;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 80%,transparent)}
 .dates span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
-.shr{flex:none;display:grid;place-items:center;width:1.9em;height:1.5em;margin:-.3em -.3em -.3em 0;padding:0;border:0;border-radius:6px;background:none;color:var(--mute);cursor:pointer;
+.shr{position:relative;flex:none;display:grid;place-items:center;width:1.9em;height:1.5em;margin:-.3em -.3em -.3em 0;padding:0;border:0;border-radius:6px;background:none;color:var(--mute);cursor:pointer;
  transition:color .25s ease,background-color .25s ease,transform .25s cubic-bezier(.3,1.4,.5,1)}
 .shr:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);transform:scale(1.08)}
 .shr:active{transform:scale(.92)}
 .shr svg{width:1.25em;height:1.25em}
+.shr::before{content:"";position:absolute;inset:-12px -7px 0} /* a bigger target than it looks (up and sideways only: below the card edge it would count as overflow when the digits are fitted); the rest of the dates row is a dead zone, the rest of the card turns it over */
 .shr:hover{color:var(--accent)}.shr:focus-visible{outline:2px solid var(--ink);opacity:1}
 .share-dlg[open]{animation:dlg-in .28s cubic-bezier(.2,.8,.3,1)}
 .share-dlg[open]::backdrop{animation:dlg-fade .28s ease-out}
@@ -137,6 +138,29 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 .sh-act button{flex:1;font:600 .95rem var(--sans);border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:none;color:var(--ink);cursor:pointer;transition:transform .2s,filter .2s}
 .sh-act button:hover{filter:brightness(1.08)}.sh-act button:active{transform:scale(.97)}
 .sh-act button.pri{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+/* The back of a card: a tap turns it over (a random one turns by itself now and then). The front stays laid out underneath, only hidden,
+   so the digit fitting never sees the back */
+.card.can-flip{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.card.can-flip:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.card>.back{display:none}
+.card.flipped>.back{display:flex}
+.card.flipped>:not(.back):not(.head),.card.flipped>.head>:not(.chip){visibility:hidden}
+.back{position:absolute;inset:0;z-index:1;flex-direction:column;padding:inherit;border-radius:inherit;overflow:hidden;min-width:0}
+.back>*{flex:none;min-width:0}
+.bk-name{margin:0;font-weight:700;font-size:1.05rem;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-q{margin:6px 0 0;padding:1px 0 1px 9px;border-left:3px solid var(--accent);font-size:.92rem;line-height:1.3;font-style:italic;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.bk-gap{flex:1 1 4px}
+.bk-l{margin:8px 0 0;color:var(--mute);font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-t{margin:1px 0 0;font:800 1.4rem/1.1 var(--sans);color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-t small{font:600 .55em var(--sans);color:var(--mute);letter-spacing:0}
+.bk-alt{margin:0;color:var(--mute);font-size:.76rem;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-c{flex:0 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column;flex-wrap:wrap;list-style:none;margin:2px 0 0;padding:0;font-size:.84rem;line-height:1.3} /* gives way first, so the share button always stays on the card; a line that does not fit wraps into a hidden second column, whole */
+.bk-c li{width:100%}
+.bk-c li{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bk-c b{color:var(--accent);font-variant-numeric:tabular-nums}
+.dates .flp{margin-left:auto}
+.dates span+.flp{margin-left:0}
+@container card (min-width:300px){.bk-name{font-size:1.3rem}.bk-q{font-size:1.1rem}.bk-t{font-size:2rem}.bk-alt{font-size:.9rem}.bk-c{font-size:1rem}.bk-l{font-size:.74rem}}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 /* Everyone's service in one number; it runs one second faster for every person serving now */
 .together{display:flex;align-items:center;justify-content:center;gap:4px 14px;flex-wrap:wrap;width:min(1108px,calc(100% - max(16px,env(safe-area-inset-left)) - max(16px,env(safe-area-inset-right))));margin:4px auto 6px;padding:10px 18px;border-radius:18px;text-align:center}
@@ -235,9 +259,12 @@ footer a:hover{color:var(--ink)}
  .meta{font-size:.52rem;margin-top:4px;gap:4px}
  .dates{font-size:.56rem;margin-top:5px;padding-top:4px}
  .done{margin-top:6px;font-size:.9rem}
+ .bk-name{font-size:.82rem}.bk-q{font-size:.7rem;-webkit-line-clamp:3;margin-top:4px;padding-left:6px;border-left-width:2px}
+ .bk-l{font-size:.52rem;margin-top:5px}.bk-t{font-size:.98rem}.bk-alt{display:none}.bk-c{font-size:.64rem}.bk-c li{-webkit-line-clamp:1}
 }
 @container card (max-width:135px){ /* very narrow phones, about 150px cards */
  .meta,.sub,.dates{display:none}
+ .bk-c li+li{display:none}
  .days{font-size:1.6rem}
  .dates{font-size:.52rem}
 }
@@ -265,8 +292,14 @@ async function load(){
   try{cfg=await (await fetch('/api/config',{cache:'no-store'})).json();offset=new Date(cfg.serverTime)-Date.now();window.SHARE_OFFSET=offset;cfg.page.showBackground===false?BACKDROP.stop():BACKDROP.start();fire();
   // hours and seasons follow the server (unit) time zone, not the visitor's
   try{clock=new Intl.DateTimeFormat('en-US',{timeZone:cfg.tz,month:'numeric',day:'numeric',hour:'numeric',hourCycle:'h23'})}catch{clock=null}
-  title();}catch{}
+  if(cfg.page.cardBacks===false){flipped.clear();held.clear()}
+  autoFlip();title();}catch{}
 }
+// For the picture in another language: the same card, with the same picks, drawn in that language (share.js)
+window.CARDS={
+  html:(id,l)=>{const tm=cfg?.timers.find(x=>x.id===id);return tm?I18N.withLang(l,()=>card(tm,cfg.page,Date.now()+offset,true)):''},
+  title:l=>I18N.withLang(l,()=>cfg?.page.pageTitle||t('page.defaultTitle')),
+};
 function title(){const s=cfg?.page.pageTitle||t('page.defaultTitle');document.title=s;document.getElementById('ptitle').textContent=s}
 function local(now){ // {m, md, h} of the server time zone
   const p=Object.fromEntries((clock||new Intl.DateTimeFormat('en-US',{month:'numeric',day:'numeric',hour:'numeric',hourCycle:'h23'})).formatToParts(now).map(x=>[x.type,+x.value]));
@@ -274,10 +307,11 @@ function local(now){ // {m, md, h} of the server time zone
 }
 const inR=(v,r)=>!r||(v>=r[0]&&v<(r[1]??Infinity));
 const inW=(v,r)=>!r||(r[0]<=r[1]?v>=r[0]&&v<r[1]:v>=r[0]||v<r[1]); // window that may wrap (hours, dates)
-function statusFor(phase,t,now,ctx){ // weighted pick among the statuses whose window fits; stable for 3 hours, same for every visitor
-  const L=local(now), ok=STATUSES.filter(([ph,r])=>ph.split(' ').includes(phase)&&
+const fits=(phase,now,ctx)=>{const L=local(now);return STATUSES.filter(([ph,r])=>ph.split(' ').includes(phase)&& // the statuses whose window fits now
     inR(ctx.u,r.u)&&inR(ctx.d,r.d)&&inR(ctx.l,r.l)&&inR(ctx.a,r.a)&&inR(ctx.p,r.p)&&
-    (!r.m||r.m.includes(L.m))&&inW(L.md,r.md)&&inW(L.h,r.h));
+    (!r.m||r.m.includes(L.m))&&inW(L.md,r.md)&&inW(L.h,r.h))};
+function statusFor(phase,t,now,ctx){ // weighted pick among the statuses whose window fits; stable for 3 hours, same for every visitor
+  const ok=fits(phase,now,ctx);
   if(!ok.length)return'';
   let h=0;for(const c of t.id+':'+Math.floor(now/108e5))h=(h*31+c.charCodeAt(0))>>>0;
   const sum=ok.reduce((s,x)=>s+(x[1].w||1),0);let x=(h%10007)/10007*sum;
@@ -296,8 +330,70 @@ function count(d,unit,short,ms,p){
 }
 const SOON_DAYS=60;
 const SHARE_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
-// The share button in a card's dates row opens the card as a picture (share.js)
-$.addEventListener('click',e=>{const c=e.target.closest?.('.shr')?.closest('.card');if(c)SHARE.open(c)});
+const FLIP_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/></svg>';
+// The share button in a card's dates row opens the card as a picture (share.js), with the side in view; a tap anywhere else
+// on the card turns it over. The dates row is left out, so a near miss of the share button does not turn the card
+$.addEventListener('click',e=>{
+  const c=e.target.closest?.('.card');if(!c)return;
+  if(e.target.closest('.shr'))return SHARE.open(c,flipped.has(c.dataset.id)?'back':'front');
+  if(e.target.closest('.flp')||(!e.target.closest('.dates')&&!getSelection().toString()))flip(c,true);
+});
+$.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.card.can-flip')){e.preventDefault();flip(e.target,true)}});
+// The back: a funny status, the time left (or since) and what it compares to. They are picked at random whenever the card
+// turns over, avoiding what the other cards show; the picks are kept per card, so every re-render and every language shows the same ones
+const picks=new Map(), flipped=new Set(), held=new Set(), turning=new Set(); // held: turned by the visitor, stays until turned back
+const ALT={weeks:6048e5,hours:36e5,minutes:6e4,seconds:1e3,beats:800}; // a heart at 75 beats a minute
+const PR={},plural=(f,n)=>f[(PR[I18N.lang]??=new Intl.PluralRules(I18N.lang)).select(n)]??f.other;
+const round=n=>n>=10?Math.round(n):Math.round(n*10)/10;
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function pick(id,phase,ms,now,ctx){
+  let p=picks.get(id);if(p&&!p.stale&&p.phase===phase)return p; // a new pick on every turn to the back, and when the phase changes
+  const others=[...picks].filter(([k])=>k!==id).map(([,v])=>v), taken=(k,v)=>others.some(o=>o[k]===v||o.items?.includes(v));
+  const sts=fits(phase,now,ctx), free=sts.filter(x=>!taken('st',x)&&x!==p?.st);
+  const st=(free.length?free:sts)[Math.random()*(free.length||sts.length)|0]||null;
+  const ok=COMPARE.filter(([m])=>{const n=ms/(m*6e4);return n>=1&&n<=1e6}), mine=shuffle(ok.filter(x=>!taken('items',x)&&!p?.items.includes(x)));
+  const items=[...mine,...shuffle(ok.filter(x=>!mine.includes(x)))].slice(0,3);
+  const units=Object.keys(ALT).filter(u=>u!==p?.unit&&ms/ALT[u]>=2);
+  p={phase,st,items,unit:units[Math.random()*units.length|0]||'seconds'};picks.set(id,p);return p;
+}
+function back(tm,phase,s,e,now,ctx,p){
+  const [lk,raw]={serve:['back.left',e-now],soon:[tm.pending?'back.toNotice':'back.toStart',s-now],summons:['back.since',now-s],done:['back.home',now-e]}[phase];
+  const ms=Math.max(0,raw), d=Math.floor(ms/DAY), k=pick(tm.id,phase,ms,now,ctx);
+  const st=p.backStatus!==false&&k.st?k.st[COL[I18N.lang]]:'', n=Math.floor(ms/ALT[k.unit]*(k.unit==='weeks'?10:1))/(k.unit==='weeks'?10:1);
+  const items=k.items.slice(0,p.backItems??2).map(([m,...names])=>{const v=ms/(m*6e4);const n=round(v);return v<.5?'':`<li><b>≈ ${n.toLocaleString(I18N.lang)}</b> ${esc(plural(names[COL[I18N.lang]-2],n))}</li>`}).join('');
+  return `<div class="back"><p class="bk-name">${esc(tm.name)}</p>${st?`<p class="bk-q">${esc(st)}</p>`:''}<div class="bk-gap"></div>
+    <p class="bk-l">${t(lk)}</p><p class="bk-t">${d} <small>${tp('days',d)}</small> ${bigHms(ms%DAY,true)}</p><p class="bk-alt">= ${n.toLocaleString(I18N.lang)} ${tp('u.'+k.unit,n)}</p>
+    ${items?`<p class="bk-l">${t('back.like')}</p><ul class="bk-c">${items}</ul>`:''}<div class="bk-gap"></div>
+    <div class="dates bk-foot"><button type="button" class="shr flp" aria-label="${t('back.flip')}" title="${t('back.flip')}">${FLIP_ICON}</button><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></div>`;
+}
+const still=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+function flip(c,user){ // a quarter turn, the other side swapped in edge-on, and a quarter turn back with a little overshoot
+  const id=c.dataset.id;if(cfg?.page.cardBacks===false||turning.has(id))return;
+  const toBack=!flipped.has(id);
+  const swap=()=>{if(toBack){const k=picks.get(id);if(k)k.stale=true;flipped.add(id);user?held.add(id):held.delete(id)}else{flipped.delete(id);held.delete(id)}render()};
+  if(still())return swap();
+  turning.add(id);const P='perspective(1100px) ';
+  c.animate([{transform:P+'rotateY(0)'},{transform:P+'rotateY(90deg)'}],{duration:200,easing:'ease-in'}).onfinish=()=>{
+    swap();const n=$.querySelector(`.card[data-id="${id}"]`);if(!n)return turning.delete(id);
+    n.animate([{transform:P+'rotateY(-90deg)'},{transform:P+'rotateY(8deg)',offset:.75},{transform:P+'rotateY(0)'}],{duration:380,easing:'ease-out'}).onfinish=()=>turning.delete(id);
+  };
+}
+// Now and then a random card in view turns over by itself, and back after a while, unless the visitor is looking at it
+let autoT=0,autoKey='';
+function autoFlip(){
+  const p=cfg?.page,key=p?`${p.cardBacks}|${p.flipEvery}`:'';if(key===autoKey)return;autoKey=key;clearTimeout(autoT);
+  if(!p||p.cardBacks===false||!p.flipEvery)return;
+  const next=()=>{autoT=setTimeout(()=>{next();
+    if(document.hidden||still()||document.querySelector('dialog[open]'))return;
+    const cs=[...$.querySelectorAll('.card.can-flip')].filter(c=>{const r=c.getBoundingClientRect();
+      return r.top>-r.height/3&&r.bottom<innerHeight+r.height/3&&!flipped.has(c.dataset.id)&&!c.matches(':hover')&&!c.contains(document.activeElement)});
+    const c=cs[Math.random()*cs.length|0];if(!c)return;const id=c.dataset.id;flip(c,false);
+    const turnBack=()=>{if(!flipped.has(id)||held.has(id))return;const n=$.querySelector(`.card[data-id="${id}"]`);
+      if(!n||n.matches(':hover')||n.contains(document.activeElement)||document.querySelector('dialog[open]'))return setTimeout(turnBack,1500);flip(n,false)};
+    setTimeout(turnBack,(cfg.page.flipHold||6)*1e3);
+  },p.flipEvery*1e3)};
+  next();
+}
 // Milestones of a service: the day a quarter, half or three quarters is served, and 100 / 30 / 7 / last day left
 function milestone(phase,s,e,now,d){
   if(phase==='done')return now-e<DAY?'demob':null; // demob day: the first 24 hours at home
@@ -308,7 +404,7 @@ function milestone(phase,s,e,now,d){
 // One-shot effects: each remembers when it started in this page view, so it plays once
 const shown=new Map(); // effect key => time it first showed in this page view
 const once=(key,ms)=>{const now=performance.now();if(!shown.has(key))shown.set(key,now);const t=now-shown.get(key);return t<ms?t:-1}; // ms since start while running, else -1
-function card(tm,p,now){
+function card(tm,p,now,quiet){
   const s=+new Date(tm.start), e=+new Date(tm.end), total=Math.round((e-s)/DAY);
   const phase=now<s?'soon':now<e?(tm.pending?'summons':'serve'):'done';
   const ctx={u:(s-now)/DAY,d:(now-s)/DAY,l:(e-now)/DAY,a:(now-e)/DAY,p:Math.max(0,Math.min(100,(now-s)/(e-s)*100))};
@@ -334,9 +430,10 @@ function card(tm,p,now){
   }
   const st=p.showStatuses===false?'':statusFor(phase,tm,now,ctx); // only for the shared picture; the card itself keeps its room for the number
   const ms=milestone(phase,s,e,now,Math.floor((e-now)/DAY));
-  let stamp='';if(ms){const a=once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${ms==='demob'?' big':''}${a>=0?' in':''}"${a>=0&&a<50?' data-new="1"':''}>${t('ms.'+ms)}</div></div>`}
-  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''}${st?` data-status="${esc(st)}"`:''} style="--accent:${accent}">${head}${main}<div class="fill"></div>${stamp}
-    <div class="dates"><span title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${fmt(s)} → ${tm.pending?'?':fmt(e)}</span><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></article>`;
+  let stamp='';if(ms){const a=quiet?-1:once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${ms==='demob'?' big':''}${a>=0?' in':''}"${a>=0&&a<50?' data-new="1"':''}>${t('ms.'+ms)}</div></div>`}
+  const can=p.cardBacks!==false, fl=can&&flipped.has(tm.id);
+  return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}${can?' can-flip':''}${fl?' flipped':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''}${st?` data-status="${esc(st)}"`:''}${can?' tabindex="0"':''} style="--accent:${accent}">${head}${main}<div class="fill"></div>${stamp}
+    <div class="dates"><span title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${fmt(s)} → ${tm.pending?'?':fmt(e)}</span>${can?`<button type="button" class="shr flp" aria-label="${t('back.flip')}" title="${t('back.flip')}">${FLIP_ICON}</button>`:''}<button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div>${can?back(tm,phase,s,e,now,ctx,p):''}</article>`;
 }
 // On phones the visitor can switch between one wide card and two squares per row; the admin's choice is the default
 const colsBtn=document.getElementById('colsBtn');
