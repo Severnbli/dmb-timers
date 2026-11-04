@@ -367,7 +367,7 @@ function back(tm,phase,s,e,now,ctx,p){
   const [lk,raw]={serve:['back.left',e-now],soon:[tm.pending?'back.toNotice':'back.toStart',s-now],summons:['back.since',now-s],done:['back.home',now-e]}[phase];
   const ms=Math.max(0,raw), d=Math.floor(ms/DAY), k=pick(tm.id,phase,ms,now,ctx);
   const st=p.backStatus!==false&&k.st?k.st[COL[I18N.lang]]:'', n=Math.floor(ms/ALT[k.unit]*(k.unit==='weeks'?10:1))/(k.unit==='weeks'?10:1);
-  const items=k.items.slice(0,p.backItems??2).map(([m,...names])=>{const v=ms/(m*6e4);const n=round(v);return v<.5?'':`<li><b>${n.toLocaleString(I18N.lang)}</b> ${esc(plural(names[COL[I18N.lang]-2],n))}</li>`}).join('');
+  const items=k.items.slice(0,p.backItems??2).map(([m,...names])=>{const v=ms/(m*6e4);const n=round(v);return v<.5?'':`<li><b>≈ ${n.toLocaleString(I18N.lang)}</b> ${esc(plural(names[COL[I18N.lang]-2],n))}</li>`}).join('');
   return `<div class="back"><p class="bk-name">${esc(tm.name)}</p>${st?`<p class="bk-q">${esc(st)}</p>`:''}<div class="bk-gap"></div>
     <p class="bk-l">${t(lk)}</p><p class="bk-t">${d} <small>${tp('days',d)}</small> ${bigHms(ms%DAY,true)}</p><p class="bk-alt">= ${n.toLocaleString(I18N.lang)} ${tp('u.'+k.unit,n)}</p>
     ${items?`<p class="bk-l bk-like">${t('back.like')}</p><ul class="bk-c">${items}</ul>`:''}<div class="bk-gap"></div>
