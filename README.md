@@ -18,7 +18,7 @@ No database, no dependencies, no tracking: one Node.js file and one JSON config 
 
 **Funny statuses.** Pictures shared from a card carry a short status that follows the real service timeline: the oath, the halfway point, "100 days to the order", the train home. Every status has its own time window, so nobody is waiting at the station two days early. The front of a card leaves them out, so the numbers get the room; they live on its back.
 
-**Card backs.** Tap a card and it flips over with its top edge leading, then springs back into place with a little wobble. The back shows a funny status, the time until demob (or until the call-up or the notice, or since the notice, or at home for), the same time in weeks, hours, minutes, seconds or heartbeats, and what it compares to: "865 Titanic films", "94 trips to the Moon", "3,686 sloths crossing a football pitch". The status and comparisons change every 3 hours, the same for every visitor, and neighbouring cards get different ones. Every 10 seconds a random card in view turns over by itself and turns back after a few seconds, unless you are pointing at it. Another tap anywhere on the card turns it back. The share button and the dates row around it never turn the card.
+**Card backs.** Tap a card and it flips over with its top edge leading, then springs back into place with a little wobble. The back shows a funny status, the time until demob (or until the call-up or the notice, or since the notice, or at home for), the same time in weeks, hours, minutes, seconds or heartbeats, and what it compares to: "865 Titanic films", "94 trips to the Moon", "3,686 sloths crossing a football pitch". The status and comparisons change every 3 hours, the same for every visitor, and neighbouring cards get different ones. When nobody has touched the page for 10 seconds, a random card in view turns over by itself every 10 seconds and turns back after a few seconds, unless you are pointing at it. On the first visit a hint over the first card says the cards turn over. Another tap anywhere on the card turns it back. The share button and the dates row around it never turn the card.
 
 **Shared counter.** Above the cards, everyone's time served is added up into one number (or the time left for everyone, if you choose). Every second it adds one second for each person serving now, so with five people serving, the seconds run five times faster.
 
@@ -138,7 +138,7 @@ The tab also shows the current count and when it starts over, with a **Start ove
 
 - **Look**: page title and the map background.
 - **Cards**: hours, minutes and seconds next to the days, seconds, progress bars, funny statuses on shared pictures, and the default cards per row on phones (one wide card or two small squares); visitors can switch it with the button in the header.
-- **Card backs**: whether a tap turns a card over, the funny status on the back, how many comparisons it shows (0–3), how often a random card turns over by itself (in seconds, 0 for never) and how long it stays turned.
+- **Card backs**: whether a tap turns a card over, the funny status on the back, how many comparisons it shows (0–3), how often a random card turns over by itself (in seconds, 0 for never), how long it stays turned, and how long the page must be left alone before that starts.
 - **Shared counter**: show or hide it, and whether it counts the time served or the time left. Unconfirmed call-ups are not counted.
 
 ### History
