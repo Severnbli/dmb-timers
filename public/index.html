@@ -61,8 +61,8 @@ main.one{max-width:420px;grid-template-columns:1fr;padding-top:3vh}
 .card>*{flex:none}
 .fill{flex:1 0 6px}
 .head{min-width:0}
-h2{margin:0;font-size:1.32rem;line-height:1.25;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* the name on one line, the label under it */
-.label{margin:1px 0 0;color:var(--mute);font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+h2{margin:0;font-size:1.32rem;line-height:1.25;letter-spacing:-.01em;overflow-wrap:anywhere} /* the name, whole (a long one wraps; the digits make room), the label under it */
+.label{margin:1px 0 0;color:var(--mute);font-size:.86rem;overflow-wrap:anywhere}
 /* The service state sits on the card's top edge: half above it, half inside */
 .chip{position:absolute;z-index:2;top:0;left:50%;transform:translate(-50%,-50%);padding:4px 13px;border-radius:999px;font:700 .74rem/1.4 var(--sans);letter-spacing:.05em;text-transform:uppercase;
  color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);box-shadow:0 2px 8px -3px rgb(0 0 0/.25);white-space:nowrap}
@@ -81,10 +81,9 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 .bar{position:relative;height:6px;margin-top:10px;border-radius:999px;background:var(--track);overflow:visible}
 .bar i{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 70%,var(--surface)),var(--accent))}
 .bar em{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--mute);opacity:.45;border-radius:2px}
-.meta{display:flex;justify-content:space-between;gap:8px;white-space:nowrap;margin-top:5px;color:var(--mute);font-size:.7rem;font-variant-numeric:tabular-nums}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 8px;margin-top:5px;color:var(--mute);font-size:.7rem;font-variant-numeric:tabular-nums}
 .done{margin:8px 0 0;font:800 1.25rem/1.1 var(--sans);letter-spacing:-.02em;color:var(--accent);overflow-wrap:anywhere}
-.meta span{overflow:hidden;text-overflow:ellipsis}
-.dates{display:flex;align-items:center;gap:6px;white-space:nowrap;margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);color:var(--mute);font-size:.68rem;font-variant-numeric:tabular-nums}
+.dates{display:flex;align-items:center;gap:6px;margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);color:var(--mute);font-size:.68rem;font-variant-numeric:tabular-nums}
 .one .card{padding:clamp(18px,4vw,28px)}
 .one h2{font-size:clamp(1.4rem,3.6vw,1.75rem)}
 .one .label{font-size:.9rem}
@@ -108,7 +107,7 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 @container card (max-width:200px){.stamp{font-size:.56rem;padding:2px 5px;border-width:2px;right:6px;bottom:24px}}
 @media(prefers-reduced-motion:reduce){.stamp.in{animation:none}}
 .tick{position:fixed;z-index:6;pointer-events:none;font:800 1rem/1 var(--sans);white-space:nowrap;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 80%,transparent)}
-.dates span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.dates span{flex:1;min-width:0;overflow-wrap:anywhere}
 .shr{position:relative;flex:none;display:grid;place-items:center;width:1.9em;height:1.5em;margin:-.3em -.3em -.3em 0;padding:0;border:0;border-radius:6px;background:none;color:var(--mute);cursor:pointer;
  transition:color .25s ease,background-color .25s ease,transform .25s cubic-bezier(.3,1.4,.5,1)}
 .shr:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);transform:scale(1.08)}
@@ -150,6 +149,7 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 /* Nothing on the back is cut off: every line wraps whole, and when it all does not fit, fitBacks() makes the text smaller
    (--bk, a scale for every size below, which are in em for that) */
 .back>*{flex:none;min-width:0;overflow-wrap:anywhere}
+.back.fitting>*{overflow-wrap:normal}
 .bk-name{margin:0;font-weight:700;font-size:1.05em;line-height:1.25}
 .bk-q{margin:.4em 0 0;padding:1px 0 1px 9px;border-left:3px solid var(--accent);font-size:.92em;line-height:1.3;font-style:italic}
 .bk-gap{flex:1 1 4px}
@@ -237,8 +237,7 @@ footer a:hover{color:var(--ink)}
  .together .tv{font-size:1.3rem}
  main{gap:26px 12px}
  main:not(.one):not(.two){grid-template-columns:1fr}
- main .card{aspect-ratio:5/6} /* a little taller than square, so the back has room too */
- main:not(.one):not(.two) .card{max-height:86vh;max-height:86svh;padding:16px 16px 10px} /* tall, so the number can be big */
+ main:not(.one):not(.two) .card{aspect-ratio:1;max-height:86vh;max-height:86svh;padding:16px 16px 10px} /* tall, so the number can be big */
  main.two{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 10px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
  main.two .card{padding:13px 9px 7px;border-radius:16px}
  main.two .sub{display:none} /* small squares give their room to the number */
@@ -248,7 +247,7 @@ footer a:hover{color:var(--ink)}
  .fire-tip::after{right:24px}
  .notice{flex-direction:column;align-items:stretch}
 }
-@media(max-width:600px) and (max-height:520px){main .card{aspect-ratio:1}main:not(.one):not(.two) .card{aspect-ratio:2/1;max-height:none}} /* phones on their side */
+@media(max-width:600px) and (max-height:520px){main:not(.one):not(.two) .card{aspect-ratio:2/1;max-height:none}} /* phones on their side */
 /* Small squares: sizes follow the card's own content width, secondary lines drop out as it shrinks */
 @container card (max-width:200px){ /* content width; cards up to about 218px */
  h2{font-size:1rem}
@@ -497,7 +496,7 @@ function render(){
   $.className=ts.length===1?'one':cols()===2?'two':'';colsBtn.hidden=ts.length<2;drawCols();
   const tpl=document.createElement('template');tpl.innerHTML=ts.length?ts.map(x=>card(x,cfg.page,now)).join(''):`<p class="empty">${t('empty')}</p>`;
   sync($,tpl.content);
-  fitCards();fitBacks();
+  fitNames();fitCards();fitBacks();
   for(const c of $.querySelectorAll('.card[data-day]')){const d=+c.dataset.day,was=lastDay.get(c.dataset.id);lastDay.set(c.dataset.id,d);if(was!==undefined&&d!==was)dayTick(c,d-was)}
   if(!matchMedia('(prefers-reduced-motion:reduce)').matches)for(const el of $.querySelectorAll('.stamp[data-new="1"]')){ // sparks as the stamp hits
     const id=el.closest('.card').dataset.id, big=el.classList.contains('big');
@@ -530,10 +529,23 @@ function fitBacks(){
   for(const c of $.querySelectorAll('.card.flipped')){
     const b=c.querySelector('.back');if(!b)continue;
     const key=[c.clientWidth,c.clientHeight,I18N.lang,b.textContent.length].join('|');if(b.dataset.fit===key)continue;
-    const t=b.querySelector('.bk-t'), ok=()=>b.scrollHeight<=b.clientHeight+.5&&(!t||t.scrollWidth<=t.clientWidth+.5), set=k=>b.style.setProperty('--bk',k);
+    // while fitting, words may not break, so a long word that does not fit makes the text smaller; only below the smallest size it breaks
+    const ok=()=>b.scrollHeight<=b.clientHeight+.5&&[...b.querySelectorAll(':scope>p,:scope>ul')].every(e=>e.scrollWidth<=e.clientWidth+.5), set=k=>b.style.setProperty('--bk',k);
     let k=backFit.get(c.dataset.id+'|'+key);
-    if(k===undefined){set(1);if(ok())k=1;else{let lo=.35,hi=1;for(let i=0;i<7;i++){const m=(lo+hi)/2;set(m);ok()?lo=m:hi=m}k=lo*.98}backFit.set(c.dataset.id+'|'+key,k)}
+    if(k===undefined){b.classList.add('fitting');set(1);if(ok())k=1;else{let lo=.35,hi=1;for(let i=0;i<7;i++){const m=(lo+hi)/2;set(m);ok()?lo=m:hi=m}k=lo*.98}
+      b.classList.remove('fitting');backFit.set(c.dataset.id+'|'+key,k)}
     set(k);b.dataset.fit=key;
+  }
+}
+// A name that has a word too long for the card is made smaller until the word fits (to 60% at most), so it is not broken in two.
+// Kept while the card width and the name stay the same
+const nameFit=new WeakMap();
+function fitNames(){
+  for(const h of $.querySelectorAll('.card h2')){
+    const key=h.closest('.card').offsetWidth+'|'+h.textContent;if(nameFit.get(h)===key)continue;nameFit.set(h,key);
+    h.style.fontSize='';h.style.overflowWrap='normal';const base=parseFloat(getComputedStyle(h).fontSize);
+    for(let k=.95;h.scrollWidth>h.clientWidth+.5&&k>=.6;k-=.05)h.style.fontSize=base*k+'px';
+    h.style.overflowWrap='';
   }
 }
 function fitCards(){ // one digit size for every countdown, the largest with which every card still fits; names get one height so the digits line up
