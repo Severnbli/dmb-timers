@@ -17,7 +17,7 @@
 // A card as a picture to share: everything is drawn on a canvas in the browser, nothing is sent anywhere.
 // It copies what the card shows at the moment it is opened (name, number, progress, status, stamp, dates) or its back
 // (funny status, time left, comparisons), and the visitor picks the side, the language of the picture, a light or dark look,
-// a post (4:5) or story (9:16) size, whether to hide the dates, and whether to show the funny status and the funny stats. The picture can be shared, copied or saved.
+// a post (4:5) or story (9:16) size, whether to hide the dates, and whether to show the status and the stats. The picture can be shared, copied or saved.
 (() => {
 const { t } = I18N;
 const PAL = { // the site's own colors, per theme; state accents follow the theme too
