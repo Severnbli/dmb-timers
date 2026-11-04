@@ -143,6 +143,12 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 .card.can-flip{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .card.can-flip:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .card>.back{display:none}
+main{position:relative}
+.card.leaf{position:absolute;z-index:5;margin:0;pointer-events:none;backface-visibility:visible;will-change:transform;animation:none;
+ background:linear-gradient(color-mix(in srgb,var(--accent) 4%,var(--surface)),var(--surface));-webkit-backdrop-filter:none;backdrop-filter:none} /* solid paper: the other side must not show through it */
+.leaf-shade{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;background:linear-gradient(to right,rgb(0 0 0/.28),rgb(0 0 0/.06) 60%,rgb(255 255 255/.08))}
+.card.leaf.rev{background:color-mix(in srgb,var(--ink) 5%,var(--surface))}
+.card.leaf.rev>:not(.leaf-shade){visibility:hidden}
 .card.flipped>.back{display:flex}
 .card.flipped>:not(.back):not(.head),.card.flipped>.head>:not(.chip){visibility:hidden}
 .back{position:absolute;inset:0;z-index:1;flex-direction:column;padding:inherit;border-radius:inherit;overflow:hidden;min-width:0}
@@ -158,8 +164,7 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 .bk-c li{width:100%}
 .bk-c li{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .bk-c b{color:var(--accent);font-variant-numeric:tabular-nums}
-.dates .flp{margin-left:auto}
-.dates span+.flp{margin-left:0}
+.bk-foot .shr{margin-left:auto}
 @container card (min-width:300px){.bk-name{font-size:1.3rem}.bk-q{font-size:1.1rem}.bk-t{font-size:2rem}.bk-alt{font-size:.9rem}.bk-c{font-size:1rem}.bk-l{font-size:.74rem}}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 /* Everyone's service in one number; it runs one second faster for every person serving now */
@@ -330,13 +335,12 @@ function count(d,unit,short,ms,p){
 }
 const SOON_DAYS=60;
 const SHARE_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
-const FLIP_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/></svg>';
 // The share button in a card's dates row opens the card as a picture (share.js), with the side in view; a tap anywhere else
 // on the card turns it over. The dates row is left out, so a near miss of the share button does not turn the card
 $.addEventListener('click',e=>{
   const c=e.target.closest?.('.card');if(!c)return;
   if(e.target.closest('.shr'))return SHARE.open(c,flipped.has(c.dataset.id)?'back':'front');
-  if(e.target.closest('.flp')||(!e.target.closest('.dates')&&!getSelection().toString()))flip(c,true);
+  if(!e.target.closest('.dates')&&!getSelection().toString())flip(c,true);
 });
 $.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.card.can-flip')){e.preventDefault();flip(e.target,true)}});
 // The back: a funny status, the time left (or since) and what it compares to. They are picked at random whenever the card
@@ -364,19 +368,35 @@ function back(tm,phase,s,e,now,ctx,p){
   return `<div class="back"><p class="bk-name">${esc(tm.name)}</p>${st?`<p class="bk-q">${esc(st)}</p>`:''}<div class="bk-gap"></div>
     <p class="bk-l">${t(lk)}</p><p class="bk-t">${d} <small>${tp('days',d)}</small> ${bigHms(ms%DAY,true)}</p><p class="bk-alt">= ${n.toLocaleString(I18N.lang)} ${tp('u.'+k.unit,n)}</p>
     ${items?`<p class="bk-l">${t('back.like')}</p><ul class="bk-c">${items}</ul>`:''}<div class="bk-gap"></div>
-    <div class="dates bk-foot"><button type="button" class="shr flp" aria-label="${t('back.flip')}" title="${t('back.flip')}">${FLIP_ICON}</button><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></div>`;
+    <div class="dates bk-foot"><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></div>`;
 }
 const still=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
-function flip(c,user){ // a quarter turn, the other side swapped in edge-on, and a quarter turn back with a little overshoot
+// A turn like a page of a book: a copy of the side in view lies on the card as a leaf and swings away on one edge (the left one
+// to the back, the right one to the front, as when paging back), while the other side is already underneath. Past edge-on the
+// leaf shows its plain paper back, settles and fades. The leaf lives in the grid but sync() and the fitting leave it alone
+function flip(c,user){
   const id=c.dataset.id;if(cfg?.page.cardBacks===false||turning.has(id))return;
   const toBack=!flipped.has(id);
   const swap=()=>{if(toBack){const k=picks.get(id);if(k)k.stale=true;flipped.add(id);user?held.add(id):held.delete(id)}else{flipped.delete(id);held.delete(id)}render()};
   if(still())return swap();
-  turning.add(id);const P='perspective(1100px) ';
-  c.animate([{transform:P+'rotateY(0)'},{transform:P+'rotateY(90deg)'}],{duration:200,easing:'ease-in'}).onfinish=()=>{
-    swap();const n=$.querySelector(`.card[data-id="${id}"]`);if(!n)return turning.delete(id);
-    n.animate([{transform:P+'rotateY(-90deg)'},{transform:P+'rotateY(8deg)',offset:.75},{transform:P+'rotateY(0)'}],{duration:380,easing:'ease-out'}).onfinish=()=>turning.delete(id);
+  turning.add(id);
+  const leaf=c.cloneNode(true),dir=toBack?-1:1;
+  for(const a of ['data-id','data-day','tabindex','data-status'])leaf.removeAttribute(a);
+  leaf.classList.add('leaf');leaf.setAttribute('aria-hidden','true');leaf.getAnimations?.().forEach(a=>a.cancel());
+  Object.assign(leaf.style,{left:c.offsetLeft+'px',top:c.offsetTop+'px',width:c.offsetWidth+'px',height:c.offsetHeight+'px',transformOrigin:toBack?'left center':'right center'});
+  leaf.insertAdjacentHTML('beforeend','<i class="leaf-shade"></i>');
+  $.append(leaf);swap();
+  const P='perspective(1600px) ',sh=leaf.lastChild,half=420;
+  // first half: the leaf lifts and turns edge-on, its shadow grows on the page underneath and its face darkens
+  leaf.animate([{transform:P+'rotateY(0)',boxShadow:'0 2px 8px -4px rgb(0 0 0/.2)'},{transform:P+`rotateY(${dir*90}deg) translateZ(10px)`,boxShadow:`${-dir*30}px 18px 40px -10px rgb(0 0 0/.35)`}],
+    {duration:half,easing:'cubic-bezier(.5,0,.75,.4)',fill:'forwards'}).onfinish=()=>{
+    leaf.classList.add('rev'); // now its back is in view: plain paper, lit from the other side
+    sh.animate([{opacity:.55},{opacity:0}],{duration:half,fill:'forwards'});
+    const a=leaf.animate([{transform:P+`rotateY(${dir*90}deg) translateZ(10px)`,opacity:1},{transform:P+`rotateY(${dir*150}deg)`,opacity:.9,offset:.6},{transform:P+`rotateY(${dir*178}deg)`,opacity:0}],
+      {duration:half*1.15,easing:'cubic-bezier(.25,.6,.4,1)',fill:'forwards'});
+    a.onfinish=()=>{leaf.remove();turning.delete(id)};
   };
+  sh.animate([{opacity:0},{opacity:.55}],{duration:half,easing:'ease-in',fill:'forwards'});
 }
 // Now and then a random card in view turns over by itself, and back after a while, unless the visitor is looking at it
 let autoT=0,autoKey='';
@@ -385,7 +405,7 @@ function autoFlip(){
   if(!p||p.cardBacks===false||!p.flipEvery)return;
   const next=()=>{autoT=setTimeout(()=>{next();
     if(document.hidden||still()||document.querySelector('dialog[open]'))return;
-    const cs=[...$.querySelectorAll('.card.can-flip')].filter(c=>{const r=c.getBoundingClientRect();
+    const cs=[...$.querySelectorAll('.card.can-flip:not(.leaf)')].filter(c=>{const r=c.getBoundingClientRect();
       return r.top>-r.height/3&&r.bottom<innerHeight+r.height/3&&!flipped.has(c.dataset.id)&&!c.matches(':hover')&&!c.contains(document.activeElement)});
     const c=cs[Math.random()*cs.length|0];if(!c)return;const id=c.dataset.id;flip(c,false);
     const turnBack=()=>{if(!flipped.has(id)||held.has(id))return;const n=$.querySelector(`.card[data-id="${id}"]`);
@@ -433,7 +453,7 @@ function card(tm,p,now,quiet){
   let stamp='';if(ms){const a=quiet?-1:once(tm.id+':'+ms+':'+Math.floor((now-s)/DAY),700);stamp=`<div class="fxl"><div class="stamp${ms==='demob'?' big':''}${a>=0?' in':''}"${a>=0&&a<50?' data-new="1"':''}>${t('ms.'+ms)}</div></div>`}
   const can=p.cardBacks!==false, fl=can&&flipped.has(tm.id);
   return `<article class="card${chip==='summons'||chip==='notice'?' is-'+chip:''}${ms==='demob'?' is-demob':''}${can?' can-flip':''}${fl?' flipped':''}" data-id="${tm.id}"${day!==null?` data-day="${day}"`:''}${st?` data-status="${esc(st)}"`:''}${can?' tabindex="0"':''} style="--accent:${accent}">${head}${main}<div class="fill"></div>${stamp}
-    <div class="dates"><span title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${fmt(s)} → ${tm.pending?'?':fmt(e)}</span>${can?`<button type="button" class="shr flp" aria-label="${t('back.flip')}" title="${t('back.flip')}">${FLIP_ICON}</button>`:''}<button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div>${can?back(tm,phase,s,e,now,ctx,p):''}</article>`;
+    <div class="dates"><span title="${t(tm.pending?'dates.noticeTitle':'dates.title')}">${fmt(s)} → ${tm.pending?'?':fmt(e)}</span><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div>${can?back(tm,phase,s,e,now,ctx,p):''}</article>`;
 }
 // On phones the visitor can switch between one wide card and two squares per row; the admin's choice is the default
 const colsBtn=document.getElementById('colsBtn');
@@ -441,16 +461,16 @@ const COLS_ICON={1:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
   2:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>'};
 const cols=()=>{let v=null;try{v=+localStorage.getItem('cols')}catch{}return v===1||v===2?v:cfg?.page.phoneCols===2?2:1};
 function drawCols(){const next=cols()===2?1:2;colsBtn.innerHTML=COLS_ICON[next];colsBtn.title=t('cols.'+next);colsBtn.setAttribute('aria-label',colsBtn.title)} // the icon shows the layout a tap switches to
-colsBtn.onclick=()=>{const next=cols()===2?1:2;try{localStorage.setItem('cols',next)}catch{}fitted.clear();render()};
+colsBtn.onclick=()=>{const next=cols()===2?1:2;try{localStorage.setItem('cols',next)}catch{}refit();render()};
 // The page is re-drawn every second, but only what changed is touched: elements that stay keep their running animations,
 // hover transitions and focus. sync() makes a's children look like b's, reusing a's nodes where the tags match
 function sync(a,b){
-  const ac=[...a.childNodes],bc=[...b.childNodes];
+  const ac=[...a.childNodes].filter(n=>!n.classList?.contains('leaf')),bc=[...b.childNodes]; // a turning leaf is not part of the page
   bc.forEach((n,i)=>{const o=ac[i];
     if(!o)a.append(n);
     else if(o.nodeType!==n.nodeType||o.nodeName!==n.nodeName)o.replaceWith(n);
     else if(o.nodeType!==1){if(o.data!==n.data)o.data=n.data}
-    else{for(const {name} of [...o.attributes])if(!n.hasAttribute(name))o.removeAttribute(name);
+    else{for(const {name} of [...o.attributes])if(!n.hasAttribute(name)&&(name!=='style'||o.getAttribute('class')!==n.getAttribute('class')))o.removeAttribute(name); // inline styles are the fitted sizes: kept while the element stays what it was, so a re-render does not lay every card out again
       for(const {name,value} of [...n.attributes])if(o.getAttribute(name)!==value)o.setAttribute(name,value);
       sync(o,n)}});
   for(let i=bc.length;i<ac.length;i++)ac[i].remove();
@@ -473,7 +493,7 @@ function salute(id,n){ // demob day: volleys of sparks from random points of the
   for(let i=0;i<n;i++)setTimeout(()=>{const r=$.querySelector(`.card[data-id="${id}"]`)?.getBoundingClientRect();
     if(r&&r.bottom>0&&r.top<innerHeight)FIRE.burst(r.left+r.width*(.2+Math.random()*.6),r.top+r.height*(.25+Math.random()*.5),46,1.25)},700+i*650);
 }
-setInterval(()=>{if(!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches)$.querySelectorAll('.card.is-demob').forEach(c=>salute(c.dataset.id,1))},2e4);
+setInterval(()=>{if(!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches)$.querySelectorAll('.card.is-demob:not(.leaf)').forEach(c=>salute(c.dataset.id,1))},2e4);
 const lastDay=new Map(); // card id => its day count at the last render
 function dayTick(c,n){ // "-1 day" rises from the big number and fades out
   if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
@@ -484,23 +504,28 @@ function dayTick(c,n){ // "-1 day" rises from the big number and fades out
   FIRE.burst(r.left+r.width/2,r.top+r.height/2,14,.5);
 }
 const fitted=new Map(); // fitted sizes per set of cards + width + texts, so the 1 s re-render does not measure again
+let bases=new WeakMap(); // element => its font size from the CSS (before fitting) and the class it had then
+const refit=()=>{fitted.clear();bases=new WeakMap()}; // the width changed: the CSS sizes (container queries) may have too
 function fitCards(){ // one digit size for every countdown, the largest with which every card still fits; names get one height so the digits line up
   if(fitted.size>50)fitted.clear();
-  const cards=[...$.querySelectorAll('.card')].map(c=>{
+  // the CSS size of each element that grows, read once (with the fitted size taken off) and kept while the width stays
+  const growing=[...$.querySelectorAll('.card:not(.leaf) .count :is(.days,.unit,.clock),.card:not(.leaf)>.done')], fresh=growing.filter(e=>bases.get(e)?.c!==e.className);
+  if(fresh.length){fresh.forEach(e=>e.style.fontSize='');fresh.forEach(e=>bases.set(e,{c:e.className,b:parseFloat(getComputedStyle(e).fontSize)}))}
+  const cards=[...$.querySelectorAll('.card:not(.leaf)')].map(c=>{
     const cnt=c.querySelector('.count'), done=c.querySelector('.done'), fill=c.querySelector('.fill');
     const CAP={days:9,unit:cnt?.classList.contains('bare')?2.2:1.2,clock:1.6,done:9}; // the days grow freely, the unit label and clock less
     const grow=(cnt?['days','unit','clock'].map(k=>cnt.querySelector('.'+k)):[done]).filter(Boolean);
-    const gBase=grow.map(e=>parseFloat(getComputedStyle(e).fontSize)), caps=grow.map(e=>CAP[e.classList[0]]);
+    const gBase=grow.map(e=>bases.get(e)?.b||parseFloat(getComputedStyle(e).fontSize)), caps=grow.map(e=>CAP[e.classList[0]]);
     return {head:c.querySelector('.head'),cnt,hms:!!cnt?.querySelector('.hms'),
-      key:[c.dataset.id,c.getBoundingClientRect().width.toFixed(1),I18N.lang,...grow.map(e=>e.textContent.length)].join('|'),
+      key:[c.dataset.id,c.offsetWidth,I18N.lang,...grow.map(e=>e.textContent.length)].join('|'),
       setG:g=>grow.forEach((e,i)=>e.style.fontSize=gBase[i]*Math.min(g,caps[i])+'px'),
-      ok:()=>fill.getBoundingClientRect().height>=6&&c.scrollHeight<=c.clientHeight+.5&&(cnt?cnt.scrollWidth<=cnt.clientWidth:!done||done.scrollWidth<=done.clientWidth+.5)};
+      ok:()=>fill.offsetHeight>=6&&c.scrollHeight<=c.clientHeight+.5&&(cnt?cnt.scrollWidth<=cnt.clientWidth:!done||done.scrollWidth<=done.clientWidth+.5)};
   });
   const key=cards.map(x=>x.key).join('#');
   let f=fitted.get(key);
   if(!f){
     cards.forEach(x=>x.head.style.minHeight='');
-    const hh=Math.max(0,...cards.map(x=>x.head.getBoundingClientRect().height));
+    const hh=Math.max(0,...cards.map(x=>x.head.offsetHeight)); // layout sizes, untouched by a turn in progress
     cards.forEach(x=>x.head.style.minHeight=hh+'px');
     const fit=xs=>{ // largest size with which all these cards fit
       const all=g=>xs.forEach(x=>x.setG(g)), ok=()=>xs.every(x=>x.ok());
@@ -520,7 +545,7 @@ function fitCards(){ // one digit size for every countdown, the largest with whi
 }
 let resizing=0,lastW=innerWidth; // phones fire resize mid-rotation, so fit again once the layout has settled
 // the cards depend only on the width: the address bar sliding away while scrolling changes just the height and must not re-fit them mid-scroll
-addEventListener('resize',()=>{if(innerWidth===lastW)return;lastW=innerWidth;render();clearTimeout(resizing);resizing=setTimeout(()=>{fitted.clear();render()},250)});
+addEventListener('resize',()=>{if(innerWidth===lastW)return;lastW=innerWidth;refit();render();clearTimeout(resizing);resizing=setTimeout(()=>{refit();render()},250)});
 (()=>{ // while a card is hovered, accent-colored particles drift outward from its edges
   if(!matchMedia('(hover:hover) and (pointer:fine)').matches||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   const cv=document.createElement('canvas'),ctx=cv.getContext('2d');cv.className='fx';document.body.append(cv);
@@ -652,7 +677,7 @@ document.addEventListener('visibilitychange',syncSparks);addEventListener('focus
 // The shared counter: everyone's time served (or left) added up. Each person serving now adds (or takes) a second
 // every second, so the seconds run as many times faster as there are people serving
 const tBox=document.getElementById('together'), tVal=document.getElementById('tValue');
-let tShown='', tRaf=0;
+let tShown='', tRaf=0; const coarse=matchMedia('(pointer:coarse)').matches;
 function together(now){
   const left=cfg.page.counterMode==='left';let sum=0,n=0;
   for(const tm of cfg.timers){const s=+new Date(tm.start),e=+new Date(tm.end);
@@ -667,14 +692,14 @@ function drawTogether(){
   const txt=`${d.toLocaleString(I18N.lang)}<small>${tp('days',d)}</small>${pad(Math.floor(sec/3600)%24)}:${pad(Math.floor(sec/60)%60)}:<i>${pad(sec%60)}</i>`;
   if(txt!==tShown){tShown=txt;tVal.innerHTML=txt}
   tBox.hidden=!sum&&!n;
-  if(n&&!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches)tRaf=requestAnimationFrame(drawTogether); // per frame: with many people it ticks many times a second
+  if(n&&!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches)tRaf=coarse?setTimeout(drawTogether,100):requestAnimationFrame(drawTogether); // phones: 10 times a second is enough and leaves the frames to the scroll // per frame: with many people it ticks many times a second
 }
 function together0(){ // labels; the number itself is redrawn by drawTogether
   if(!cfg)return;
   const {n,left}=together(Date.now()+offset);
   document.getElementById('tLabel').textContent=t(left?'together.left':'together.served');
   const r=document.getElementById('tRate');r.hidden=!n;r.textContent=t('together.rate',{n});r.title=t('together.rateTitle',{n});
-  tShown='';cancelAnimationFrame(tRaf);drawTogether();
+  tShown='';coarse?clearTimeout(tRaf):cancelAnimationFrame(tRaf);drawTogether();
 }
 setInterval(()=>{if(cfg&&!tRaf)drawTogether()},1000); // with reduced motion, in a hidden tab or with nobody serving, once a second
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cfg&&!tRaf)drawTogether()});
