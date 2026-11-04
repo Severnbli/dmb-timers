@@ -375,7 +375,7 @@ function back(tm,phase,s,e,now,ctx,p){
     <div class="dates bk-foot"><button type="button" class="shr" aria-label="${t('share.btn')}" title="${t('share.btn')}">${SHARE_ICON}</button></div></div>`;
 }
 const still=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
-// A soft turn around the vertical middle line, as if the card were a sheet of very soft material held by its top edge: the card is
+// Computers: a soft turn around the vertical middle line, as if the card were a sheet of very soft material held by its top edge: the card is
 // cut into thin horizontal strips that all turn about the same axis, each a moment after the one above it, so the top leads,
 // the rest lags behind and the card bends while it turns. The old side turns away to edge-on, then the new side turns in the same
 // way and settles with a little overshoot. The strips are copies of the card (the real one is hidden meanwhile) in a layer that
@@ -387,6 +387,7 @@ function flip(c,user){
   const swap=()=>{if(toBack){flipped.add(id);user?held.add(id):held.delete(id)}else{flipped.delete(id);held.delete(id)}render()};
   if(still())return swap();
   turning.add(id);
+  if(touchFlip)return springFlip(c,id,toBack,swap);
   const copy=el=>{const x=el.cloneNode(true);for(const a of ['data-id','data-day','tabindex','data-status'])x.removeAttribute(a);x.classList.add('leaf','strip');x.setAttribute('aria-hidden','true');return x};
   const old=copy(c), box={left:c.offsetLeft+'px',top:c.offsetTop+'px',width:c.offsetWidth+'px',height:c.offsetHeight+'px'};
   swap();
@@ -409,6 +410,18 @@ function flip(c,user){
   $.append(layer);
   n.animate([{opacity:0},{opacity:0}],{duration:total}); // the real card shows again when the last strip has settled
   setTimeout(()=>{layer.remove();turning.delete(id)},total); // the strips look like the card itself, so it simply takes over
+}
+// Phones get a one-piece turn: the card itself (no copies, a single layer, transforms only) turns edge-on with a slight skew, so
+// its top seems to lead, the other side is swapped in, and it springs back past flat and settles with a little wobble
+const touchFlip=matchMedia('(pointer:coarse)').matches;
+function springFlip(c,id,toBack,swap){
+  const P='perspective(1100px) ',dir=toBack?1:-1;
+  c.animate([{transform:P+'rotateY(0) skewY(0)'},{transform:P+`rotateY(${dir*90}deg) skewY(${-dir*6}deg)`}],{duration:220,easing:'cubic-bezier(.55,0,.8,.45)'}).onfinish=()=>{
+    swap();const n=$.querySelector(`.card[data-id="${id}"]`);if(!n)return turning.delete(id);
+    n.animate([{transform:P+`rotateY(${-dir*90}deg) skewY(${dir*6}deg)`},{transform:P+`rotateY(${dir*9}deg) skewY(${-dir*1}deg)`,offset:.55},
+      {transform:P+`rotateY(${-dir*4}deg)`,offset:.78},{transform:P+`rotateY(${dir*1.5}deg)`,offset:.9},{transform:P+'rotateY(0)'}],
+      {duration:560,easing:'cubic-bezier(.25,.7,.4,1)'}).onfinish=()=>turning.delete(id);
+  };
 }
 // Now and then a random card in view turns over by itself, and back after a while, unless the visitor is looking at it
 let autoT=0,autoKey='';
