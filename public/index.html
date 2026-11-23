@@ -190,23 +190,12 @@ main:not(.one) .count.bare .unit{flex-direction:row;flex-wrap:wrap;justify-conte
 .fire-btn.away{translate:0 calc(100% + 40px);opacity:0;pointer-events:none}
 @keyframes fire-call{0%{transform:scale(1);opacity:.75}75%,100%{transform:scale(1.1,1.32);opacity:0}}
 @keyframes flame{0%,100%{transform:scale(1,1) skewX(0)}25%{transform:scale(.97,1.04) skewX(-1.6deg)}50%{transform:scale(1.02,.98) skewX(.8deg)}75%{transform:scale(.98,1.03) skewX(1.6deg)}}
-.plus{position:fixed;z-index:6;pointer-events:none;font:800 1.1rem/1 var(--sans);color:var(--fire);text-shadow:0 1px 8px rgb(255 140 40/.5)}
 .fire-tip{position:fixed;z-index:6;right:max(16px,env(safe-area-inset-right));bottom:calc(max(16px,env(safe-area-inset-bottom)) + 66px);width:min(330px,calc(100% - 32px));
  padding:14px 16px;border-radius:18px;background:var(--ink);color:var(--surface);font-size:.9rem;line-height:1.4;box-shadow:0 14px 40px -12px rgb(0 0 0/.5);
  transform-origin:calc(100% - 40px) 100%;animation:tip-in .35s cubic-bezier(.3,1.4,.5,1)}
 .fire-tip::after{content:"";position:absolute;right:30px;bottom:-7px;width:14px;height:14px;background:inherit;transform:rotate(45deg);border-radius:0 0 3px 0}
 .fire-tip p{margin:0}.fire-tip b{display:block;margin-bottom:3px;font-size:.98rem}
 .fire-tip button{display:block;margin:10px 0 0 auto;font:600 .85rem var(--sans);border:0;border-radius:10px;padding:8px 14px;background:var(--surface);color:var(--ink);cursor:pointer}
-.fire-btn.wobble{animation:btn-shake .55s ease-in-out 2}
-.fire-btn.wobble .lg{animation:logs-wobble .18s ease-in-out 7 alternate;transform-box:fill-box;transform-origin:50% 50%}
-.fire-btn.wobble .fl{animation:flame .12s ease-in-out 10 alternate}
-@keyframes btn-shake{0%,100%{transform:none}20%{transform:translateX(-4px) rotate(-4deg)}40%{transform:translateX(4px) rotate(3deg)}60%{transform:translateX(-3px) rotate(-2deg)}80%{transform:translateX(2px) rotate(1deg)}}
-@keyframes logs-wobble{from{transform:rotate(-9deg) translateY(-1px)}to{transform:rotate(9deg) translateY(1px)}}
-.log{position:fixed;z-index:7;width:54px;height:21px;pointer-events:none;--bark:#7a4a26;--grain:#563216;--core:#e6b67c;--ring:#b47a42;filter:drop-shadow(0 3px 4px rgb(0 0 0/.3))}
-.log.birch{--bark:#eee8db;--grain:#2b2b2b;--core:#f2deb6;--ring:#c8a26a}
-.log.pine{--bark:#94401f;--grain:#5c210d;--core:#f0c27a;--ring:#c4823a}
-.log.gold{--bark:#d9a21c;--grain:#9a6a06;--core:#ffe68e;--ring:#c99512;filter:drop-shadow(0 0 7px rgb(255 200 60/.95))}
-.log svg{display:block;width:100%;height:100%}
 .fire-tip .rec{display:block;margin-top:3px;opacity:.7;font-size:.8em}
 /* the card hint sits by its card, not by the fire button: .fire-tip.card-tip outranks every later .fire-tip rule (the phone one too) */
 .fire-tip.card-tip{position:absolute;right:auto;bottom:auto;height:auto;transform-origin:50% 0}
@@ -624,7 +613,7 @@ const store={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:
 const record=()=>Math.max(cfg?.sparks?.record||0,logs||0);
 const resetLine=()=>{const at=cfg?.sparks?.resetAt;return at?`<small class="rec">${esc(t('fire.resetAt',{date:new Date(at).toLocaleString(I18N.lang,{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})}))}</small>`:''};
 const recLine=()=>record()?`<small class="rec">${esc(t('fire.record',{n:record().toLocaleString(I18N.lang)}))}</small>`:'';
-let pokes=[], logs=null, tipEl=null, tipT=0, sending=false;
+let pokes=[], lastPoke=-Infinity, logs=null, tipEl=null, tipT=0, sending=false;
 const waitLeft=()=>(+store.get('fireAt')||0)+cfg.page.sparkHours*36e5-Date.now()-offset; // > 0 while this visitor's log still burns
 const hm=ms=>{const n=Math.max(1,Math.ceil(ms/6e4)),h=Math.floor(n/60),m=n%60;return h&&m?t('fire.hm',{h,m}):h?t('fire.h',{h}):t('fire.m',{m})};
 function drawFire(){
@@ -656,56 +645,33 @@ function tip(html,ms=3800){ // a bubble over the button: the first-visit hint (s
   tipEl.querySelector('button')?.addEventListener('click',()=>{store.set('fireHint','1');tip(null)});
   document.body.append(tipEl);if(ms)tipT=setTimeout(()=>tip(null),ms);
 }
-// A log falls from above, turning, into the fire on the button; land() runs as it hits
-const LOG_SVG='<svg viewBox="0 0 50 20" aria-hidden="true"><rect x="1" y="3" width="42" height="14" rx="7" fill="var(--bark)"/><path d="M9 7.5h17M15 12.5h19" stroke="var(--grain)" stroke-width="1.4" stroke-linecap="round"/><ellipse cx="42" cy="10" rx="6.5" ry="7" fill="var(--core)" stroke="var(--bark)" stroke-width="1.5"/><ellipse cx="42" cy="10" rx="3.2" ry="3.6" fill="none" stroke="var(--ring)" stroke-width="1.2"/></svg>';
-function dropLog(x,y,land,kind='oak'){
-  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return land();
-  const el=document.createElement('div'),tilt=(Math.random()<.5?-1:1)*(4+Math.random()*6);el.className='log '+kind;el.innerHTML=LOG_SVG;
-  el.style.left=x+'px';el.style.top=y+'px';document.body.append(el);
-  const at=(dy,r,s=1,sy=s)=>`translate(-50%,-50%) translate(0,${dy}px) rotate(${r}deg) scale(${s},${sy})`;
-  el.animate([ // straight down with gravity, a small squash on the flame, then it sinks into the button
-    {transform:at(-240,tilt),opacity:0,easing:'cubic-bezier(.55,0,1,.45)'},
-    {transform:at(-200,tilt),opacity:1,offset:.1,easing:'cubic-bezier(.5,0,1,.5)'},
-    {transform:at(0,tilt*.3),offset:.7,easing:'ease-out'},
-    {transform:at(-5,0,1.08,.85),offset:.8,easing:'ease-in'},
-    {transform:at(10,0,.4),opacity:0}],{duration:800}).onfinish=()=>el.remove();
-  setTimeout(land,560);
-}
-// Wood types: mostly oak, sometimes birch (crackles) or pine (resin pops), rarely a golden log. Only for the show: every log counts as one
+// Wood types color the sparks. Every log counts as one.
 const wood=()=>{const r=Math.random();return r<.025?'gold':r<.2?'birch':r<.33?'pine':'oak'};
 function flare(kind,x,y){
-  const k=kind==='oak'?'':kind, later=(ms,n,p)=>setTimeout(()=>FIRE.burst(x+(Math.random()-.5)*16,y,n,p,k),ms);
-  FIRE.burst(x,y,{oak:60,birch:44,pine:66,gold:90}[kind],{oak:1.15,birch:1,pine:1.25,gold:1.4}[kind],k);
-  if(kind==='birch')for(let i=0;i<5;i++)later(120+Math.random()*900,7,.55); // crackle
-  if(kind==='pine')for(const ms of [320,700,1100])later(ms,18,.95); // resin pops
-  if(kind==='gold')later(380,70,1.3);
+  FIRE.burst(x,y,{oak:44,birch:36,pine:48,gold:60}[kind],{oak:1,birch:.9,pine:1.1,gold:1.2}[kind],kind==='oak'?'':kind);
 }
 function bump(){fc.classList.add('bump');setTimeout(()=>fc.classList.remove('bump'),250)}
-function plus(x,y){
-  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
-  const e=document.createElement('div');e.className='plus';e.textContent='+1';e.style.left=x+'px';e.style.top=y+'px';document.body.append(e);
-  e.animate([{transform:'translate(-50%,0) scale(.6)',opacity:0},{transform:'translate(-50%,-28px) scale(1.15)',opacity:1,offset:.25},{transform:'translate(-50%,-70px) scale(1)',opacity:0}],{duration:1300,easing:'ease-out'}).onfinish=()=>e.remove();
-}
 fb.onclick=async()=>{
   store.set('fireHint','1');
   const r=fb.querySelector('svg').getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height*.4;
   const w=waitLeft();
-  if(w>0){ // still burning; five quick taps knock the logs about (an easter egg)
-    const n=performance.now();pokes=pokes.filter(p=>n-p<2500);pokes.push(n);
-    if(pokes.length>=5){pokes=[];fb.classList.remove('wobble');void fb.offsetWidth;fb.classList.add('wobble');setTimeout(()=>fb.classList.remove('wobble'),1300);
-      FIRE.burst(x,y,36,.9);setTimeout(()=>FIRE.burst(x,y,20,.7),300);return tip(esc(t('fire.egg')),4500)}
+  if(w>0){ // five quick taps get a bigger burst, with a short gap between bursts
+    const n=performance.now();if(n-lastPoke<180)return;
+    lastPoke=n;pokes=pokes.filter(p=>n-p<2500);pokes.push(n);
+    if(pokes.length>=5){pokes=[];FIRE.burst(x,y,24,.8);return tip(esc(t('fire.egg')),4500)}
     FIRE.burst(x,y,8,.45);return tip(esc(t('fire.wait',{time:hm(w)}))+resetLine()+recLine(),5e3)}
+  if(sending)return;
   const prev=store.get('fireAt')||'';store.set('fireAt',String(Date.now()+offset));
   const kind=wood();
-  logs++;drawFire();const landed=new Promise(ok=>dropLog(x,y,()=>{bump();plus(x,r.top);flare(kind,x,y);ok()},kind)); // at once, the server confirms after
+  logs++;drawFire();flare(kind,x,y);
   sending=true;
   try{
-    const res=await fetch('/api/spark',{method:'POST'}),d=await res.json().catch(()=>({}));await landed; // the tip waits until the log is in the fire
+    const res=await fetch('/api/spark',{method:'POST'}),d=await res.json().catch(()=>({}));
     if(typeof d.count==='number'){logs=d.count;cfg.sparks={...cfg.sparks,count:d.count,record:d.record}}
-    if(res.ok&&d.newRecord){tip(`<b>${esc(t('fire.newRecord',{n:d.count.toLocaleString(I18N.lang)}))}</b>`,5e3);for(let i=1;i<4;i++)setTimeout(()=>FIRE.burst(x,y,50,1.3),i*450)}
+    if(res.ok&&d.newRecord)tip(`<b>${esc(t('fire.newRecord',{n:d.count.toLocaleString(I18N.lang)}))}</b>`,5e3);
     else if(res.ok)tip(esc(t(kind==='oak'?'fire.thanks':'wood.'+kind))+recLine());
-    else{store.set('fireAt',prev);tip(esc(t(d.code?'err.'+d.code:'err.request')))}
-  }catch{await landed;logs--;store.set('fireAt',prev);tip(esc(t('err.request')))}
+    else{if(typeof d.count!=='number')logs--;store.set('fireAt',prev);tip(esc(t(d.code?'err.'+d.code:'err.request')))}
+  }catch{logs--;store.set('fireAt',prev);tip(esc(t('err.request')))}
   sending=false;drawFire();FIRE.set({on:cfg.page.dustOn!==false,logs,full:cfg.page.dustFull,lo:cfg.page.dustMin,hi:cfg.page.dustMax});
 };
 setInterval(()=>{if(cfg&&!fb.hidden)drawFire()},3e4);

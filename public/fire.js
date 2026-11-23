@@ -19,7 +19,7 @@
 // one lights up elsewhere. The sparks belong to the page, not the screen: they scroll with it. They light up around the
 // part of the page in view, so a long page (one card per row on a phone) does not get more of them than a short one.
 // The fire level (0..1, from the logs visitors add) sets how many there are, how big and hot they burn and how strong the wind is.
-// A burst throws a handful of sparks out of one point, as when a log lands in the fire. With reduced motion nothing moves.
+// A burst throws a handful of sparks out of one point. With reduced motion nothing moves.
 (() => {
 const still = matchMedia('(prefers-reduced-motion: reduce)'), touch = matchMedia('(pointer: coarse)');
 const CSS = `.fire{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:3;overflow:hidden;contain:strict}
